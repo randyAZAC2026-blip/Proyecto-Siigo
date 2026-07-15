@@ -1,0 +1,3082 @@
+[
+  {
+    "clase_ciiu": "0510",
+    "descripcion": "Extracción de hulla (carbón de piedra)",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "0520",
+    "descripcion": "Extracción de carbón lignito",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "0610",
+    "descripcion": "Extracción de petróleo crudo",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "0620",
+    "descripcion": "Extracción de gas natural",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "0710",
+    "descripcion": "Extracción de minerales de hierro",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "0721",
+    "descripcion": "Extracción de minerales de uranio y de torio",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "0722",
+    "descripcion": "Extracción de oro y otros metales preciosos",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "0723",
+    "descripcion": "Extracción de minerales de níquel",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "0729",
+    "descripcion": "Extracción de otros minerales metalíferos no ferrosos n.c.p.",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "0811",
+    "descripcion": "Extracción de piedra, arena, arcillas comunes, yeso y anhidrita",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "0812",
+    "descripcion": "Extracción de arcillas de uso industrial, caliza, caolín y bentonitas",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "0820",
+    "descripcion": "Extracción de esmeraldas, piedras preciosas y semipreciosas",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "0891",
+    "descripcion": "Extracción de minerales para la fabricación de abonos y productos químicos",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "0892",
+    "descripcion": "Extracción de halita (sal)",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "0899",
+    "descripcion": "Extracción de otros minerales no metálicos n.c.p.",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "0910",
+    "descripcion": "Actividades de apoyo para la extracción de petróleo y de gas natural",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "0990",
+    "descripcion": "Actividades de apoyo para otras actividades de explotación de minas y canteras",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "1011",
+    "descripcion": "Procesamiento y conservación de carne y productos cárnicos",
+    "grupo_ica": "103",
+    "sector": "Industrial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "1012",
+    "descripcion": "Procesamiento y conservación de pescados, crustáceos y moluscos",
+    "grupo_ica": "103",
+    "sector": "Industrial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "1020",
+    "descripcion": "Procesamiento y conservación de frutas, legumbres, hortalizas y tubérculos",
+    "grupo_ica": "103",
+    "sector": "Industrial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "1030",
+    "descripcion": "Elaboración de aceites y grasas de origen vegetal y animal",
+    "grupo_ica": "103",
+    "sector": "Industrial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "1040",
+    "descripcion": "Elaboración de productos lácteos",
+    "grupo_ica": "103",
+    "sector": "Industrial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "1051",
+    "descripcion": "Elaboración de productos de molinería",
+    "grupo_ica": "103",
+    "sector": "Industrial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "1052",
+    "descripcion": "Elaboración de almidones y productos derivados del almidón",
+    "grupo_ica": "103",
+    "sector": "Industrial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "1061",
+    "descripcion": "Trilla de café",
+    "grupo_ica": "103",
+    "sector": "Industrial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "1062",
+    "descripcion": "Descafeinado, tostión y molienda del café",
+    "grupo_ica": "103",
+    "sector": "Industrial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "1063",
+    "descripcion": "Otros derivados del café",
+    "grupo_ica": "103",
+    "sector": "Industrial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "1071",
+    "descripcion": "Elaboración y refinación de azúcar",
+    "grupo_ica": "103",
+    "sector": "Industrial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "1072",
+    "descripcion": "Elaboración de panela",
+    "grupo_ica": "103",
+    "sector": "Industrial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "1081",
+    "descripcion": "Elaboración de productos de panadería",
+    "grupo_ica": "103",
+    "sector": "Industrial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "1082",
+    "descripcion": "Elaboración de cacao, chocolate y productos de confitería",
+    "grupo_ica": "103",
+    "sector": "Industrial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "1083",
+    "descripcion": "Elaboración de macarrones, fideos, alcuzcuz y productos farináceos similares",
+    "grupo_ica": "103",
+    "sector": "Industrial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "1084",
+    "descripcion": "Elaboración de comidas y platos preparados",
+    "grupo_ica": "103",
+    "sector": "Industrial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "1089",
+    "descripcion": "Elaboración de otros productos alimenticios n.c.p.",
+    "grupo_ica": "103",
+    "sector": "Industrial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "1090",
+    "descripcion": "Elaboración de alimentos preparados para animales",
+    "grupo_ica": "103",
+    "sector": "Industrial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "1101",
+    "descripcion": "Destilación, rectificación y mezcla de bebidas alcohólicas",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "1102",
+    "descripcion": "Elaboración de bebidas fermentadas no destiladas",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "1103",
+    "descripcion": "Producción de malta, elaboración de cervezas y otras bebidas malteadas",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "1104",
+    "descripcion": "Elaboración de bebidas no alcohólicas, producción de aguas minerales y de otras aguas embotelladas",
+    "grupo_ica": "103",
+    "sector": "Industrial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "1200",
+    "descripcion": "Elaboración de productos de tabaco",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "1311",
+    "descripcion": "Preparación e hilatura de fibras textiles",
+    "grupo_ica": "102",
+    "sector": "Industrial",
+    "tarifa_por_mil": 3.0
+  },
+  {
+    "clase_ciiu": "1312",
+    "descripcion": "Tejeduría de productos textiles",
+    "grupo_ica": "102",
+    "sector": "Industrial",
+    "tarifa_por_mil": 3.0
+  },
+  {
+    "clase_ciiu": "1313",
+    "descripcion": "Acabado de productos textiles",
+    "grupo_ica": "102",
+    "sector": "Industrial",
+    "tarifa_por_mil": 3.0
+  },
+  {
+    "clase_ciiu": "1391",
+    "descripcion": "Fabricación de tejidos de punto y ganchillo",
+    "grupo_ica": "102",
+    "sector": "Industrial",
+    "tarifa_por_mil": 3.0
+  },
+  {
+    "clase_ciiu": "1392",
+    "descripcion": "Confección de artículos con materiales textiles, excepto prendas de vestir",
+    "grupo_ica": "102",
+    "sector": "Industrial",
+    "tarifa_por_mil": 3.0
+  },
+  {
+    "clase_ciiu": "1393",
+    "descripcion": "Fabricación de tapetes y alfombras para pisos",
+    "grupo_ica": "102",
+    "sector": "Industrial",
+    "tarifa_por_mil": 3.0
+  },
+  {
+    "clase_ciiu": "1394",
+    "descripcion": "Fabricación de cuerdas, cordeles, cables, bramantes y redes",
+    "grupo_ica": "102",
+    "sector": "Industrial",
+    "tarifa_por_mil": 3.0
+  },
+  {
+    "clase_ciiu": "1399",
+    "descripcion": "Fabricación de otros artículos textiles n.c.p.",
+    "grupo_ica": "102",
+    "sector": "Industrial",
+    "tarifa_por_mil": 3.0
+  },
+  {
+    "clase_ciiu": "1410",
+    "descripcion": "Confección de prendas de vestir, excepto prendas de piel",
+    "grupo_ica": "102",
+    "sector": "Industrial",
+    "tarifa_por_mil": 3.0
+  },
+  {
+    "clase_ciiu": "1420",
+    "descripcion": "Fabricación de artículos de piel",
+    "grupo_ica": "102",
+    "sector": "Industrial",
+    "tarifa_por_mil": 3.0
+  },
+  {
+    "clase_ciiu": "1430",
+    "descripcion": "Fabricación de artículos de punto y ganchillo",
+    "grupo_ica": "102",
+    "sector": "Industrial",
+    "tarifa_por_mil": 3.0
+  },
+  {
+    "clase_ciiu": "1511",
+    "descripcion": "Curtido y recurtido de cueros; recurtido y teñido de pieles",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "1512",
+    "descripcion": "Fabricación de artículos de viaje, bolsos de mano y artículos similares elaborados en cuero, y fabricación de artículos de talabartería y guarnicionería",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "1513",
+    "descripcion": "Fabricación de artículos de viaje, bolsos de mano y artículos similares; artículos de talabartería y guarnicionería elaborados en otros materiales",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "1521",
+    "descripcion": "Fabricación de calzado de cuero y piel, con cualquier tipo de suela",
+    "grupo_ica": "102",
+    "sector": "Industrial",
+    "tarifa_por_mil": 3.0
+  },
+  {
+    "clase_ciiu": "1522",
+    "descripcion": "Fabricación de otros tipos de calzado, excepto calzado de cuero y piel",
+    "grupo_ica": "102",
+    "sector": "Industrial",
+    "tarifa_por_mil": 3.0
+  },
+  {
+    "clase_ciiu": "1523",
+    "descripcion": "Fabricación de partes del calzado",
+    "grupo_ica": "102",
+    "sector": "Industrial",
+    "tarifa_por_mil": 3.0
+  },
+  {
+    "clase_ciiu": "1610",
+    "descripcion": "Aserrado, acepillado e impregnación de la madera",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "1620",
+    "descripcion": "Fabricación de hojas de madera para enchapado; fabricación de tableros contrachapados, tableros laminados, tableros de partículas y otros tableros y paneles",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "1630",
+    "descripcion": "Fabricación de partes y piezas de madera, de carpintería y ebanistería para la construcción",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "1640",
+    "descripcion": "Fabricación de recipientes de madera",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "1690",
+    "descripcion": "Fabricación de otros productos de madera; fabricación de artículos de corcho, cestería y espartería",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "1701",
+    "descripcion": "Fabricación de pulpas (pastas) celulósicas; papel y cartón",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "1702",
+    "descripcion": "Fabricación de papel y cartón ondulado (corrugado); fabricación de envases, empaques y de  embalajes de papel y cartón",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "1709",
+    "descripcion": "Fabricación de otros artículos de papel y cartón",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "1811",
+    "descripcion": "Tipografía y artes graficas",
+    "grupo_ica": "104",
+    "sector": "Industrial",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "1812",
+    "descripcion": "Actividades de servicios relacionados con la impresión",
+    "grupo_ica": "104",
+    "sector": "Industrial",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "1820",
+    "descripcion": "Producción de copias a partir de grabaciones originales",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "1910",
+    "descripcion": "Fabricación de productos de hornos de coque",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "1921",
+    "descripcion": "Fabricación de productos de la refinación del petróleo",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "1922",
+    "descripcion": "Actividad de mezcla de combustibles",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2011",
+    "descripcion": "Fabricación de sustancias y productos químicos básicos",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2012",
+    "descripcion": "Fabricación de abonos y compuestos inorgánicos nitrogenados",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2013",
+    "descripcion": "Fabricación de plásticos en formas primarias",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2014",
+    "descripcion": "Fabricación de caucho sintético en formas primarias",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2021",
+    "descripcion": "Fabricación de plaguicidas y otros productos químicos de uso agropecuario",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2022",
+    "descripcion": "Fabricación de pinturas, barnices y revestimientos similares, tintas para impresión y masillas",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2023",
+    "descripcion": "Fabricación de jabones y detergentes, preparados para limpiar y pulir; perfumes y preparados  de tocador",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2029",
+    "descripcion": "Fabricación de otros productos químicos n.c.p.",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2030",
+    "descripcion": "Fabricación de fibras sintéticas y artificiales",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2100",
+    "descripcion": "Fabricación de productos farmacéuticos, sustancias químicas medicinales y productos botánicos  de uso farmacéutico",
+    "grupo_ica": "104",
+    "sector": "Industrial",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "2211",
+    "descripcion": "Fabricación de llantas y neumáticos de caucho",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2212",
+    "descripcion": "Reencauche de llantas usadas",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "2219",
+    "descripcion": "Fabricación de formas básicas de caucho y otros productos de caucho n.c.p.",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2221",
+    "descripcion": "Fabricación de formas básicas de plástico",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2229",
+    "descripcion": "Fabricación de artículos de plástico n.c.p.",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2310",
+    "descripcion": "Fabricación de vidrio y productos de vidrio",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2391",
+    "descripcion": "Fabricación de productos refractarios",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2392",
+    "descripcion": "Fabricación de materiales de arcilla para la construcción",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2393",
+    "descripcion": "Fabricación de otros productos de cerámica y porcelana",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2394",
+    "descripcion": "Fabricación de cemento, cal y yeso",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2395",
+    "descripcion": "Fabricación de artículos de hormigón, cemento y yeso",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2396",
+    "descripcion": "Corte, tallado y acabado de la piedra",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2399",
+    "descripcion": "Fabricación de otros productos minerales no metálicos n.c.p.",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2410",
+    "descripcion": "Producción de hierro",
+    "grupo_ica": "104",
+    "sector": "Industrial",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "2421",
+    "descripcion": "Industrias básicas de metales preciosos",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2429",
+    "descripcion": "Industrias básicas de otros metales no ferrosos",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2431",
+    "descripcion": "Fundición de hierro y de acero",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2432",
+    "descripcion": "Fundición de metales no ferrosos",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2511",
+    "descripcion": "Fabricación de productos metálicos para uso estructural",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2512",
+    "descripcion": "Fabricación de tanques, depósitos y recipientes de metal, excepto los utilizados para el envase o transporte de mercancías",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2513",
+    "descripcion": "Fabricación de generadores de vapor, excepto calderas de agua caliente para calefacción central",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2520",
+    "descripcion": "Fabricación de armas y municiones",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2591",
+    "descripcion": "Forja, prensado, estampado y laminado de metal; pulvimetalurgia",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2592",
+    "descripcion": "Tratamiento y revestimiento de metales; mecanizado",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2593",
+    "descripcion": "Fabricación de artículos de cuchillería, herramientas de mano y artículos de ferretería",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2599",
+    "descripcion": "Fabricación de otros productos elaborados de metal n.c.p.",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2610",
+    "descripcion": "Fabricación de componentes y tableros electrónicos",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2620",
+    "descripcion": "Fabricación de computadoras y de equipo periférico",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2630",
+    "descripcion": "Fabricación de equipos de comunicación",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2640",
+    "descripcion": "Fabricación de aparatos electrónicos de consumo",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2651",
+    "descripcion": "Fabricación de equipo de medición, prueba, navegación y control",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2652",
+    "descripcion": "Fabricación de relojes",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2660",
+    "descripcion": "Fabricación de equipo de irradiación y equipo electrónico de uso médico y terapéutico",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2670",
+    "descripcion": "Fabricación de instrumentos ópticos y equipo fotográfico",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2680",
+    "descripcion": "Fabricación de medios magnéticos y ópticos para almacenamiento de datos",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2711",
+    "descripcion": "Fabricación de motores, generadores y transformadores eléctricos",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2712",
+    "descripcion": "Fabricación de aparatos de distribución y control de la energía eléctrica",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2720",
+    "descripcion": "Fabricación de pilas, baterías y acumuladores eléctricos",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2731",
+    "descripcion": "Fabricación de hilos y cables eléctricos y de fibra óptica",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2732",
+    "descripcion": "Fabricación de dispositivos de cableado",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2740",
+    "descripcion": "Fabricación de equipos eléctricos de iluminación",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2750",
+    "descripcion": "Fabricación de aparatos de uso doméstico",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2790",
+    "descripcion": "Fabricación de otros tipos de equipo eléctrico n.c.p.",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2811",
+    "descripcion": "Fabricación de motores, turbinas, y partes para motores de combustión interna",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2812",
+    "descripcion": "Fabricación de equipos de potencia hidráulica y neumática",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2813",
+    "descripcion": "Fabricación de otras bombas, compresores, grifos y válvulas",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2814",
+    "descripcion": "Fabricación de cojinetes, engranajes, trenes de engranajes y piezas de transmisión",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2815",
+    "descripcion": "Fabricación de hornos, hogares y quemadores industriales",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2816",
+    "descripcion": "Fabricación de equipo de elevación y manipulación",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2817",
+    "descripcion": "Fabricación de maquinaria y equipo de oficina (excepto computadoras y equipo periférico)",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2818",
+    "descripcion": "Fabricación de herramientas manuales con motor",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2819",
+    "descripcion": "Fabricación de otros tipos de maquinaria y equipo de uso general n.c.p.",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2821",
+    "descripcion": "Fabricación de maquinaria agropecuaria y forestal",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2822",
+    "descripcion": "Fabricación de máquinas formadoras de metal y de máquinas herramienta",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2823",
+    "descripcion": "Fabricación de maquinaria para la metalurgia",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2824",
+    "descripcion": "Fabricación de maquinaria para explotación de minas y canteras y para obras de construcción",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2825",
+    "descripcion": "Fabricación de maquinaria para la elaboración de alimentos, bebidas y tabaco",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2826",
+    "descripcion": "Fabricación de maquinaria para la elaboración de productos textiles, prendas de vestir y cueros",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2829",
+    "descripcion": "Fabricación de otros tipos de maquinaria y equipo de uso especial n.c.p.",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2910",
+    "descripcion": "Fabricación de vehículos automotores y sus motores",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2920",
+    "descripcion": "Fabricación de carrocerías para vehículos automotores; fabricación de remolques y semirremolques",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "2930",
+    "descripcion": "Fabricación de partes, piezas (autopartes) y accesorios (lujos) para vehículos automotores",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "3011",
+    "descripcion": "Construcción de barcos y de estructuras flotantes",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "3012",
+    "descripcion": "Construcción de embarcaciones de recreo y deporte",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "3020",
+    "descripcion": "Fabricación de locomotoras y de material rodante para ferrocarriles",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "3030",
+    "descripcion": "Fabricación de aeronaves, naves espaciales y de maquinaria conexa",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "3040",
+    "descripcion": "Fabricación de vehículos militares de combate",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "3091",
+    "descripcion": "Fabricación de motocicletas",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "3092",
+    "descripcion": "Fabricación de bicicletas y de sillas de ruedas para personas con discapacidad",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "3099",
+    "descripcion": "Fabricación de otros tipos de equipo de transporte n.c.p.",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "3110",
+    "descripcion": "Fabricación de muebles",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "3120",
+    "descripcion": "Fabricación de colchones y somieres",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "3210",
+    "descripcion": "Fabricación de joyas, bisutería y artículos conexos",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "3220",
+    "descripcion": "Fabricación de instrumentos musicales",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "3230",
+    "descripcion": "Fabricación de artículos y equipo para la práctica del deporte",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "3240",
+    "descripcion": "Fabricación de juegos, juguetes y rompecabezas",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "3250",
+    "descripcion": "Fabricación de instrumentos, aparatos y materiales médicos y odontológicos (incluido mobiliario)",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "3290",
+    "descripcion": "Otras industrias manufactureras n.c.p.",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "3311",
+    "descripcion": "Mantenimiento y reparación especializado de productos elaborados en metal",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "3312",
+    "descripcion": "Mantenimiento y reparación especializado de maquinaria y equipo",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "3313",
+    "descripcion": "Mantenimiento y reparación especializado de equipo electrónico y óptico",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "3314",
+    "descripcion": "Mantenimiento y reparación especializado de equipo eléctrico",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "3315",
+    "descripcion": "Mantenimiento y reparación especializado de equipo de transporte, excepto los vehículos automotores, motocicletas y bicicletas",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "3319",
+    "descripcion": "Mantenimiento y reparación de otros tipos de equipos y sus componentes n.c.p.",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "3320",
+    "descripcion": "Instalación especializada de maquinaria y equipo industrial",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "3511",
+    "descripcion": "Servicios públicos básicos y servicios domiciliarios - Generación de energía eléctrica",
+    "grupo_ica": "304",
+    "sector": "Servicios",
+    "tarifa_por_mil": 6.0
+  },
+  {
+    "clase_ciiu": "3512",
+    "descripcion": "Servicios públicos básicos y servicios domiciliarios- Transmisión de energía eléctrica",
+    "grupo_ica": "304",
+    "sector": "Servicios",
+    "tarifa_por_mil": 6.0
+  },
+  {
+    "clase_ciiu": "3513",
+    "descripcion": "Servicios públicos básicos y servicios domiciliarios_ Distribución de energía eléctrica",
+    "grupo_ica": "304",
+    "sector": "Servicios",
+    "tarifa_por_mil": 6.0
+  },
+  {
+    "clase_ciiu": "3514",
+    "descripcion": "Servicios públicos básicos y servicios domiciliarios_ Comercialización de energía eléctrica",
+    "grupo_ica": "304",
+    "sector": "Servicios",
+    "tarifa_por_mil": 6.0
+  },
+  {
+    "clase_ciiu": "3520",
+    "descripcion": "Servicios públicos básicos y servicios domiciliarios_ Producción de gas; distribución de combustibles gaseosos",
+    "grupo_ica": "304",
+    "sector": "Servicios",
+    "tarifa_por_mil": 6.0
+  },
+  {
+    "clase_ciiu": "3530",
+    "descripcion": "Suministro de vapor y aire acondicionado",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "3600",
+    "descripcion": "Servicios públicos básicos y servicios domiciliarios_ Captación,",
+    "grupo_ica": "304",
+    "sector": "Servicios",
+    "tarifa_por_mil": 6.0
+  },
+  {
+    "clase_ciiu": "3700",
+    "descripcion": "Servicios públicos básicos y servicios domiciliarios_ Evacuación y tratamiento de aguas residuales",
+    "grupo_ica": "304",
+    "sector": "Servicios",
+    "tarifa_por_mil": 6.0
+  },
+  {
+    "clase_ciiu": "3811",
+    "descripcion": "Recolección de desechos no peligrosos",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "3812",
+    "descripcion": "Recolección de desechos peligrosos",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "3821",
+    "descripcion": "Tratamiento y disposición de desechos no peligrosos",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "3822",
+    "descripcion": "Tratamiento y disposición de desechos peligrosos",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "3830",
+    "descripcion": "Recuperación de materiales",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "3900",
+    "descripcion": "Actividades de saneamiento ambiental y otros servicios de gestión de desechos",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "4111",
+    "descripcion": "Servicios por prestados por contratistas de construcción, constructores y urbanizadores (incluyen los ingresos provenientes de la construcción y venta de inmuebles)_ Construcción de edificios residenciales",
+    "grupo_ica": "303",
+    "sector": "Servicios",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "4112",
+    "descripcion": "Servicios por prestados por contratistas de construcción, constructores y urbanizadores (incluyen los ingresos provenientes de la construcción y venta de inmuebles)_ Construcción de edificios no residenciales",
+    "grupo_ica": "303",
+    "sector": "Servicios",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "4210",
+    "descripcion": "Construcción de carreteras y vías de ferrocarril",
+    "grupo_ica": "303",
+    "sector": "Servicios",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "4220",
+    "descripcion": "Construcción de proyectos de servicio público",
+    "grupo_ica": "303",
+    "sector": "Servicios",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "4290",
+    "descripcion": "Construcción de otras obras de ingeniería civil",
+    "grupo_ica": "303",
+    "sector": "Servicios",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "4311",
+    "descripcion": "Demolición",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "4312",
+    "descripcion": "Preparación del terreno para la construcción",
+    "grupo_ica": "303",
+    "sector": "Servicios",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "4321",
+    "descripcion": "Instalaciones eléctricas",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "4322",
+    "descripcion": "Instalaciones de fontanería, calefacción y aire acondicionado",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "4329",
+    "descripcion": "Otras instalaciones especializadas",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "4330",
+    "descripcion": "Terminación y acabado de edificios y obras de ingeniería civil",
+    "grupo_ica": "303",
+    "sector": "Servicios",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "4390",
+    "descripcion": "Otras actividades especializadas para la construcción de edificios y obras de ingeniería civil",
+    "grupo_ica": "303",
+    "sector": "Servicios",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "4511",
+    "descripcion": "Comercio de automotores nacionales nuevos (incluye motocicletas ) y automotores producidos o ensamblados en los países del pacto andino.",
+    "grupo_ica": "203",
+    "sector": "Comercial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "4511",
+    "descripcion": "Comercio automotores de fabricación extranjera  (incluidas motocicletas)",
+    "grupo_ica": "206",
+    "sector": "Comercial",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "4512",
+    "descripcion": "Comercio de automotores nacionales usados (incluye motocicletas ) y automotores producidos o ensamblados en los países del pacto andino.",
+    "grupo_ica": "203",
+    "sector": "Comercial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "4512",
+    "descripcion": "Comercio de vehículos automotores usados (fuera pacto andino)",
+    "grupo_ica": "206",
+    "sector": "Comercial",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "4520",
+    "descripcion": "Mantenimiento y reparación de vehículos automotores",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "4530",
+    "descripcion": "Comercio de partes, piezas (autopartes) y accesorios (lujos) para vehículos automotores",
+    "grupo_ica": "207",
+    "sector": "Comercial",
+    "tarifa_por_mil": 8.0
+  },
+  {
+    "clase_ciiu": "4541",
+    "descripcion": "Comercio de motocicletas y de sus partes, piezas y accesorios",
+    "grupo_ica": "207",
+    "sector": "Comercial",
+    "tarifa_por_mil": 8.0
+  },
+  {
+    "clase_ciiu": "4542",
+    "descripcion": "Mantenimiento y reparación de motocicletas y de sus partes y piezas",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "4610",
+    "descripcion": "Comercio al por mayor a cambio de una retribución o por contrata",
+    "grupo_ica": "207",
+    "sector": "Comercial",
+    "tarifa_por_mil": 8.0
+  },
+  {
+    "clase_ciiu": "4620",
+    "descripcion": "Comercio al por mayor de materias primas agropecuarias;",
+    "grupo_ica": "207",
+    "sector": "Comercial",
+    "tarifa_por_mil": 8.0
+  },
+  {
+    "clase_ciiu": "4631",
+    "descripcion": "Comercio al por mayor de productos alimenticios",
+    "grupo_ica": "203",
+    "sector": "Comercial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "4632",
+    "descripcion": "Comercio al por mayor de bebidas y tabaco",
+    "grupo_ica": "206",
+    "sector": "Comercial",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "4641",
+    "descripcion": "Comercio al por mayor de productos textiles, productos confeccionados para uso doméstico",
+    "grupo_ica": "203",
+    "sector": "Comercial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "4642",
+    "descripcion": "Comercio al por mayor de prendas de vestir",
+    "grupo_ica": "203",
+    "sector": "Comercial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "4643",
+    "descripcion": "Comercio al por mayor de calzado",
+    "grupo_ica": "203",
+    "sector": "Comercial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "4644",
+    "descripcion": "Comercio al por mayor de aparatos y equipo de uso doméstico",
+    "grupo_ica": "205",
+    "sector": "Comercial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "4645",
+    "descripcion": "Comercio al por mayor de productos farmacéuticos, medicinales, cosméticos y de tocador",
+    "grupo_ica": "204",
+    "sector": "Comercial",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "4649",
+    "descripcion": "Comercio al por mayor de otros utensilios domésticos n.c.p.",
+    "grupo_ica": "205",
+    "sector": "Comercial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "4651",
+    "descripcion": "Comercio al por mayor de computadores, equipo periférico y programas de informática",
+    "grupo_ica": "207",
+    "sector": "Comercial",
+    "tarifa_por_mil": 8.0
+  },
+  {
+    "clase_ciiu": "4652",
+    "descripcion": "Comercio al por mayor de equipo, partes y piezas electrónicos y de telecomunicaciones",
+    "grupo_ica": "207",
+    "sector": "Comercial",
+    "tarifa_por_mil": 8.0
+  },
+  {
+    "clase_ciiu": "4653",
+    "descripcion": "Comercio al por mayor de maquinaria y equipo agropecuarios",
+    "grupo_ica": "207",
+    "sector": "Comercial",
+    "tarifa_por_mil": 8.0
+  },
+  {
+    "clase_ciiu": "4659",
+    "descripcion": "Comercio al por mayor de otros tipos de maquinaria y equipo n.c.p.",
+    "grupo_ica": "207",
+    "sector": "Comercial",
+    "tarifa_por_mil": 8.0
+  },
+  {
+    "clase_ciiu": "4661",
+    "descripcion": "Comercio al por mayor de combustibles sólidos, líquidos, gaseosos y productos conexos combustibles.",
+    "grupo_ica": "206",
+    "sector": "Comercial",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "4661",
+    "descripcion": "Comercio de productos derivados del petróleo no combustibles",
+    "grupo_ica": "207",
+    "sector": "Comercial",
+    "tarifa_por_mil": 8.0
+  },
+  {
+    "clase_ciiu": "4662",
+    "descripcion": "Comercio al por mayor y por menor de metales y productos metalíferos",
+    "grupo_ica": "207",
+    "sector": "Comercial",
+    "tarifa_por_mil": 8.0
+  },
+  {
+    "clase_ciiu": "4663",
+    "descripcion": "Comercio al por mayor de materiales de construcción, artículos de ferretería, pinturas, productos de vidrio, equipo y",
+    "grupo_ica": "204",
+    "sector": "Comercial",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "4664",
+    "descripcion": "Comercio al por mayor de productos químicos básicos, cauchos y plásticos en formas primarias y productos químicos de uso agropecuario",
+    "grupo_ica": "207",
+    "sector": "Comercial",
+    "tarifa_por_mil": 8.0
+  },
+  {
+    "clase_ciiu": "4665",
+    "descripcion": "Comercio al por mayor de desperdicios, desechos y chatarra",
+    "grupo_ica": "207",
+    "sector": "Comercial",
+    "tarifa_por_mil": 8.0
+  },
+  {
+    "clase_ciiu": "4669",
+    "descripcion": "Comercio al por mayor de otros productos n.c.p.",
+    "grupo_ica": "207",
+    "sector": "Comercial",
+    "tarifa_por_mil": 8.0
+  },
+  {
+    "clase_ciiu": "4690",
+    "descripcion": "Comercio al por mayor no especializado",
+    "grupo_ica": "207",
+    "sector": "Comercial",
+    "tarifa_por_mil": 8.0
+  },
+  {
+    "clase_ciiu": "4711",
+    "descripcion": "Comercio al por menor en establecimientos no especializados con surtido compuesto principalmente por alimentos, bebidas o tabaco",
+    "grupo_ica": "204",
+    "sector": "Comercial",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "4719",
+    "descripcion": "Comercio al por menor en establecimientos no especializados, con surtido compuesto principalmente por productos diferentes de alimentos (víveres en general), bebidas y tabaco",
+    "grupo_ica": "207",
+    "sector": "Comercial",
+    "tarifa_por_mil": 8.0
+  },
+  {
+    "clase_ciiu": "4721",
+    "descripcion": "Comercio al por menor de productos agrícolas para el consumo en establecimientos especializados",
+    "grupo_ica": "203",
+    "sector": "Comercial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "4722",
+    "descripcion": "Comercio al por menor de leche, productos lácteos y huevos, en establecimientos especializados",
+    "grupo_ica": "203",
+    "sector": "Comercial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "4723",
+    "descripcion": "Comercio al por menor de carnes (incluye aves de corral), productos cárnicos, pescados y productos de mar, en establecimientos especializados",
+    "grupo_ica": "203",
+    "sector": "Comercial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "4724",
+    "descripcion": "Comercio al por menor de bebidas y productos del tabaco, en establecimientos especializados",
+    "grupo_ica": "206",
+    "sector": "Comercial",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "4729",
+    "descripcion": "Comercio al por menor de otros productos alimenticios n.c.p., en establecimientos especializados",
+    "grupo_ica": "203",
+    "sector": "Comercial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "4731",
+    "descripcion": "Comercio al por menor de combustible para automotores",
+    "grupo_ica": "206",
+    "sector": "Comercial",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "4732",
+    "descripcion": "Comercio al por menor de lubricantes (aceites, grasas), aditivos y productos de limpieza para vehículos automotores",
+    "grupo_ica": "207",
+    "sector": "Comercial",
+    "tarifa_por_mil": 8.0
+  },
+  {
+    "clase_ciiu": "4741",
+    "descripcion": "Comercio al por menor de computadores, equipos periféricos, programas de informática y equipos de telecomunicaciones en establecimientos especializados",
+    "grupo_ica": "207",
+    "sector": "Comercial",
+    "tarifa_por_mil": 8.0
+  },
+  {
+    "clase_ciiu": "4742",
+    "descripcion": "Comercio al por menor de equipos y aparatos de sonido y de video, en establecimientos especializados",
+    "grupo_ica": "207",
+    "sector": "Comercial",
+    "tarifa_por_mil": 8.0
+  },
+  {
+    "clase_ciiu": "4751",
+    "descripcion": "Comercio al por menor de productos textiles en establecimientos especializados",
+    "grupo_ica": "203",
+    "sector": "Comercial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "4752",
+    "descripcion": "Comercio al por menor de artículos de ferretería, pinturas y productos de vidrio en establecimientos  especializados",
+    "grupo_ica": "204",
+    "sector": "Comercial",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "4753",
+    "descripcion": "Comercio al por menor de tapices, alfombras y cubrimientos para paredes y pisos en establecimientos  especializados",
+    "grupo_ica": "207",
+    "sector": "Comercial",
+    "tarifa_por_mil": 8.0
+  },
+  {
+    "clase_ciiu": "4754",
+    "descripcion": "Comercio al por menor de electrodomésticos y gasodomésticos de uso doméstico, muebles y equipos de iluminación",
+    "grupo_ica": "205",
+    "sector": "Comercial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "4755",
+    "descripcion": "Comercio al por menor de artículos y utensilios de uso doméstico",
+    "grupo_ica": "207",
+    "sector": "Comercial",
+    "tarifa_por_mil": 8.0
+  },
+  {
+    "clase_ciiu": "4759",
+    "descripcion": "Comercio al por menor de otros artículos domésticos en establecimientos especializados",
+    "grupo_ica": "207",
+    "sector": "Comercial",
+    "tarifa_por_mil": 8.0
+  },
+  {
+    "clase_ciiu": "4761",
+    "descripcion": "Comercio al por menor de libros, periódicos, materiales y artículos de papelería y escritorio,  en establecimientos especializados",
+    "grupo_ica": "203",
+    "sector": "Comercial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "4762",
+    "descripcion": "Comercio al por menor de artículos deportivos, en establecimientos especializados",
+    "grupo_ica": "207",
+    "sector": "Comercial",
+    "tarifa_por_mil": 8.0
+  },
+  {
+    "clase_ciiu": "4769",
+    "descripcion": "Comercio al por menor de otros artículos culturales y de entretenimiento n.c.p. en establecimientos especializados",
+    "grupo_ica": "207",
+    "sector": "Comercial",
+    "tarifa_por_mil": 8.0
+  },
+  {
+    "clase_ciiu": "4771",
+    "descripcion": "Comercio al por menor de prendas de vestir y sus accesorios (incluye artículos de piel) en establecimientos especializados",
+    "grupo_ica": "203",
+    "sector": "Comercial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "4772",
+    "descripcion": "Comercio al por menor de todo tipo de calzado y artículos de cuero y sucedáneos del cuero en establecimientos especializados",
+    "grupo_ica": "203",
+    "sector": "Comercial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "4773",
+    "descripcion": "Comercio al por menor de productos farmacéuticos y medicinales, cosméticos y artículos de tocador en establecimientos especializados",
+    "grupo_ica": "204",
+    "sector": "Comercial",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "4774",
+    "descripcion": "Comercio al por menor de otros productos nuevos en establecimientos especializados",
+    "grupo_ica": "207",
+    "sector": "Comercial",
+    "tarifa_por_mil": 8.0
+  },
+  {
+    "clase_ciiu": "4775",
+    "descripcion": "Comercio al por menor de artículos de segunda mano",
+    "grupo_ica": "207",
+    "sector": "Comercial",
+    "tarifa_por_mil": 8.0
+  },
+  {
+    "clase_ciiu": "4781",
+    "descripcion": "Comercio al por menor de alimentos, bebidas y tabaco, en puestos de venta móviles",
+    "grupo_ica": "206",
+    "sector": "Comercial",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "4782",
+    "descripcion": "Comercio al por menor de productos textiles, prendas de vestir y calzado, en puestos de venta móviles",
+    "grupo_ica": "203",
+    "sector": "Comercial",
+    "tarifa_por_mil": 4.0
+  },
+  {
+    "clase_ciiu": "4789",
+    "descripcion": "Comercio al por menor de otros productos en puestos de venta móviles",
+    "grupo_ica": "207",
+    "sector": "Comercial",
+    "tarifa_por_mil": 8.0
+  },
+  {
+    "clase_ciiu": "4791",
+    "descripcion": "Comercio al por menor realizado a través de internet",
+    "grupo_ica": "207",
+    "sector": "Comercial",
+    "tarifa_por_mil": 8.0
+  },
+  {
+    "clase_ciiu": "4792",
+    "descripcion": "Comercio al por menor realizado a través de casas de venta o por correo",
+    "grupo_ica": "207",
+    "sector": "Comercial",
+    "tarifa_por_mil": 8.0
+  },
+  {
+    "clase_ciiu": "4799",
+    "descripcion": "Otros tipos de comercio al por menor no realizado en establecimientos,   puestos de venta o  mercados",
+    "grupo_ica": "207",
+    "sector": "Comercial",
+    "tarifa_por_mil": 8.0
+  },
+  {
+    "clase_ciiu": "4911",
+    "descripcion": "Transporte férreo de pasajeros",
+    "grupo_ica": "304",
+    "sector": "Servicios",
+    "tarifa_por_mil": 6.0
+  },
+  {
+    "clase_ciiu": "4912",
+    "descripcion": "Transporte férreo de carga",
+    "grupo_ica": "304",
+    "sector": "Servicios",
+    "tarifa_por_mil": 6.0
+  },
+  {
+    "clase_ciiu": "4921",
+    "descripcion": "Transporte de pasajeros",
+    "grupo_ica": "304",
+    "sector": "Servicios",
+    "tarifa_por_mil": 6.0
+  },
+  {
+    "clase_ciiu": "4922",
+    "descripcion": "Transporte mixto",
+    "grupo_ica": "304",
+    "sector": "Servicios",
+    "tarifa_por_mil": 6.0
+  },
+  {
+    "clase_ciiu": "4923",
+    "descripcion": "Transporte de carga por carretera",
+    "grupo_ica": "304",
+    "sector": "Servicios",
+    "tarifa_por_mil": 6.0
+  },
+  {
+    "clase_ciiu": "4930",
+    "descripcion": "Transporte por tuberías",
+    "grupo_ica": "304",
+    "sector": "Servicios",
+    "tarifa_por_mil": 6.0
+  },
+  {
+    "clase_ciiu": "5011",
+    "descripcion": "Transporte de pasajeros marítimo y de cabotaje",
+    "grupo_ica": "304",
+    "sector": "Servicios",
+    "tarifa_por_mil": 6.0
+  },
+  {
+    "clase_ciiu": "5012",
+    "descripcion": "Transporte de carga marítimo y de cabotaje",
+    "grupo_ica": "304",
+    "sector": "Servicios",
+    "tarifa_por_mil": 6.0
+  },
+  {
+    "clase_ciiu": "5021",
+    "descripcion": "Transporte fluvial de pasajeros",
+    "grupo_ica": "304",
+    "sector": "Servicios",
+    "tarifa_por_mil": 6.0
+  },
+  {
+    "clase_ciiu": "5022",
+    "descripcion": "Transporte fluvial de carga",
+    "grupo_ica": "304",
+    "sector": "Servicios",
+    "tarifa_por_mil": 6.0
+  },
+  {
+    "clase_ciiu": "5111",
+    "descripcion": "Transporte aéreo nacional de pasajeros",
+    "grupo_ica": "304",
+    "sector": "Servicios",
+    "tarifa_por_mil": 6.0
+  },
+  {
+    "clase_ciiu": "5112",
+    "descripcion": "Transporte aéreo internacional de pasajeros",
+    "grupo_ica": "304",
+    "sector": "Servicios",
+    "tarifa_por_mil": 6.0
+  },
+  {
+    "clase_ciiu": "5121",
+    "descripcion": "Transporte aéreo nacional de carga",
+    "grupo_ica": "304",
+    "sector": "Servicios",
+    "tarifa_por_mil": 6.0
+  },
+  {
+    "clase_ciiu": "5122",
+    "descripcion": "Transporte aéreo internacional de carga",
+    "grupo_ica": "304",
+    "sector": "Servicios",
+    "tarifa_por_mil": 6.0
+  },
+  {
+    "clase_ciiu": "5210",
+    "descripcion": "Almacenamiento y depósito",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "5221",
+    "descripcion": "Actividades de estaciones, vías y servicios complementarios para el transporte terrestre",
+    "grupo_ica": "304",
+    "sector": "Servicios",
+    "tarifa_por_mil": 6.0
+  },
+  {
+    "clase_ciiu": "5222",
+    "descripcion": "Actividades de puertos y servicios complementarios para el transporte acuático",
+    "grupo_ica": "304",
+    "sector": "Servicios",
+    "tarifa_por_mil": 6.0
+  },
+  {
+    "clase_ciiu": "5223",
+    "descripcion": "Actividades de aeropuertos, servicios de navegación aérea y demás actividades conexas al transporte aéreo",
+    "grupo_ica": "304",
+    "sector": "Servicios",
+    "tarifa_por_mil": 6.0
+  },
+  {
+    "clase_ciiu": "5224",
+    "descripcion": "Manipulación de carga",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "5229",
+    "descripcion": "Otras actividades complementarias al transporte",
+    "grupo_ica": "304",
+    "sector": "Servicios",
+    "tarifa_por_mil": 6.0
+  },
+  {
+    "clase_ciiu": "5310",
+    "descripcion": "Actividades postales nacionales",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "5320",
+    "descripcion": "Actividades de mensajería",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "5511",
+    "descripcion": "Los hoteles, siempre y cuando se encuentren debidamente inscritos en el Registro Nacional de Turismo. (ley 1558 de 2012)",
+    "grupo_ica": "205",
+    "sector": "Comercial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "5511",
+    "descripcion": "restaurantes turísticos clasificados como tal, de acuerdo a resolución emanada del Ministerio de comercio, industria y turismo",
+    "grupo_ica": "205",
+    "sector": "Comercial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "5512",
+    "descripcion": "Apartahoteles y las empresas comercializadoras de proyectos de tiempo compartido y multipropiedad, siempre y cuando se encuentren debidamente inscritos en el Registro Nacional de Turismo. (ley 1558 de 2012)",
+    "grupo_ica": "205",
+    "sector": "Comercial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "5512",
+    "descripcion": "Restaurantes turísticos clasificados como tal, de acuerdo a resolución emanada del Ministerio de comercio, industria y turismo",
+    "grupo_ica": "205",
+    "sector": "Comercial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "5513",
+    "descripcion": "Alojamiento en centros vacacionales  siempre y cuando se encuentren debidamente inscritos en el Registro Nacional de Turismo. (ley 1558 de 2012)",
+    "grupo_ica": "205",
+    "sector": "Comercial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "5519",
+    "descripcion": "Servicios de Alojamiento prestados por Clubes sociales vacacionales  siempre y cuando se encuentren debidamente inscritos en el Registro Nacional de Turismo. (ley 1558 de 2012)",
+    "grupo_ica": "205",
+    "sector": "Comercial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "5514",
+    "descripcion": "Alojamiento rural",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "5519",
+    "descripcion": "Otros tipos de alojamientos",
+    "grupo_ica": "305",
+    "sector": "Servicios",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "5520",
+    "descripcion": "Actividades de zonas de camping y parques para vehículos",
+    "grupo_ica": "305",
+    "sector": "Servicios",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "5530",
+    "descripcion": "Servicio por horas",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "5590",
+    "descripcion": "Otros tipos de alojamiento n.c.p.",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "5611",
+    "descripcion": "Expendio a la mesa de comidas preparadas",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "5612",
+    "descripcion": "Expendio por autoservicio de comidas preparadas",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "5613",
+    "descripcion": "Expendio de comidas preparadas en cafeterías",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "5619",
+    "descripcion": "Otros tipos de expendio de comidas preparadas n.c.p.",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "5621",
+    "descripcion": "Catering para eventos",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "5629",
+    "descripcion": "Actividades de otros servicios de comidas",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "5630",
+    "descripcion": "Expendio de bebidas alcohólicas para el consumo dentro del establecimiento  clasificado como turístico por el Ministerio de Comercio, Industria y Turismo",
+    "grupo_ica": "205",
+    "sector": "Comercial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "5111",
+    "descripcion": "Las empresas de transporte de pasajeros: aéreas  excepto el que opera dentro de áreas metropolitanas o ciudades dormitorio (ley 1558 de 2012)",
+    "grupo_ica": "205",
+    "sector": "Comercial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "4921",
+    "descripcion": "Las empresas de transporte de pasajeros terrestres, excepto el transporte urbano (ley 1558 de 2012)",
+    "grupo_ica": "205",
+    "sector": "Comercial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "4921",
+    "descripcion": "Las empresas de transporte terrestre automotor especializado, las empresas operadoras de chivas y otros vehículos automotores que presten servicio de transporte turístico. (ley 1558 de 2012)",
+    "grupo_ica": "205",
+    "sector": "Comercial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "5514",
+    "descripcion": "Los concesionarios de servicios turísticos en parques nacionales que presten servicios turísticos (ley 1558 de 2012)",
+    "grupo_ica": "205",
+    "sector": "Comercial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "5519",
+    "descripcion": "Los centros de convenciones. (ley 1558 de 2012)",
+    "grupo_ica": "205",
+    "sector": "Comercial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "6511",
+    "descripcion": "Las empresas de seguros de viaje y de asistencia médica en viaje. (ley 1558 de 2012)",
+    "grupo_ica": "205",
+    "sector": "Comercial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "7990",
+    "descripcion": "Las empresas asociativas de redes de vendedores multinivel de servicios turísticos. (ley 1558 de 2012)",
+    "grupo_ica": "205",
+    "sector": "Comercial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "5630",
+    "descripcion": "Expendio de bebidas alcohólicas para el consumo dentro del establecimiento",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "5811",
+    "descripcion": "Edición de libros",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "5812",
+    "descripcion": "Edición de directorios y listas de correo",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "5813",
+    "descripcion": "Edición de periódicos",
+    "grupo_ica": "101",
+    "sector": "Industrial",
+    "tarifa_por_mil": 2.0
+  },
+  {
+    "clase_ciiu": "5813",
+    "descripcion": "Edición de revistas y otras publicaciones periódicas",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "5819",
+    "descripcion": "Otros trabajos de edición",
+    "grupo_ica": "105",
+    "sector": "Industrial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "5820",
+    "descripcion": "Edición de programas de informática (software)",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "5911",
+    "descripcion": "Actividades de producción de películas cinematográficas, videos, programas, anuncios y comerciales de televisión",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "5912",
+    "descripcion": "Actividades de posproducción de películas cinematográficas, videos, programas, anuncios y comerciales de televisión",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "5913",
+    "descripcion": "Actividades de distribución de películas cinematográficas, videos, programas, anuncios y comerciales de televisión",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "5914",
+    "descripcion": "Actividades de exhibición de películas cinematográficas y videos",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "5920",
+    "descripcion": "Actividades de grabación de sonido y edición de música",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "6010",
+    "descripcion": "Actividades de programación y transmisión en el servicio de radiodifusión sonora",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "6020",
+    "descripcion": "Actividades de programación y transmisión de televisión",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "6110",
+    "descripcion": "Actividades de telecomunicaciones alámbricas",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "6120",
+    "descripcion": "Actividades de telecomunicaciones inalámbricas",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "6130",
+    "descripcion": "Actividades de telecomunicación satelital",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "6190",
+    "descripcion": "Otras actividades de telecomunicaciones",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "6201",
+    "descripcion": "Actividades de desarrollo de sistemas informáticos (planificación, análisis, diseño, programación, pruebas)",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "6202",
+    "descripcion": "Actividades de consultoría informática y actividades de administración de instalaciones informáticas",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "6311",
+    "descripcion": "Procesamiento de datos, alojamiento (hosting) y actividades relacionadas",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "6312",
+    "descripcion": "Portales web",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "6391",
+    "descripcion": "Actividades de agencias de noticias",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "6399",
+    "descripcion": "Otras actividades de servicio de información n.c.p.",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "6411",
+    "descripcion": "Banco Central",
+    "grupo_ica": "402",
+    "sector": "Financiero",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "6412",
+    "descripcion": "Bancos comerciales",
+    "grupo_ica": "402",
+    "sector": "Financiero",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "6421",
+    "descripcion": "Actividades de las corporaciones financieras",
+    "grupo_ica": "402",
+    "sector": "Financiero",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "6422",
+    "descripcion": "Actividades de las compañías de financiamiento",
+    "grupo_ica": "402",
+    "sector": "Financiero",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "6423",
+    "descripcion": "Banca de segundo piso",
+    "grupo_ica": "402",
+    "sector": "Financiero",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "6424",
+    "descripcion": "Actividades de las cooperativas financieras",
+    "grupo_ica": "402",
+    "sector": "Financiero",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "6431",
+    "descripcion": "Fideicomisos, fondos y entidades financieras similares",
+    "grupo_ica": "402",
+    "sector": "Financiero",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "6432",
+    "descripcion": "Fondos de cesantías",
+    "grupo_ica": "402",
+    "sector": "Financiero",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "6491",
+    "descripcion": "Leasing financiero (arrendamiento financiero)",
+    "grupo_ica": "402",
+    "sector": "Financiero",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "6492",
+    "descripcion": "Actividades financieras de fondos de empleados y otras formas asociativas del sector solidario",
+    "grupo_ica": "402",
+    "sector": "Financiero",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "6493",
+    "descripcion": "Actividades de compra de cartera o factoring",
+    "grupo_ica": "402",
+    "sector": "Financiero",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "6494",
+    "descripcion": "Otras actividades de distribución de fondos",
+    "grupo_ica": "402",
+    "sector": "Financiero",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "6495",
+    "descripcion": "Instituciones especiales oficiales",
+    "grupo_ica": "402",
+    "sector": "Financiero",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "6499",
+    "descripcion": "Otras actividades de servicio financiero, excepto las de seguros y pensiones n.c.p.",
+    "grupo_ica": "402",
+    "sector": "Financiero",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "6511",
+    "descripcion": "Seguros generales",
+    "grupo_ica": "402",
+    "sector": "Financiero",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "6512",
+    "descripcion": "Seguros de vida",
+    "grupo_ica": "402",
+    "sector": "Financiero",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "6513",
+    "descripcion": "Reaseguros",
+    "grupo_ica": "402",
+    "sector": "Financiero",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "6514",
+    "descripcion": "Capitalización",
+    "grupo_ica": "402",
+    "sector": "Financiero",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "6521",
+    "descripcion": "Servicios de seguros sociales de salud",
+    "grupo_ica": "402",
+    "sector": "Financiero",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "6522",
+    "descripcion": "Servicios de seguros sociales de riesgos profesionales",
+    "grupo_ica": "402",
+    "sector": "Financiero",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "6531",
+    "descripcion": "Régimen de prima media con prestación definida (RPM)",
+    "grupo_ica": "402",
+    "sector": "Financiero",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "6532",
+    "descripcion": "Régimen de ahorro individual (RAI)",
+    "grupo_ica": "402",
+    "sector": "Financiero",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "6611",
+    "descripcion": "Administración de mercados financieros",
+    "grupo_ica": "402",
+    "sector": "Financiero",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "6612",
+    "descripcion": "Corretaje de valores y de contratos de productos básicos",
+    "grupo_ica": "402",
+    "sector": "Financiero",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "6613",
+    "descripcion": "Otras actividades relacionadas con el mercado de valores",
+    "grupo_ica": "402",
+    "sector": "Financiero",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "6614",
+    "descripcion": "Actividades de las casas de cambio",
+    "grupo_ica": "402",
+    "sector": "Financiero",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "6615",
+    "descripcion": "Actividades de los profesionales de compra y venta de divisas",
+    "grupo_ica": "402",
+    "sector": "Financiero",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "6619",
+    "descripcion": "Otras actividades auxiliares de las actividades de servicios financieros n.c.p.",
+    "grupo_ica": "402",
+    "sector": "Financiero",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "6621",
+    "descripcion": "Actividades de agentes y corredores de seguros",
+    "grupo_ica": "402",
+    "sector": "Financiero",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "6629",
+    "descripcion": "Evaluación de riesgos y daños, y otras actividades de servicios auxiliares",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "6630",
+    "descripcion": "Actividades de administración de fondos",
+    "grupo_ica": "402",
+    "sector": "Financiero",
+    "tarifa_por_mil": 5.0
+  },
+  {
+    "clase_ciiu": "6810",
+    "descripcion": "Actividades inmobiliarias realizadas con bienes propios o arrendados",
+    "grupo_ica": "207",
+    "sector": "Comercial",
+    "tarifa_por_mil": 8.0
+  },
+  {
+    "clase_ciiu": "6820",
+    "descripcion": "Actividades inmobiliarias realizadas a cambio de una retribución o por contrata",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "6920",
+    "descripcion": "Actividades de contabilidad, teneduría de libros, auditoría financiera y asesoría tributaria",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "7010",
+    "descripcion": "Actividades de administración empresarial",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "7020",
+    "descripcion": "Actividades de consultaría de gestión",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "7110",
+    "descripcion": "Actividades de arquitectura e ingeniería y otras actividades conexas de consultoría técnica",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "7120",
+    "descripcion": "Ensayos y análisis técnicos",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "7210",
+    "descripcion": "Investigaciones y desarrollo experimental en el campo de las ciencias naturales y la ingeniería",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "7220",
+    "descripcion": "Investigaciones y desarrollo experimental en el campo de las ciencias sociales y las humanidades",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "7310",
+    "descripcion": "Publicidad",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "7320",
+    "descripcion": "Estudios de mercado y realización de encuestas de opinión pública",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "7410",
+    "descripcion": "Actividades especializadas de diseño",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "7420",
+    "descripcion": "Actividades de fotografía",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "7490",
+    "descripcion": "Otras actividades profesionales, científicas y técnicas n.c.p.",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "7500",
+    "descripcion": "Actividades veterinarias",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "7710",
+    "descripcion": "Alquiler y arrendamiento de vehículos automotores",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "7710",
+    "descripcion": "Los arrendadores de vehículos para turismo nacional e internacional",
+    "grupo_ica": "205",
+    "sector": "Comercial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "7721",
+    "descripcion": "Alquiler y arrendamiento de equipo recreativo y deportivo",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "7722",
+    "descripcion": "Alquiler de videos y discos",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "7729",
+    "descripcion": "Alquiler y arrendamiento de otros efectos personales y enseres domésticos n.c.p.",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "7730",
+    "descripcion": "Alquiler y arrendamiento de otros tipos de maquinaria, equipo y bienes tangibles n.c.p.",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "7740",
+    "descripcion": "Arrendamiento de propiedad intelectual y productos similares, excepto obras protegidas por derechos de autor",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "7810",
+    "descripcion": "Actividades de agencias de empleo",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "7820",
+    "descripcion": "Actividades de agencias de empleo temporal",
+    "grupo_ica": "301",
+    "sector": "Servicios",
+    "tarifa_por_mil": 2.0
+  },
+  {
+    "clase_ciiu": "7830",
+    "descripcion": "Otras actividades de suministro de recurso humano",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "7911",
+    "descripcion": "Las agencias de viajes y turismo, agencias mayoristas y las agencias operadoras  siempre y cuando se encuentren debidamente inscritos en el Registro Nacional de Turismo. (ley 1558 de 2012)",
+    "grupo_ica": "205",
+    "sector": "Comercial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "7912",
+    "descripcion": "las agencias operadoras  siempre y cuando se encuentren debidamente inscritos en el Registro Nacional de Turismo. (ley 1558 de 2012)",
+    "grupo_ica": "205",
+    "sector": "Comercial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "7912",
+    "descripcion": "Empresas dedicadas a la operación de actividades de turismo de naturaleza o aventura, tales como canotaje, balsaje, espeleología, escalda, parapente, canopy, buceo y deportes náuticos en general    siempre y cuando se encuentren debidamente inscritos en el Registro Nacional de Turismo. (ley 1558 de 2012)",
+    "grupo_ica": "205",
+    "sector": "Comercial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "7990",
+    "descripcion": "Otros servicios de reserva y actividades relacionadas",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "7990",
+    "descripcion": "Las oficinas de representaciones turísticas  siempre y cuando se encuentren debidamente inscritos en el Registro Nacional de Turismo. (ley 1558 de 2012)",
+    "grupo_ica": "205",
+    "sector": "Comercial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "8010",
+    "descripcion": "Actividades de seguridad privada",
+    "grupo_ica": "302",
+    "sector": "Servicios",
+    "tarifa_por_mil": 3.0
+  },
+  {
+    "clase_ciiu": "8020",
+    "descripcion": "Actividades de servicios de sistemas de seguridad",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "8030",
+    "descripcion": "Actividades de detectives e investigadores privados",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "8110",
+    "descripcion": "Actividades combinadas de apoyo a instalaciones",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "8121",
+    "descripcion": "Limpieza general interior de edificios",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "8129",
+    "descripcion": "Otras actividades de limpieza de edificios e instalaciones industriales",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "8130",
+    "descripcion": "Actividades de paisajismo y servicios de mantenimiento conexos",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "8211",
+    "descripcion": "Actividades combinadas de servicios administrativos de oficina",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "8219",
+    "descripcion": "Fotocopiado, preparación de documentos y otras actividades especializadas de apoyo a oficina",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "8220",
+    "descripcion": "Actividades de centros de llamadas (Call center)",
+    "grupo_ica": "302",
+    "sector": "Servicios",
+    "tarifa_por_mil": 3.0
+  },
+  {
+    "clase_ciiu": "8230",
+    "descripcion": "Organización de convenciones y eventos comerciales",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "8230",
+    "descripcion": "Los operadores profesionales de congresos, ferias y convenciones, excepto las universidades e instituciones de educación superior y los medios de comunicación que realicen actividades de esta naturaleza, cuando su objeto o tema sea afín a su misión. (ley 1558 de 2012)",
+    "grupo_ica": "205",
+    "sector": "Comercial",
+    "tarifa_por_mil": 7.0
+  },
+  {
+    "clase_ciiu": "8291",
+    "descripcion": "Actividades de agencias de cobranza y oficinas de calificación crediticia",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "8292",
+    "descripcion": "Actividades de envase y empaque",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "8299",
+    "descripcion": "Otras actividades de servicio de apoyo a las empresas n.c.p.",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "8511",
+    "descripcion": "Educación de la primera infancia",
+    "grupo_ica": "301",
+    "sector": "Servicios",
+    "tarifa_por_mil": 2.0
+  },
+  {
+    "clase_ciiu": "8512",
+    "descripcion": "Educación preescolar",
+    "grupo_ica": "301",
+    "sector": "Servicios",
+    "tarifa_por_mil": 2.0
+  },
+  {
+    "clase_ciiu": "8513",
+    "descripcion": "Educación básica primaria",
+    "grupo_ica": "301",
+    "sector": "Servicios",
+    "tarifa_por_mil": 2.0
+  },
+  {
+    "clase_ciiu": "8521",
+    "descripcion": "Educación básica secundaria",
+    "grupo_ica": "301",
+    "sector": "Servicios",
+    "tarifa_por_mil": 2.0
+  },
+  {
+    "clase_ciiu": "8522",
+    "descripcion": "Educación media académica",
+    "grupo_ica": "301",
+    "sector": "Servicios",
+    "tarifa_por_mil": 2.0
+  },
+  {
+    "clase_ciiu": "8523",
+    "descripcion": "Educación media técnica y de formación laboral",
+    "grupo_ica": "301",
+    "sector": "Servicios",
+    "tarifa_por_mil": 2.0
+  },
+  {
+    "clase_ciiu": "8530",
+    "descripcion": "Establecimientos que combinan diferentes niveles de educación",
+    "grupo_ica": "301",
+    "sector": "Servicios",
+    "tarifa_por_mil": 2.0
+  },
+  {
+    "clase_ciiu": "8541",
+    "descripcion": "Educación técnica profesional",
+    "grupo_ica": "301",
+    "sector": "Servicios",
+    "tarifa_por_mil": 2.0
+  },
+  {
+    "clase_ciiu": "8542",
+    "descripcion": "Educación tecnológica",
+    "grupo_ica": "301",
+    "sector": "Servicios",
+    "tarifa_por_mil": 2.0
+  },
+  {
+    "clase_ciiu": "8543",
+    "descripcion": "Educación de instituciones universitarias o de escuelas tecnológicas",
+    "grupo_ica": "301",
+    "sector": "Servicios",
+    "tarifa_por_mil": 2.0
+  },
+  {
+    "clase_ciiu": "8544",
+    "descripcion": "Educación de universidades",
+    "grupo_ica": "301",
+    "sector": "Servicios",
+    "tarifa_por_mil": 2.0
+  },
+  {
+    "clase_ciiu": "8551",
+    "descripcion": "Formación académica no formal",
+    "grupo_ica": "301",
+    "sector": "Servicios",
+    "tarifa_por_mil": 2.0
+  },
+  {
+    "clase_ciiu": "8552",
+    "descripcion": "Enseñanza deportiva y recreativa",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "8553",
+    "descripcion": "Enseñanza cultural",
+    "grupo_ica": "301",
+    "sector": "Servicios",
+    "tarifa_por_mil": 2.0
+  },
+  {
+    "clase_ciiu": "8559",
+    "descripcion": "Otros tipos de educación n.c.p.",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "8560",
+    "descripcion": "Actividades de apoyo a la educación",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "8621",
+    "descripcion": "Actividades de la práctica médica, sin internación",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "8622",
+    "descripcion": "Actividades de la práctica odontológica",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "8691",
+    "descripcion": "Actividades de apoyo diagnóstico",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "8692",
+    "descripcion": "Actividades de apoyo terapéutico",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "8699",
+    "descripcion": "Otras actividades de atención de la salud humana",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "8710",
+    "descripcion": "Actividades de atención residencial medicalizada de tipo general",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "8720",
+    "descripcion": "Actividades de atención residencial, para el cuidado de pacientes con retardo mental, enfermedad mental y consumo de sustancias psicoactivas",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "8730",
+    "descripcion": "Actividades de atención en instituciones para el cuidado de personas mayores y/o discapacitadas",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "8790",
+    "descripcion": "Otras actividades de atención en instituciones con alojamiento",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "8810",
+    "descripcion": "Actividades de asistencia social sin alojamiento para personas mayores y discapacitadas",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "8890",
+    "descripcion": "Otras actividades de asistencia social sin alojamiento",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "9200",
+    "descripcion": "Actividades de juegos de azar y apuestas",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "9311",
+    "descripcion": "Gestión de instalaciones deportivas",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "9511",
+    "descripcion": "Mantenimiento y reparación de computadores y de equipo periférico",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "9512",
+    "descripcion": "Mantenimiento y reparación de equipos de comunicación",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "9521",
+    "descripcion": "Mantenimiento y reparación de aparatos electrónicos de consumo",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "9522",
+    "descripcion": "Mantenimiento y reparación de aparatos y equipos domésticos y de jardinería",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "9523",
+    "descripcion": "Reparación de calzado y artículos de cuero",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "9524",
+    "descripcion": "Reparación de muebles y accesorios para el hogar",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "9529",
+    "descripcion": "Mantenimiento y reparación de otros efectos personales y enseres domésticos",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "9601",
+    "descripcion": "Lavado y limpieza, incluso la limpieza en seco, de productos textiles y de piel",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "9602",
+    "descripcion": "Peluquería y otros tratamientos de belleza",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "9603",
+    "descripcion": "Pompas fúnebres y actividades relacionadas",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  },
+  {
+    "clase_ciiu": "9609",
+    "descripcion": "Otras actividades de servicios personales n.c.p.",
+    "grupo_ica": "306",
+    "sector": "Servicios",
+    "tarifa_por_mil": 10.0
+  }
+]

@@ -1,0 +1,712 @@
+[
+  {
+    "rubro": "Autoretención",
+    "concepto": "Declaración Mensual Autoretención de renta",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": null,
+    "tarifa_natural_declarante": null,
+    "tarifa_natural_no_declarante": null,
+    "year": 2026
+  },
+  {
+    "rubro": "Arrendamiento",
+    "concepto": "Bienes Inmuebles",
+    "uvt_base": 27.0,
+    "valor_base_cop": 1414098.0,
+    "tarifa_persona_juridica": 0.035,
+    "tarifa_natural_declarante": 0.035,
+    "tarifa_natural_no_declarante": 0.035,
+    "year": 2026
+  },
+  {
+    "rubro": "Arrendamiento",
+    "concepto": "Bienes Muebles",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.04,
+    "tarifa_natural_declarante": 0.04,
+    "tarifa_natural_no_declarante": 0.04,
+    "year": 2026
+  },
+  {
+    "rubro": "Compra",
+    "concepto": "En General",
+    "uvt_base": 27.0,
+    "valor_base_cop": 1414098.0,
+    "tarifa_persona_juridica": 0.025,
+    "tarifa_natural_declarante": 0.025,
+    "tarifa_natural_no_declarante": 0.035,
+    "year": 2026
+  },
+  {
+    "rubro": "Compra",
+    "concepto": "Bienes Raíces para uso de vivienda de habitación por las primeras 20.000 UVT",
+    "uvt_base": 27.0,
+    "valor_base_cop": 1414098.0,
+    "tarifa_persona_juridica": 0.01,
+    "tarifa_natural_declarante": 0.01,
+    "tarifa_natural_no_declarante": 0.01,
+    "year": 2026
+  },
+  {
+    "rubro": "Compra",
+    "concepto": "Bienes Raíces para uso de vivienda de habitación cuando exceda las 20.000 UVT (al excedente se le aplicará la tarifa aquí señalada).",
+    "uvt_base": 20000.0,
+    "valor_base_cop": 1047480000.0,
+    "tarifa_persona_juridica": 0.025,
+    "tarifa_natural_declarante": 0.025,
+    "tarifa_natural_no_declarante": 0.025,
+    "year": 2026
+  },
+  {
+    "rubro": "Compra",
+    "concepto": "Bienes Raíces para uso diferente a vivienda de habitación",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.025,
+    "tarifa_natural_declarante": 0.025,
+    "tarifa_natural_no_declarante": 0.025,
+    "year": 2026
+  },
+  {
+    "rubro": "Compra",
+    "concepto": "Combustible",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.001,
+    "tarifa_natural_declarante": 0.001,
+    "tarifa_natural_no_declarante": 0.001,
+    "year": 2026
+  },
+  {
+    "rubro": "Compra",
+    "concepto": "Productos o insumos agrícolas o pecuarios sin procesamiento industrial",
+    "uvt_base": 92.0,
+    "valor_base_cop": 4818408.0,
+    "tarifa_persona_juridica": 0.015,
+    "tarifa_natural_declarante": 0.015,
+    "tarifa_natural_no_declarante": 0.015,
+    "year": 2026
+  },
+  {
+    "rubro": "Compra",
+    "concepto": "Compras de bienes o productos agrícolas o pecuarios con procesamiento industrial (declarantes)",
+    "uvt_base": 27.0,
+    "valor_base_cop": 1414098.0,
+    "tarifa_persona_juridica": 0.025,
+    "tarifa_natural_declarante": 0.025,
+    "tarifa_natural_no_declarante": null,
+    "year": 2026
+  },
+  {
+    "rubro": "Compra",
+    "concepto": "Compras de bienes o productos agrícolas o pecuarios con procesamiento industrial declarantes (no declarantes)",
+    "uvt_base": 27.0,
+    "valor_base_cop": 1414098.0,
+    "tarifa_persona_juridica": null,
+    "tarifa_natural_declarante": null,
+    "tarifa_natural_no_declarante": 0.035,
+    "year": 2026
+  },
+  {
+    "rubro": "Compra",
+    "concepto": "Café pergamino o cereza",
+    "uvt_base": 160.0,
+    "valor_base_cop": 8379840.0,
+    "tarifa_persona_juridica": 0.005,
+    "tarifa_natural_declarante": 0.005,
+    "tarifa_natural_no_declarante": 0.005,
+    "year": 2026
+  },
+  {
+    "rubro": "Compra",
+    "concepto": "Enajenación de activos fijos",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.025,
+    "tarifa_natural_declarante": 0.01,
+    "tarifa_natural_no_declarante": 0.01,
+    "year": 2026
+  },
+  {
+    "rubro": "Compra",
+    "concepto": "Oro",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.03,
+    "tarifa_natural_declarante": 0.03,
+    "tarifa_natural_no_declarante": 0.03,
+    "year": 2026
+  },
+  {
+    "rubro": "Compra",
+    "concepto": "Vehículos",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.01,
+    "tarifa_natural_declarante": 0.01,
+    "tarifa_natural_no_declarante": 0.01,
+    "year": 2026
+  },
+  {
+    "rubro": "Contrato",
+    "concepto": "Contrato de Construcción y urbanización.",
+    "uvt_base": 27.0,
+    "valor_base_cop": 1414098.0,
+    "tarifa_persona_juridica": 0.02,
+    "tarifa_natural_declarante": 0.02,
+    "tarifa_natural_no_declarante": 0.02,
+    "year": 2026
+  },
+  {
+    "rubro": "Contrato",
+    "concepto": "Mantenimiento o Reparación de obras civiles",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.02,
+    "tarifa_natural_declarante": 0.02,
+    "tarifa_natural_no_declarante": 0.02,
+    "year": 2026
+  },
+  {
+    "rubro": "Contrato",
+    "concepto": "Consultoría en Obras Publicas",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.02,
+    "tarifa_natural_declarante": 0.02,
+    "tarifa_natural_no_declarante": 0.02,
+    "year": 2026
+  },
+  {
+    "rubro": "Contrato",
+    "concepto": "Consultoría y Administración Delegada HASTA 33.000 UVT",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.11,
+    "tarifa_natural_declarante": 0.1,
+    "tarifa_natural_no_declarante": 0.1,
+    "year": 2026
+  },
+  {
+    "rubro": "Contrato",
+    "concepto": "Consultoría y Administración Delegada DESDE 33.000 UVT",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.11,
+    "tarifa_natural_declarante": 0.1,
+    "tarifa_natural_no_declarante": 0.11,
+    "year": 2026
+  },
+  {
+    "rubro": "Contrato",
+    "concepto": "Consultoría en Ingeniería de Proyectos HASTA 33.000 UVT",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.06,
+    "tarifa_natural_declarante": 0.06,
+    "tarifa_natural_no_declarante": 0.1,
+    "year": 2026
+  },
+  {
+    "rubro": "Contrato",
+    "concepto": "Consultoría en Ingeniería de Proyectos DESDE 33.000 UVT",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.06,
+    "tarifa_natural_declarante": 0.06,
+    "tarifa_natural_no_declarante": 0.1,
+    "year": 2026
+  },
+  {
+    "rubro": "Intereses",
+    "concepto": "Intereses y Corrección monetaria de CDT en UPAC",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.07,
+    "tarifa_natural_declarante": 0.07,
+    "tarifa_natural_no_declarante": 0.07,
+    "year": 2026
+  },
+  {
+    "rubro": "Intereses",
+    "concepto": "En cuentas de ahorros diferentes a UPAC",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.07,
+    "tarifa_natural_declarante": 0.07,
+    "tarifa_natural_no_declarante": 0.07,
+    "year": 2026
+  },
+  {
+    "rubro": "Intereses",
+    "concepto": "Rendimientos financieros (títulos de renta fija) Incluye CDAT",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.04,
+    "tarifa_natural_declarante": 0.04,
+    "tarifa_natural_no_declarante": 0.04,
+    "year": 2026
+  },
+  {
+    "rubro": "Intereses",
+    "concepto": "En cuentas de Ahorro UPAC (UVR)",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.6,
+    "tarifa_natural_declarante": 0.6,
+    "tarifa_natural_no_declarante": 0.6,
+    "year": 2026
+  },
+  {
+    "rubro": "Intereses",
+    "concepto": "Intereses y demás rendimientos financieros en general",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.07,
+    "tarifa_natural_declarante": 0.07,
+    "tarifa_natural_no_declarante": 0.07,
+    "year": 2026
+  },
+  {
+    "rubro": "Salarios",
+    "concepto": "Pagos laborales gravables",
+    "uvt_base": 95.0,
+    "valor_base_cop": 4975530.0,
+    "tarifa_persona_juridica": null,
+    "tarifa_natural_declarante": null,
+    "tarifa_natural_no_declarante": null,
+    "year": 2026
+  },
+  {
+    "rubro": "Salarios",
+    "concepto": "Indemnizaciones diferentes a las salariales y a las percibidas en demandas contra el estado.",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": null,
+    "tarifa_natural_declarante": 0.2,
+    "tarifa_natural_no_declarante": 0.2,
+    "year": 2026
+  },
+  {
+    "rubro": "Salarios",
+    "concepto": "Indemnizaciones de la relación laboral, legal y reglamentaria  para trabajores que devenguen ingresos inferiores al equivalente a 204 UVT",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": null,
+    "tarifa_natural_declarante": 0.0,
+    "tarifa_natural_no_declarante": 0.0,
+    "year": 2026
+  },
+  {
+    "rubro": "Salarios",
+    "concepto": "Indemnizaciones de la relación laboral, legal y reglamentaria  para trabajores que devenguen ingresos superiores al equivalente a 204 UVT",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": null,
+    "tarifa_natural_declarante": 0.2,
+    "tarifa_natural_no_declarante": 0.2,
+    "year": 2026
+  },
+  {
+    "rubro": "Servicios",
+    "concepto": "En General",
+    "uvt_base": 4.0,
+    "valor_base_cop": 209496.0,
+    "tarifa_persona_juridica": 0.04,
+    "tarifa_natural_declarante": 0.04,
+    "tarifa_natural_no_declarante": 0.06,
+    "year": 2026
+  },
+  {
+    "rubro": "Servicios",
+    "concepto": "Si Persona Natural se acoge al Decreto 2231 del 22 de dic de 2023",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": null,
+    "tarifa_natural_declarante": null,
+    "tarifa_natural_no_declarante": null,
+    "year": 2026
+  },
+  {
+    "rubro": "Servicios",
+    "concepto": "Si Persona Natural no se acoge Decreto 2231 del 22 de dic de 2023",
+    "uvt_base": 4.0,
+    "valor_base_cop": 209496.0,
+    "tarifa_persona_juridica": null,
+    "tarifa_natural_declarante": 0.04,
+    "tarifa_natural_no_declarante": 0.06,
+    "year": 2026
+  },
+  {
+    "rubro": "Servicios",
+    "concepto": "Prestados por empresas de servicios temporales (sobre AIU) que no puede ser inferior al 10% del contrato.",
+    "uvt_base": 4.0,
+    "valor_base_cop": 209496.0,
+    "tarifa_persona_juridica": 0.01,
+    "tarifa_natural_declarante": null,
+    "tarifa_natural_no_declarante": null,
+    "year": 2026
+  },
+  {
+    "rubro": "Servicios",
+    "concepto": "Prestados por empresas de vigilancia y aseo (sobre AIU) que no puede ser inferior al 10% del contrato",
+    "uvt_base": 4.0,
+    "valor_base_cop": 209496.0,
+    "tarifa_persona_juridica": 0.02,
+    "tarifa_natural_declarante": null,
+    "tarifa_natural_no_declarante": null,
+    "year": 2026
+  },
+  {
+    "rubro": "Servicios",
+    "concepto": "Iintegrales de salud prestados por IPS",
+    "uvt_base": 4.0,
+    "valor_base_cop": 209496.0,
+    "tarifa_persona_juridica": 0.02,
+    "tarifa_natural_declarante": null,
+    "tarifa_natural_no_declarante": null,
+    "year": 2026
+  },
+  {
+    "rubro": "Servicios",
+    "concepto": "Restaurante, hotel y hospedaje",
+    "uvt_base": 4.0,
+    "valor_base_cop": 209496.0,
+    "tarifa_persona_juridica": 0.035,
+    "tarifa_natural_declarante": 0.035,
+    "tarifa_natural_no_declarante": 0.035,
+    "year": 2026
+  },
+  {
+    "rubro": "Servicios",
+    "concepto": "Actividades de análisis, diseño, desarrollo, implementación, mantenimiento, ajustes, pruebas, suministro y documentación, fases necesarias en la elaboración de programas de informática, sean o no personalizados, así como el diseño de páginas web y consultoría en programas de informática",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.035,
+    "tarifa_natural_declarante": 0.035,
+    "tarifa_natural_no_declarante": 0.035,
+    "year": 2026
+  },
+  {
+    "rubro": "Servicios",
+    "concepto": "Llicenciamiento y/o derecho de uso de software",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.035,
+    "tarifa_natural_declarante": 0.035,
+    "tarifa_natural_no_declarante": 0.035,
+    "year": 2026
+  },
+  {
+    "rubro": "Transporte",
+    "concepto": "Nacional Carga (terrestre, aéreo, marítimo)",
+    "uvt_base": 4.0,
+    "valor_base_cop": 209496.0,
+    "tarifa_persona_juridica": 0.01,
+    "tarifa_natural_declarante": 0.01,
+    "tarifa_natural_no_declarante": 0.01,
+    "year": 2026
+  },
+  {
+    "rubro": "Transporte",
+    "concepto": "Nacional Pasajeros (terrestre)",
+    "uvt_base": 27.0,
+    "valor_base_cop": 1414098.0,
+    "tarifa_persona_juridica": 0.035,
+    "tarifa_natural_declarante": 0.035,
+    "tarifa_natural_no_declarante": 0.035,
+    "year": 2026
+  },
+  {
+    "rubro": "Transporte",
+    "concepto": "Nacional Pasajeros (aéreo, marítimo)",
+    "uvt_base": 4.0,
+    "valor_base_cop": 209496.0,
+    "tarifa_persona_juridica": 0.01,
+    "tarifa_natural_declarante": 0.01,
+    "tarifa_natural_no_declarante": 0.01,
+    "year": 2026
+  },
+  {
+    "rubro": "Transporte",
+    "concepto": "Internacional Carga (terrestre)",
+    "uvt_base": 4.0,
+    "valor_base_cop": 209496.0,
+    "tarifa_persona_juridica": 0.01,
+    "tarifa_natural_declarante": 0.01,
+    "tarifa_natural_no_declarante": 0.01,
+    "year": 2026
+  },
+  {
+    "rubro": "Transporte",
+    "concepto": "Internacional Carga (aéreo, marítimo) a No domiciliados Art 414-1 ET",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.05,
+    "tarifa_natural_declarante": 0.0,
+    "tarifa_natural_no_declarante": 0.0,
+    "year": 2026
+  },
+  {
+    "rubro": "Transporte",
+    "concepto": "Internacional Pasajeros (terrestre)",
+    "uvt_base": 27.0,
+    "valor_base_cop": 1414098.0,
+    "tarifa_persona_juridica": 0.035,
+    "tarifa_natural_declarante": 0.035,
+    "tarifa_natural_no_declarante": 0.035,
+    "year": 2026
+  },
+  {
+    "rubro": "Transporte",
+    "concepto": "Internacional Pasajeros (aéreo, marítimo) a No domiciliados Art 414-1 ET",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.05,
+    "tarifa_natural_declarante": 0.0,
+    "tarifa_natural_no_declarante": 0.0,
+    "year": 2026
+  },
+  {
+    "rubro": "Honorarios",
+    "concepto": "Honorarios, Comisiones HASTA 3.000 UVT",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.11,
+    "tarifa_natural_declarante": 0.1,
+    "tarifa_natural_no_declarante": 0.1,
+    "year": 2026
+  },
+  {
+    "rubro": "Honorarios",
+    "concepto": "Honorarios, Comisiones que suscribran contratos DESDE 3.000 UVT",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.11,
+    "tarifa_natural_declarante": 0.11,
+    "tarifa_natural_no_declarante": 0.11,
+    "year": 2026
+  },
+  {
+    "rubro": "Honorarios",
+    "concepto": "Honorarios profesores extranjeros sin residencia en el pais",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.07,
+    "tarifa_natural_declarante": 0.07,
+    "tarifa_natural_no_declarante": 0.07,
+    "year": 2026
+  },
+  {
+    "rubro": "Honorarios",
+    "concepto": "Si Persona Natural se acoge al Decreto 2231 del 22 de dic de 2023",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": null,
+    "tarifa_natural_declarante": null,
+    "tarifa_natural_no_declarante": null,
+    "year": 2026
+  },
+  {
+    "rubro": "Otros Ingresos Tributarios",
+    "concepto": "Otros Ingresos Tributarios",
+    "uvt_base": 27.0,
+    "valor_base_cop": 1414098.0,
+    "tarifa_persona_juridica": 0.025,
+    "tarifa_natural_declarante": 0.025,
+    "tarifa_natural_no_declarante": 0.035,
+    "year": 2026
+  },
+  {
+    "rubro": "Otros Ingresos Tributarios",
+    "concepto": "Software y diseño web HASTA 3.300 UVT",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.035,
+    "tarifa_natural_declarante": 0.035,
+    "tarifa_natural_no_declarante": 0.1,
+    "year": 2026
+  },
+  {
+    "rubro": "Otros Ingresos Tributarios",
+    "concepto": "Software y diseño web DESDE 3.300 UVT",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.035,
+    "tarifa_natural_declarante": 0.035,
+    "tarifa_natural_no_declarante": 0.11,
+    "year": 2026
+  },
+  {
+    "rubro": "Otros Ingresos Tributarios",
+    "concepto": "Comision por operaciones en Bolsa de Valores",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.03,
+    "tarifa_natural_declarante": 0.03,
+    "tarifa_natural_no_declarante": 0.03,
+    "year": 2026
+  },
+  {
+    "rubro": "Otros Ingresos Tributarios",
+    "concepto": "Comisiones sector financiero",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.11,
+    "tarifa_natural_declarante": 0.11,
+    "tarifa_natural_no_declarante": 0.11,
+    "year": 2026
+  },
+  {
+    "rubro": "Otros Ingresos Tributarios",
+    "concepto": "Impuesto de Timbre no viviendas urbanas estratos 1, 2 y 3",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": null,
+    "tarifa_natural_declarante": null,
+    "tarifa_natural_no_declarante": null,
+    "year": 2026
+  },
+  {
+    "rubro": "Otros Ingresos Tributarios",
+    "concepto": "Loterías, rifas, apuestas y similares",
+    "uvt_base": 48.0,
+    "valor_base_cop": 2513952.0,
+    "tarifa_persona_juridica": 0.2,
+    "tarifa_natural_declarante": 0.2,
+    "tarifa_natural_no_declarante": 0.2,
+    "year": 2026
+  },
+  {
+    "rubro": "Otros Ingresos Tributarios",
+    "concepto": "Colocación independiente de juegos de suerte y azar",
+    "uvt_base": 5.0,
+    "valor_base_cop": 261870.0,
+    "tarifa_persona_juridica": 0.03,
+    "tarifa_natural_declarante": 0.03,
+    "tarifa_natural_no_declarante": 0.03,
+    "year": 2026
+  },
+  {
+    "rubro": "Otros Ingresos Tributarios",
+    "concepto": "Rendimientos Financieros",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.07,
+    "tarifa_natural_declarante": 0.07,
+    "tarifa_natural_no_declarante": 0.07,
+    "year": 2026
+  },
+  {
+    "rubro": "Otros Ingresos Tributarios",
+    "concepto": "Instrumentos Financieros y derivados",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.025,
+    "tarifa_natural_declarante": 0.025,
+    "tarifa_natural_no_declarante": 0.035,
+    "year": 2026
+  },
+  {
+    "rubro": "Otros Ingresos Tributarios",
+    "concepto": "Operaciones Activas de crédito",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.025,
+    "tarifa_natural_declarante": 0.025,
+    "tarifa_natural_no_declarante": 0.035,
+    "year": 2026
+  },
+  {
+    "rubro": "Otros Ingresos Tributarios",
+    "concepto": "Operaciones de Mutuo Comercial",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.025,
+    "tarifa_natural_declarante": 0.025,
+    "tarifa_natural_no_declarante": 0.035,
+    "year": 2026
+  },
+  {
+    "rubro": "Otros Ingresos Tributarios",
+    "concepto": "Estudios de mercado y la realización de encuestas de opinión pública",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.04,
+    "tarifa_natural_declarante": 0.04,
+    "tarifa_natural_no_declarante": 0.04,
+    "year": 2026
+  },
+  {
+    "rubro": "Otros Ingresos Tributarios",
+    "concepto": "Por emolumentos eclesiásticos",
+    "uvt_base": 27.0,
+    "valor_base_cop": 1414098.0,
+    "tarifa_persona_juridica": 0.04,
+    "tarifa_natural_declarante": 0.04,
+    "tarifa_natural_no_declarante": 0.035,
+    "year": 2026
+  },
+  {
+    "rubro": "Otros Ingresos Tributarios",
+    "concepto": "Venta con tarjeta débito o crédito",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 0.015,
+    "tarifa_natural_declarante": 0.015,
+    "tarifa_natural_no_declarante": 0.015,
+    "year": 2026
+  },
+  {
+    "rubro": "GMF 4 x 1.000",
+    "concepto": "Cuenta bancaria marcada como exenta",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 1.0,
+    "tarifa_natural_declarante": 1.0,
+    "tarifa_natural_no_declarante": 1.0,
+    "year": 2026
+  },
+  {
+    "rubro": "GMF 4 x 1.000",
+    "concepto": "Cuenta bancaria marcada como NO exenta",
+    "uvt_base": 0.0,
+    "valor_base_cop": 0.0,
+    "tarifa_persona_juridica": 1.0,
+    "tarifa_natural_declarante": 1.0,
+    "tarifa_natural_no_declarante": 1.0,
+    "year": 2026
+  },
+  {
+    "rubro": "Retención IVA",
+    "concepto": "Compra de Bienes",
+    "uvt_base": 27.0,
+    "valor_base_cop": 1414098.0,
+    "tarifa_persona_juridica": null,
+    "tarifa_natural_declarante": null,
+    "tarifa_natural_no_declarante": null,
+    "year": 2026
+  },
+  {
+    "rubro": "Retención IVA",
+    "concepto": "Servicios a no Residentes",
+    "uvt_base": 4.0,
+    "valor_base_cop": 209496.0,
+    "tarifa_persona_juridica": null,
+    "tarifa_natural_declarante": null,
+    "tarifa_natural_no_declarante": null,
+    "year": 2026
+  },
+  {
+    "rubro": "Retención IVA",
+    "concepto": "Servicios",
+    "uvt_base": 4.0,
+    "valor_base_cop": 209496.0,
+    "tarifa_persona_juridica": null,
+    "tarifa_natural_declarante": null,
+    "tarifa_natural_no_declarante": null,
+    "year": 2026
+  }
+]

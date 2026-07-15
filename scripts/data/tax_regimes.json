@@ -1,0 +1,22 @@
+[
+  {
+    "code": "simple",
+    "label": "Régimen Simple de Tributación",
+    "description": "Régimen opcional para pequeños contribuyentes que unifica varios impuestos en una tarifa única. Generalmente no es agente autorretenedor ni requiere las mismas retenciones que el régimen ordinario."
+  },
+  {
+    "code": "ordinario",
+    "label": "Régimen Ordinario",
+    "description": "Régimen general de renta. Persona natural o jurídica sujeta a las reglas estándar de IVA, retención en la fuente e ICA."
+  },
+  {
+    "code": "gran_contribuyente",
+    "label": "Gran Contribuyente",
+    "description": "Calificación especial de la DIAN para contribuyentes de alto volumen. Suele actuar como agente autorretenedor y tiene tarifas de retención diferenciadas."
+  },
+  {
+    "code": "no_declarante",
+    "label": "Persona Natural No Declarante de Renta",
+    "description": "Persona natural que por sus ingresos y patrimonio no está obligada a declarar renta. Aplican las tarifas de retención en la fuente para 'natural no declarante'."
+  }
+]

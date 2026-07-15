@@ -1,0 +1,1458 @@
+[
+  {
+    "codigo_dane": "1110100",
+    "descripcion": "Arroz",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1110200",
+    "descripcion": "Harina de maíz y otras harinas",
+    "categoria": "Alimentos",
+    "tarifa": 0.05,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1110300",
+    "descripcion": "Pastas alimenticias",
+    "categoria": "Alimentos",
+    "tarifa": 0.05,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1110400",
+    "descripcion": "Cereales preparados",
+    "categoria": "Alimentos",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1110500",
+    "descripcion": "Otros cereales",
+    "categoria": "Alimentos",
+    "tarifa": 0.05,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1120100",
+    "descripcion": "Pan",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1120200",
+    "descripcion": "Otros productos de panadería",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1210100",
+    "descripcion": "Papa",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1210200",
+    "descripcion": "Yuca",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1210300",
+    "descripcion": "Otros tubérculos",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1220100",
+    "descripcion": "Plátano",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1310100",
+    "descripcion": "Cebolla",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1310200",
+    "descripcion": "Tomate",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1310300",
+    "descripcion": "Zanahoria",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1310400",
+    "descripcion": "Revuelto verde",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1310500",
+    "descripcion": "Otras hortalizas y legumbres frescas",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1320100",
+    "descripcion": "Fríjol",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1320200",
+    "descripcion": "Arveja",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1320300",
+    "descripcion": "Otras hortalizas y legumbres secas",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1320400",
+    "descripcion": "Hortalizas y legumbres enlatadas",
+    "categoria": "Alimentos",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1410100",
+    "descripcion": "Naranjas",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1410200",
+    "descripcion": "Bananos",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1410300",
+    "descripcion": "Tomate de árbol",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1410400",
+    "descripcion": "Moras",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1410500",
+    "descripcion": "Otras frutas frescas",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1420100",
+    "descripcion": "Frutas en conserva o secas",
+    "categoria": "Alimentos",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1510100",
+    "descripcion": "Res",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1510200",
+    "descripcion": "Cerdo",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1510300",
+    "descripcion": "Pollo",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1520100",
+    "descripcion": "Carnes frías y embutidos",
+    "categoria": "Alimentos",
+    "tarifa": 0.05,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1610100",
+    "descripcion": "Pescado de mar, río y enlatado",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1620100",
+    "descripcion": "Otros productos de mar",
+    "categoria": "Alimentos",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1710100",
+    "descripcion": "Huevos",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1720100",
+    "descripcion": "Leche",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1720200",
+    "descripcion": "Queso",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1720300",
+    "descripcion": "Otros derivados lácteos",
+    "categoria": "Alimentos",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1730100",
+    "descripcion": "Aceites",
+    "categoria": "Alimentos",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1730200",
+    "descripcion": "Grasas",
+    "categoria": "Alimentos",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1810100",
+    "descripcion": "Panela",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1810200",
+    "descripcion": "Azúcar",
+    "categoria": "Alimentos",
+    "tarifa": 0.05,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1820100",
+    "descripcion": "Café",
+    "categoria": "Alimentos",
+    "tarifa": 0.05,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1820200",
+    "descripcion": "Chocolate",
+    "categoria": "Alimentos",
+    "tarifa": 0.05,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1830100",
+    "descripcion": "Sal",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1830200",
+    "descripcion": "Otros condimentos",
+    "categoria": "Alimentos",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1840100",
+    "descripcion": "Sopas y cremas",
+    "categoria": "Alimentos",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1840200",
+    "descripcion": "Salsas y aderezos",
+    "categoria": "Alimentos",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1840300",
+    "descripcion": "Dulces, confites y gelatinas",
+    "categoria": "Alimentos",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1840400",
+    "descripcion": "Otros abarrotes",
+    "categoria": "Alimentos",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "4110100",
+    "descripcion": "Consulta médica general",
+    "categoria": "Salud",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "4110200",
+    "descripcion": "Medicina especializada",
+    "categoria": "Salud",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "4120100",
+    "descripcion": "Exámenes de laboratorio",
+    "categoria": "Salud",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "4120200",
+    "descripcion": "Imágenes diagnósticas",
+    "categoria": "Salud",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "4130100",
+    "descripcion": "Servicios de hospitalización y ambulancias",
+    "categoria": "Salud",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "4210100",
+    "descripcion": "Medicinas",
+    "categoria": "Salud",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "4210200",
+    "descripcion": "Otras medicinas y anticonceptivos",
+    "categoria": "Salud",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "4220100",
+    "descripcion": "Aparatos ortopédicos y otros",
+    "categoria": "Salud",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "4310100",
+    "descripcion": "Aseguramiento privado",
+    "categoria": "Salud",
+    "tarifa": 0.05,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "4310200",
+    "descripcion": "Servicios de protección dentro y fuera del hogar",
+    "categoria": "Salud",
+    "tarifa": 0.05,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "4320100",
+    "descripcion": "Pagos complementarios",
+    "categoria": "Salud",
+    "tarifa": 0.05,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "5110100",
+    "descripcion": "Matrículas",
+    "categoria": "Educación",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "5110200",
+    "descripcion": "Pensiones",
+    "categoria": "Educación",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "5120100",
+    "descripcion": "Matrículas",
+    "categoria": "Educación",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "5130100",
+    "descripcion": "Otros costos educativos",
+    "categoria": "Educación",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "5210100",
+    "descripcion": "Textos",
+    "categoria": "Educación",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "5210200",
+    "descripcion": "Cuadernos",
+    "categoria": "Educación",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "5210300",
+    "descripcion": "Otros artículos escolares",
+    "categoria": "Educación",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "5220100",
+    "descripcion": "Otros gastos escolares",
+    "categoria": "Educación",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "6110100",
+    "descripcion": "Libros",
+    "categoria": "Diversión",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "6110200",
+    "descripcion": "Revistas",
+    "categoria": "Diversión",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "6110300",
+    "descripcion": "Periódicos",
+    "categoria": "Diversión",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "6120100",
+    "descripcion": "Juegos, aficiones, artículos, adornos y prendas de vestir para fiestas",
+    "categoria": "Diversión",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "6130100",
+    "descripcion": "Jardines y productos para animales domésticos",
+    "categoria": "Diversión",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "6140100",
+    "descripcion": "Discos",
+    "categoria": "Diversión",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "6140200",
+    "descripcion": "Artículos deportivos",
+    "categoria": "Diversión",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "6210100",
+    "descripcion": "Televisor",
+    "categoria": "Diversión",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "6210200",
+    "descripcion": "Otros aparatos de video e imagen",
+    "categoria": "Diversión",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "6220100",
+    "descripcion": "Equipo de sonido",
+    "categoria": "Diversión",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "6230100",
+    "descripcion": "Computadores, impresoras y otros aparatos",
+    "categoria": "Diversión",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "6310100",
+    "descripcion": "Servicios de T.V.",
+    "categoria": "Diversión",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "6310200",
+    "descripcion": "Turismo",
+    "categoria": "Diversión",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "6310300",
+    "descripcion": "Servicios relacionados con diversión",
+    "categoria": "Diversión",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "6310400",
+    "descripcion": "Servicios culturales",
+    "categoria": "Diversión",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "6320100",
+    "descripcion": "Juegos de azar",
+    "categoria": "Diversión",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "6330100",
+    "descripcion": "Servicios para mascotas",
+    "categoria": "Diversión",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "7110100",
+    "descripcion": "Vehículos",
+    "categoria": "Transporte",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "7110200",
+    "descripcion": "Otros para transporte",
+    "categoria": "Transporte",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "7120100",
+    "descripcion": "Combustible",
+    "categoria": "Transporte",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "7120200",
+    "descripcion": "Compra y cambio de aceite",
+    "categoria": "Transporte",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "7120300",
+    "descripcion": "Servicio de parqueadero",
+    "categoria": "Transporte",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "7120400",
+    "descripcion": "Servicios de mecánica",
+    "categoria": "Transporte",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "7120500",
+    "descripcion": "Batería",
+    "categoria": "Transporte",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "7120600",
+    "descripcion": "Llantas",
+    "categoria": "Transporte",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "7210100",
+    "descripcion": "Bus",
+    "categoria": "Transporte",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "7210200",
+    "descripcion": "Buseta",
+    "categoria": "Transporte",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "7210300",
+    "descripcion": "Taxi",
+    "categoria": "Transporte",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "7210400",
+    "descripcion": "Otros medios para transporte urbano",
+    "categoria": "Transporte",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "7220100",
+    "descripcion": "Bus intermunicipal",
+    "categoria": "Transporte",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "7220200",
+    "descripcion": "Otros transporte intermunicipal",
+    "categoria": "Transporte",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "7230100",
+    "descripcion": "Pasaje aéreo",
+    "categoria": "Transporte",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "8110100",
+    "descripcion": "Porte de cartas y otros servicios",
+    "categoria": "Comunicaciones",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "8120100",
+    "descripcion": "Servicios de telefonía",
+    "categoria": "Comunicaciones",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "8120200",
+    "descripcion": "Otros servivios de telefonía",
+    "categoria": "Comunicaciones",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "8130100",
+    "descripcion": "Equipos de telefonía móvil y similares",
+    "categoria": "Comunicaciones",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "9110100",
+    "descripcion": "Cerveza",
+    "categoria": "Otros gastos",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "9110200",
+    "descripcion": "Aguardiente",
+    "categoria": "Otros gastos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "9110300",
+    "descripcion": "Otras bebidas alcohólicas",
+    "categoria": "Otros gastos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "9120100",
+    "descripcion": "Cigarrillos",
+    "categoria": "Otros gastos",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "9210100",
+    "descripcion": "Higiene oral",
+    "categoria": "Otros gastos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "9210200",
+    "descripcion": "Higiene corporal",
+    "categoria": "Otros gastos",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "9210300",
+    "descripcion": "Higiene y cuidado facial",
+    "categoria": "Otros gastos",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "9210400",
+    "descripcion": "Cuidado del cabello",
+    "categoria": "Otros gastos",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "9210500",
+    "descripcion": "Otros productos relacionados con el cuidado personal",
+    "categoria": "Otros gastos",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "9220100",
+    "descripcion": "Corte de cabello",
+    "categoria": "Otros gastos",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "9220200",
+    "descripcion": "Otros servicios relacionados para el cuidado personal",
+    "categoria": "Otros gastos",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "9310100",
+    "descripcion": "Joyería en oro y plata",
+    "categoria": "Otros gastos",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "9310200",
+    "descripcion": "Relojes",
+    "categoria": "Otros gastos",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "9320100",
+    "descripcion": "Otros artículos personales",
+    "categoria": "Otros gastos",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "9410100",
+    "descripcion": "Servicios bancarios",
+    "categoria": "Otros gastos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "9410200",
+    "descripcion": "Otros servicios financieros",
+    "categoria": "Otros gastos",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "9420100",
+    "descripcion": "Seguros de vehículo",
+    "categoria": "Otros gastos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2110100",
+    "descripcion": "Arrendamiento efectivo",
+    "categoria": "Vivienda",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2120100",
+    "descripcion": "Arrendamiento imputado",
+    "categoria": "Vivienda",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2130100",
+    "descripcion": "Otros gastos de ocupación",
+    "categoria": "Vivienda",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2210100",
+    "descripcion": "Gas",
+    "categoria": "Vivienda",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2220100",
+    "descripcion": "Energía eléctrica",
+    "categoria": "Vivienda",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2220200",
+    "descripcion": "Acueducto, alcantarillado y aseo",
+    "categoria": "Vivienda",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2310200",
+    "descripcion": "Comedor",
+    "categoria": "Vivienda",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2310300",
+    "descripcion": "Alcoba",
+    "categoria": "Vivienda",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2320100",
+    "descripcion": "Otros muebles del hogar, equipo de iluminación y decoración",
+    "categoria": "Vivienda",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2410100",
+    "descripcion": "Nevera",
+    "categoria": "Vivienda",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2410200",
+    "descripcion": "Estufa",
+    "categoria": "Vivienda",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2410300",
+    "descripcion": "Lavadora",
+    "categoria": "Vivienda",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2410400",
+    "descripcion": "Otros aparatos del hogar",
+    "categoria": "Vivienda",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2420100",
+    "descripcion": "Reparación de artefactos para el hogar",
+    "categoria": "Vivienda",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2510100",
+    "descripcion": "Ollas, sartenes y refractarias",
+    "categoria": "Vivienda",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2510200",
+    "descripcion": "Otros utencilios o menaje del hogar",
+    "categoria": "Vivienda",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2520100",
+    "descripcion": "Vajilla",
+    "categoria": "Vivienda",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2520200",
+    "descripcion": "Cubiertos",
+    "categoria": "Vivienda",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2530100",
+    "descripcion": "Otros utensilios domésticos",
+    "categoria": "Vivienda",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2610100",
+    "descripcion": "Juego de sabanas y fundas",
+    "categoria": "Vivienda",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2610200",
+    "descripcion": "Cobijas y cubrelechos",
+    "categoria": "Vivienda",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2610300",
+    "descripcion": "Colchones y almohadas",
+    "categoria": "Vivienda",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2620100",
+    "descripcion": "Cortinas",
+    "categoria": "Vivienda",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2620200",
+    "descripcion": "Toallas, manteles y forros para muebles",
+    "categoria": "Vivienda",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2710100",
+    "descripcion": "Jabones",
+    "categoria": "Vivienda",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2710200",
+    "descripcion": "Detergentes, blanqueadores, suavizantes",
+    "categoria": "Vivienda",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2720100",
+    "descripcion": "Limpiadores y desinfectantes",
+    "categoria": "Vivienda",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2720200",
+    "descripcion": "Insecticidas",
+    "categoria": "Vivienda",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2720300",
+    "descripcion": "Ceras",
+    "categoria": "Vivienda",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2730100",
+    "descripcion": "Papeles de cocina",
+    "categoria": "Vivienda",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2730200",
+    "descripcion": "Otros utensilios de aseo",
+    "categoria": "Vivienda",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "3110100",
+    "descripcion": "Camisas para hombre",
+    "categoria": "Vestuario",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "3110200",
+    "descripcion": "Pantalones para hombre",
+    "categoria": "Vestuario",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "3110300",
+    "descripcion": "Ropa interior hombre",
+    "categoria": "Vestuario",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "3110400",
+    "descripcion": "Otras prendas de vestir hombre",
+    "categoria": "Vestuario",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "3120100",
+    "descripcion": "Blusa",
+    "categoria": "Vestuario",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "3120200",
+    "descripcion": "Pantalones para mujer",
+    "categoria": "Vestuario",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "3120300",
+    "descripcion": "Ropa interior mujer",
+    "categoria": "Vestuario",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "3120400",
+    "descripcion": "Otras prendas de vestir mujer",
+    "categoria": "Vestuario",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "3130100",
+    "descripcion": "Camisas para niños y blusas para niñas",
+    "categoria": "Vestuario",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "3130200",
+    "descripcion": "Pantalones para niños",
+    "categoria": "Vestuario",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "3130300",
+    "descripcion": "Otras prendas de vestir para niños",
+    "categoria": "Vestuario",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "3130400",
+    "descripcion": "Ropa interior para niños",
+    "categoria": "Vestuario",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "3140100",
+    "descripcion": "Camisitas y vestidos para bebé",
+    "categoria": "Vestuario",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "3140200",
+    "descripcion": "Pañales y otros",
+    "categoria": "Vestuario",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "3210100",
+    "descripcion": "Calzado para hombre",
+    "categoria": "Vestuario",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "3220100",
+    "descripcion": "Calzado para mujer",
+    "categoria": "Vestuario",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "3230100",
+    "descripcion": "Calzado deportivo",
+    "categoria": "Vestuario",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "3240100",
+    "descripcion": "Calzado para niños",
+    "categoria": "Vestuario",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "3310100",
+    "descripcion": "Confección y alquiler",
+    "categoria": "Vestuario",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "3310200",
+    "descripcion": "Lavandería",
+    "categoria": "Vestuario",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "3320100",
+    "descripcion": "Reparación y limpieza",
+    "categoria": "Vestuario",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1850200",
+    "descripcion": "Gaseosas y maltas",
+    "categoria": "Alimentos",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1850300",
+    "descripcion": "Otras bebidas no alcohólicas (agua)",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1910100",
+    "descripcion": "Almuerzo",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1920100",
+    "descripcion": "Hamburguesa",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1920200",
+    "descripcion": "Comidas rápidas calientes",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1930100",
+    "descripcion": "Gastos de cafetería",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1930200",
+    "descripcion": "Comidas rápidas frías",
+    "categoria": "Alimentos",
+    "tarifa": 0.0,
+    "tipo": "excluido",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "1850100",
+    "descripcion": "Jugos",
+    "categoria": "Alimentos",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": "2310100",
+    "descripcion": "Sala",
+    "categoria": "Vivienda",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Canasta Familiar DANE - Reforma Tributaria Estructural"
+  },
+  {
+    "codigo_dane": null,
+    "descripcion": "Regla general — cualquier bien o servicio no listado explícitamente en la tabla de canasta familiar",
+    "categoria": "Regla General",
+    "tarifa": 0.19,
+    "tipo": "gravado",
+    "fuente": "Estatuto Tributario Art. 420/468 - tarifa general del 19%, salvo exclusión (Art. 424) o exención (Art. 477/481) expresa"
+  }
+]
