@@ -1,7 +1,14 @@
-// importador.js
-// ETL para migrar los aportes/prestamos/rifas/actividades desde el Excel de la
-// natillera hacia SQLite. Toda la inserción va dentro de una transacción; si el
-// checksum final no cuadra al centavo se hace ROLLBACK completo.
+// importador.js — ETL Excel → SQLite estandarizado.
+//
+// Lee las hojas útiles del libro de la natillera:
+//   - "BD"            → maestra de socios (id, nombre, cuota)
+//   - "Datos"         → catálogo de periodos del ciclo anual
+//   - "BASE DE DATOS" → libro diario de transacciones (fuente de verdad)
+//   - "Bancolombia"   → extracto bancario (para conciliación)
+//   - "Nequi"         → extracto Nequi (para conciliación)
+//
+// Todo se inserta en una transacción atómica. La validación al centavo se
+// ejecuta ANTES del COMMIT — si no cuadra, ROLLBACK automático.
 //
 // Uso:
 //   node importador.js <ruta-al-xlsm> [--db=natillera.db] [--dry-run]
@@ -11,18 +18,41 @@ import process from "node:process";
 import ExcelJS from "exceljs";
 import { inicializarDB, cerrarDB } from "./database.js";
 
+const HOJA_MAESTRA = "BD";
+const HOJA_PERIODOS = "Datos";
 const HOJA_TRANSACCIONES = "BASE DE DATOS";
-const HOJA_MAESTRA = "BD"; // hoja con cuota mensual y n. rifa por socio
+const HOJAS_BANCARIAS = ["Bancolombia", "Nequi"];
+
+// Cuentas contables (no son personas reales); se marcan tipo=cuenta_admin
+// y quedan excluidas de las matrices socios × mes y del conteo de "activos".
+const CUENTAS_ADMIN = new Set([
+  "Liquidados",
+  "Gastos Bancarios",
+  "Varios",
+]);
+
+// Meses del ciclo (orden por defecto DICIEMBRE → NOVIEMBRE, como en la hoja Datos).
+const ORDEN_MESES_DEFAULT = [
+  "DICIEMBRE",
+  "ENERO",
+  "FEBRERO",
+  "MARZO",
+  "ABRIL",
+  "MAYO",
+  "JUNIO",
+  "JULIO",
+  "AGOSTO",
+  "SEPTIEMBRE",
+  "OCTUBRE",
+  "NOVIEMBRE",
+];
 
 // ------------------------------------------------------------
 // Utilidades de limpieza (edge cases del prompt)
 // ------------------------------------------------------------
 
-/** Convierte cualquier celda a un entero de pesos limpio, positivo (el signo
- *  lo determina el `tipo` ingreso/egreso del movimiento). Nunca devuelve NaN. */
 function toMoney(raw) {
   if (raw === null || raw === undefined || raw === "") return 0;
-  // Errores tipo #DIV/0!, #REF!, #N/A: ExcelJS los expone como { error: '#...' }
   if (typeof raw === "object" && "error" in raw) return 0;
   if (typeof raw === "number") return Math.abs(Math.round(raw));
   const cleaned = String(raw).replace(/[^\d.-]/g, "");
@@ -31,25 +61,31 @@ function toMoney(raw) {
   return Number.isFinite(n) ? Math.abs(Math.round(n)) : 0;
 }
 
-/** Normaliza el número identificador del socio ("10.0" -> "10"). */
+function toMoneySigned(raw) {
+  if (raw === null || raw === undefined || raw === "") return 0;
+  if (typeof raw === "object" && "error" in raw) return 0;
+  if (typeof raw === "number") return Math.round(raw);
+  const cleaned = String(raw).replace(/[^\d.-]/g, "");
+  if (!cleaned || cleaned === "-" || cleaned === ".") return 0;
+  const n = Number(cleaned);
+  return Number.isFinite(n) ? Math.round(n) : 0;
+}
+
 function toSocioId(raw) {
   if (raw === null || raw === undefined || raw === "") return null;
   if (typeof raw === "object" && "error" in raw) return null;
   const s = String(raw).trim();
   if (!s) return null;
-  // Excel entrega los enteros como float; queremos "10" no "10.0"
   const n = Number(s);
   if (Number.isFinite(n) && Number.isInteger(n)) return String(n);
   if (Number.isFinite(n)) return String(Math.trunc(n));
   return s;
 }
 
-/** Convierte una celda de fecha de Excel a ISO yyyy-mm-dd. */
 function toISODate(raw) {
   if (!raw) return null;
   if (raw instanceof Date) return raw.toISOString().slice(0, 10);
   if (typeof raw === "number") {
-    // Serial number Excel -> ms desde epoch (asume 1900 date system)
     const ms = Math.round((raw - 25569) * 86400 * 1000);
     return new Date(ms).toISOString().slice(0, 10);
   }
@@ -64,39 +100,51 @@ function limpiarTexto(raw) {
   return s || null;
 }
 
-/** Extrae el valor "puro" de una celda ExcelJS (soporta ricos, hyperlinks, formulas). */
 function cellValue(cell) {
   if (!cell || cell.value === null || cell.value === undefined) return null;
   const v = cell.value;
   if (typeof v === "object") {
-    if ("result" in v) return v.result; // fórmulas evaluadas
+    if ("result" in v) return v.result;
     if ("text" in v && !("richText" in v)) return v.text;
     if ("richText" in v) return v.richText.map((r) => r.text).join("");
-    if ("error" in v) return v; // dejamos pasar el marcador de error
+    if ("error" in v) return v;
   }
   return v;
 }
+
+// Concepto Excel → concepto normalizado del schema
+const MAPEO_CONCEPTO = {
+  AHORRO: "AHORRO",
+  ACTIVIDADES: "ACTIVIDADES",
+  "RIFA CHANCE": "RIFA_CHANCE",
+  PRESTAMO: "PRESTAMO",
+  "ABONO PRESTAMO": "ABONO_PRESTAMO",
+  "INTERESES PRESTAMO": "INTERESES_PRESTAMO",
+};
+
+// Cada concepto va a ingreso/egreso desde la perspectiva de la caja de la natillera
+const TIPO_POR_CONCEPTO = {
+  AHORRO: "ingreso",
+  ACTIVIDADES: "ingreso",
+  RIFA_CHANCE: "ingreso",
+  PRESTAMO: "egreso",
+  ABONO_PRESTAMO: "ingreso",
+  INTERESES_PRESTAMO: "ingreso",
+  MULTA: "ingreso",
+};
 
 // ------------------------------------------------------------
 // Procesamiento del Excel
 // ------------------------------------------------------------
 
-/**
- * Lee el archivo y devuelve un plan de importación en memoria.
- * Nunca toca la BD — permite validar / hacer dry-run.
- */
 export async function procesarExcel(filePath) {
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.readFile(filePath);
 
+  // --- 1) Maestra de socios (hoja BD) ---
   const wsMaestra = wb.getWorksheet(HOJA_MAESTRA);
-  const wsTx = wb.getWorksheet(HOJA_TRANSACCIONES);
-  if (!wsTx) throw new Error(`No se encontró la hoja "${HOJA_TRANSACCIONES}"`);
   if (!wsMaestra) throw new Error(`No se encontró la hoja "${HOJA_MAESTRA}"`);
-
-  // --- Maestra de socios (hoja BD) ---
-  // A: N. RIFA | B: SOCIOS | C: CUOTA MENSUAL
-  /** @type {Map<string,{id:string,nombre:string,cuota:number}>} */
+  /** @type {Map<string,{id:string,nombre:string,cuota:number,tipo:string}>} */
   const sociosPorId = new Map();
   wsMaestra.eachRow({ includeEmpty: false }, (row, rowNumber) => {
     if (rowNumber === 1) return;
@@ -104,58 +152,129 @@ export async function procesarExcel(filePath) {
     const nombre = limpiarTexto(cellValue(row.getCell(2)));
     const cuota = toMoney(cellValue(row.getCell(3)));
     if (!id || !nombre) return;
+    const tipo = CUENTAS_ADMIN.has(nombre) ? "cuenta_admin" : "persona";
     if (!sociosPorId.has(id)) {
-      sociosPorId.set(id, { id, nombre, cuota });
+      sociosPorId.set(id, { id, nombre, cuota, tipo });
     }
   });
 
-  // --- Transacciones (hoja BASE DE DATOS) ---
-  // B: # (socio) | C: NOMBRES | D: Concepto | G: Valor | I: Fecha | J: MES
-  // L: Valor Mora Ahorro | M: Valor Mora Int
+  // --- 2) Periodos (hoja Datos) ---
+  const wsDatos = wb.getWorksheet(HOJA_PERIODOS);
+  const periodos = [];
+  const periodosSet = new Set();
+  if (wsDatos) {
+    wsDatos.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+      if (rowNumber === 1) return;
+      const mes = limpiarTexto(cellValue(row.getCell(2)));
+      const corteAhorro = toISODate(cellValue(row.getCell(3)));
+      const corteActividad = toISODate(cellValue(row.getCell(5)));
+      if (!mes) return;
+      if (!ORDEN_MESES_DEFAULT.includes(mes.toUpperCase())) return; // filtra "ACUMULADO" y ruido
+      const nombre = mes.toUpperCase();
+      if (periodosSet.has(nombre)) return;
+      periodosSet.add(nombre);
+      periodos.push({
+        nombre,
+        orden: ORDEN_MESES_DEFAULT.indexOf(nombre) + 1,
+        fecha_corte_ahorro: corteAhorro,
+        fecha_corte_actividad: corteActividad,
+      });
+    });
+  }
+  // Si la hoja Datos no cubre todos los meses, completamos con defaults.
+  for (const nombre of ORDEN_MESES_DEFAULT) {
+    if (!periodosSet.has(nombre)) {
+      periodos.push({
+        nombre,
+        orden: ORDEN_MESES_DEFAULT.indexOf(nombre) + 1,
+        fecha_corte_ahorro: null,
+        fecha_corte_actividad: null,
+      });
+    }
+  }
+  periodos.sort((a, b) => a.orden - b.orden);
+
+  // --- 3) Transacciones (hoja BASE DE DATOS) ---
+  const wsTx = wb.getWorksheet(HOJA_TRANSACCIONES);
+  if (!wsTx) throw new Error(`No se encontró la hoja "${HOJA_TRANSACCIONES}"`);
   const transacciones = [];
   const errores = [];
-
   wsTx.eachRow({ includeEmpty: false }, (row, rowNumber) => {
     if (rowNumber === 1) return;
     const id = toSocioId(cellValue(row.getCell(2)));
     const nombre = limpiarTexto(cellValue(row.getCell(3)));
-    const concepto = limpiarTexto(cellValue(row.getCell(4)));
+    const conceptoRaw = limpiarTexto(cellValue(row.getCell(4)));
     const valor = toMoney(cellValue(row.getCell(7)));
     const fecha = toISODate(cellValue(row.getCell(9)));
     const mes = limpiarTexto(cellValue(row.getCell(10)));
     const moraAhorro = toMoney(cellValue(row.getCell(12)));
     const moraInt = toMoney(cellValue(row.getCell(13)));
+    const diasMora = cellValue(row.getCell(14));
 
-    if (!id || !nombre || !concepto) {
-      // Fila sin socio o sin concepto: se ignora silenciosamente porque el
-      // Excel tiene filas de totales y separadores.
+    if (!id || !nombre || !conceptoRaw) return;
+    const concepto = MAPEO_CONCEPTO[conceptoRaw.toUpperCase()];
+    if (!concepto) {
+      errores.push({ fila: rowNumber, motivo: `Concepto desconocido: ${conceptoRaw}` });
       return;
     }
-
-    // Garantiza que el socio exista aunque no esté en la maestra.
     if (!sociosPorId.has(id)) {
-      sociosPorId.set(id, { id, nombre, cuota: 0 });
+      const tipo = CUENTAS_ADMIN.has(nombre) ? "cuenta_admin" : "persona";
+      sociosPorId.set(id, { id, nombre, cuota: 0, tipo });
     }
+    const periodoNombre = mes ? mes.toUpperCase() : null;
 
-    // No dedupamos por contenido: dos abonos legítimos del mismo monto en el
-    // mismo mes son transacciones distintas. La idempotencia entre corridas
-    // se garantiza por `fila_origen` en el esquema y por el truncado inicial
-    // dentro de la transacción.
     transacciones.push({
       fila: rowNumber,
       socio_id: id,
       concepto,
+      tipo: TIPO_POR_CONCEPTO[concepto],
       valor,
-      fecha,
-      periodo: mes || "",
+      fecha_pago: fecha,
+      periodo_nombre: periodoNombre,
       mora_ahorro: moraAhorro,
       mora_intereses: moraInt,
+      dias_atraso: typeof diasMora === "number" ? Math.round(diasMora) : null,
     });
   });
 
+  // --- 4) Extractos bancarios ---
+  const movimientosBanco = [];
+  for (const nombreHoja of HOJAS_BANCARIAS) {
+    const ws = wb.getWorksheet(nombreHoja);
+    if (!ws) continue;
+    ws.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+      if (rowNumber === 1) return;
+      const fecha = toISODate(cellValue(row.getCell(1)));
+      const descripcion = limpiarTexto(cellValue(row.getCell(2)));
+      const monto = toMoneySigned(cellValue(row.getCell(3)));
+      const saldo = toMoneySigned(cellValue(row.getCell(4)));
+      const detalle = limpiarTexto(cellValue(row.getCell(5)));
+      const socioId = toSocioId(cellValue(row.getCell(6)));
+      const socioNombre = limpiarTexto(cellValue(row.getCell(7)));
+
+      if (!fecha && monto === 0) return; // fila vacía o solo texto
+      if (socioId && socioNombre && !sociosPorId.has(socioId)) {
+        const tipo = CUENTAS_ADMIN.has(socioNombre) ? "cuenta_admin" : "persona";
+        sociosPorId.set(socioId, { id: socioId, nombre: socioNombre, cuota: 0, tipo });
+      }
+      movimientosBanco.push({
+        banco: nombreHoja,
+        fila: rowNumber,
+        fecha,
+        descripcion,
+        monto,
+        saldo_cuenta: saldo || null,
+        detalle_origen: detalle,
+        socio_id: socioId,
+      });
+    });
+  }
+
   return {
     socios: [...sociosPorId.values()],
+    periodos,
     transacciones,
+    movimientos_banco: movimientosBanco,
     errores,
   };
 }
@@ -164,62 +283,72 @@ export async function procesarExcel(filePath) {
 // Inserción por lotes dentro de transacción
 // ------------------------------------------------------------
 
-/**
- * Inserta todo el plan dentro de una única transacción y ejecuta la validación
- * al centavo ANTES del COMMIT. Si el checksum no cuadra, `throw` dispara el
- * ROLLBACK automático de `better-sqlite3`.
- */
 export function migrar(db, plan) {
   const insSocio = db.prepare(`
-    INSERT INTO socios (id, nombre, cuota_sostenimiento, estado)
-    VALUES (@id, @nombre, @cuota, 'activo')
+    INSERT INTO socios (id, nombre, cuota_sostenimiento, tipo, estado)
+    VALUES (@id, @nombre, @cuota, @tipo, 'activo')
     ON CONFLICT(id) DO UPDATE SET
       nombre              = excluded.nombre,
-      cuota_sostenimiento = excluded.cuota_sostenimiento
+      cuota_sostenimiento = excluded.cuota_sostenimiento,
+      tipo                = excluded.tipo
   `);
 
-  const insCuota = db.prepare(`
-    INSERT INTO cuotas (socio_id, periodo, valor_aporte, fecha_pago, concepto, fila_origen)
-    VALUES (@socio_id, @periodo, @valor, @fecha, @concepto, @fila)
+  const insPeriodo = db.prepare(`
+    INSERT INTO periodos (nombre, orden, fecha_corte_ahorro, fecha_corte_actividad)
+    VALUES (@nombre, @orden, @fecha_corte_ahorro, @fecha_corte_actividad)
+    ON CONFLICT(nombre) DO UPDATE SET
+      orden                 = excluded.orden,
+      fecha_corte_ahorro    = excluded.fecha_corte_ahorro,
+      fecha_corte_actividad = excluded.fecha_corte_actividad
+  `);
+
+  const insTx = db.prepare(`
+    INSERT INTO transacciones (
+      socio_id, periodo_id, concepto, tipo, valor, fecha_pago, notas, fila_origen
+    ) VALUES (@socio_id, @periodo_id, @concepto, @tipo, @valor, @fecha, @notas, @fila)
   `);
 
   const insPrestamo = db.prepare(`
     INSERT INTO prestamos (
-      socio_id, monto_prestado, tasa_interes, saldo_pendiente,
-      fecha_desembolso, estado
-    ) VALUES (@socio_id, @monto, 0.03, @monto, @fecha, 'activo')
+      socio_id, transaccion_id, monto_prestado, tasa_interes,
+      saldo_pendiente, fecha_desembolso, estado
+    ) VALUES (@socio_id, @tx_id, @monto, 0.03, @monto, @fecha, 'activo')
   `);
 
   const insAbono = db.prepare(`
     INSERT INTO abonos_prestamos (
-      prestamo_id, socio_id, monto_abono, intereses_pagados,
-      capital_pagado, fecha_abono
-    ) VALUES (@prestamo_id, @socio_id, @monto, @intereses, @capital, @fecha)
-  `);
-
-  const insRifa = db.prepare(`
-    INSERT INTO rifas (socio_id, periodo, valor_boleta, pagado, fila_origen)
-    VALUES (@socio_id, @periodo, @valor, 1, @fila)
+      prestamo_id, transaccion_id, socio_id, monto_abono,
+      intereses_pagados, capital_pagado, fecha_abono
+    ) VALUES (@prestamo_id, @tx_id, @socio_id, @monto, @intereses, @capital, @fecha)
   `);
 
   const insMulta = db.prepare(`
-    INSERT INTO multas (socio_id, concepto, valor, estado, periodo)
-    VALUES (@socio_id, @concepto, @valor, 'pendiente', @periodo)
+    INSERT INTO multas (
+      socio_id, transaccion_id, periodo_id, tipo, valor, dias_atraso, estado
+    ) VALUES (@socio_id, @tx_id, @periodo_id, @tipo, @valor, @dias, 'pendiente')
   `);
 
   const insMov = db.prepare(`
-    INSERT INTO movimientos (socio_id, tipo, concepto, valor, fecha, metadata)
-    VALUES (@socio_id, @tipo, @concepto, @valor, @fecha, @metadata)
+    INSERT INTO movimientos (
+      socio_id, transaccion_id, tipo, concepto, valor, fecha, metadata
+    ) VALUES (@socio_id, @tx_id, @tipo, @concepto, @valor, @fecha, @metadata)
   `);
 
-  // Localizador del último préstamo activo por socio para asociar abonos.
-  const buscaUltimoPrestamo = db.prepare(`
+  const insBanco = db.prepare(`
+    INSERT INTO movimientos_banco (
+      banco, fecha, descripcion, monto, saldo_cuenta, detalle_origen,
+      socio_id, fila_origen
+    ) VALUES (@banco, @fecha, @descripcion, @monto, @saldo_cuenta, @detalle_origen,
+              @socio_id, @fila)
+  `);
+
+  const findPrestamoActivo = db.prepare(`
     SELECT id FROM prestamos
     WHERE socio_id = ? AND estado = 'activo'
     ORDER BY id DESC LIMIT 1
   `);
 
-  const totalesPorConcepto = new Map();
+  const findPeriodoId = db.prepare(`SELECT id FROM periodos WHERE nombre = ?`);
 
   const ejecutar = db.transaction(() => {
     // 1) socios
@@ -228,191 +357,166 @@ export function migrar(db, plan) {
         id: Number(s.id),
         nombre: s.nombre,
         cuota: s.cuota,
+        tipo: s.tipo,
       });
     }
+    // 2) periodos
+    for (const p of plan.periodos) insPeriodo.run(p);
 
-    // 2) transacciones -> tabla específica + log de auditoría
+    // 3) transacciones
     for (const t of plan.transacciones) {
       const socioId = Number(t.socio_id);
+      const periodoRow = t.periodo_nombre ? findPeriodoId.get(t.periodo_nombre) : null;
+      const periodoId = periodoRow?.id ?? null;
       const meta = JSON.stringify({ fila: t.fila });
 
+      const txInfo = insTx.run({
+        socio_id: socioId,
+        periodo_id: periodoId,
+        concepto: t.concepto,
+        tipo: t.tipo,
+        valor: t.valor,
+        fecha: t.fecha_pago,
+        notas: null,
+        fila: t.fila,
+      });
+      const txId = Number(txInfo.lastInsertRowid);
+
+      // Log de auditoría
+      insMov.run({
+        socio_id: socioId,
+        tx_id: txId,
+        tipo: t.tipo,
+        concepto: t.concepto,
+        valor: t.valor,
+        fecha: t.fecha_pago,
+        metadata: meta,
+      });
+
+      // Subtabla específica
       switch (t.concepto) {
-        case "AHORRO":
-        case "ACTIVIDADES": {
-          insCuota.run({
-            socio_id: socioId,
-            periodo: t.periodo,
-            valor: t.valor,
-            fecha: t.fecha,
-            concepto: t.concepto,
-            fila: t.fila,
-          });
-          insMov.run({
-            socio_id: socioId,
-            tipo: "ingreso",
-            concepto: t.concepto,
-            valor: t.valor,
-            fecha: t.fecha,
-            metadata: meta,
-          });
-          break;
-        }
         case "PRESTAMO": {
           insPrestamo.run({
             socio_id: socioId,
+            tx_id: txId,
             monto: t.valor,
-            fecha: t.fecha,
-          });
-          insMov.run({
-            socio_id: socioId,
-            tipo: "egreso",
-            concepto: "PRESTAMO",
-            valor: t.valor,
-            fecha: t.fecha,
-            metadata: meta,
+            fecha: t.fecha_pago,
           });
           break;
         }
-        case "ABONO PRESTAMO": {
-          let row = buscaUltimoPrestamo.get(socioId);
+        case "ABONO_PRESTAMO": {
+          let row = findPrestamoActivo.get(socioId);
           if (!row?.id) {
-            // Préstamo sombra: la natillera ya venía con deuda cuando arrancó
-            // este Excel. Registramos un préstamo con monto 0 solo para poder
-            // colgar los abonos y mantener la integridad referencial. El
-            // saldo real quedará reflejado en la tabla `movimientos`.
+            // Préstamo sombra: la natillera ya venía con deuda antes del rango del Excel
             const info = insPrestamo.run({
               socio_id: socioId,
+              tx_id: null,
               monto: 0,
-              fecha: t.fecha,
+              fecha: t.fecha_pago,
             });
             row = { id: Number(info.lastInsertRowid) };
           }
-          const prestamoId = row.id;
           insAbono.run({
-            prestamo_id: prestamoId,
+            prestamo_id: row.id,
+            tx_id: txId,
             socio_id: socioId,
             monto: t.valor,
             intereses: 0,
             capital: t.valor,
-            fecha: t.fecha,
-          });
-          insMov.run({
-            socio_id: socioId,
-            tipo: "ingreso",
-            concepto: "ABONO_PRESTAMO",
-            valor: t.valor,
-            fecha: t.fecha,
-            metadata: meta,
+            fecha: t.fecha_pago,
           });
           break;
         }
-        case "INTERESES PRESTAMO": {
-          const row = buscaUltimoPrestamo.get(socioId);
+        case "INTERESES_PRESTAMO": {
+          const row = findPrestamoActivo.get(socioId);
           if (row?.id) {
             insAbono.run({
               prestamo_id: row.id,
+              tx_id: txId,
               socio_id: socioId,
               monto: t.valor,
               intereses: t.valor,
               capital: 0,
-              fecha: t.fecha,
+              fecha: t.fecha_pago,
             });
           }
-          insMov.run({
-            socio_id: socioId,
-            tipo: "ingreso",
-            concepto: "INTERESES_PRESTAMO",
-            valor: t.valor,
-            fecha: t.fecha,
-            metadata: meta,
-          });
           break;
-        }
-        case "RIFA CHANCE": {
-          insRifa.run({
-            socio_id: socioId,
-            periodo: t.periodo,
-            valor: t.valor,
-            fila: t.fila,
-          });
-          insMov.run({
-            socio_id: socioId,
-            tipo: "ingreso",
-            concepto: "RIFA_CHANCE",
-            valor: t.valor,
-            fecha: t.fecha,
-            metadata: meta,
-          });
-          break;
-        }
-        default: {
-          // Concepto desconocido: log de auditoría sin lanzar excepción para no
-          // abortar la transacción por una fila mal etiquetada.
-          insMov.run({
-            socio_id: socioId,
-            tipo: "ingreso",
-            concepto: "ACTIVIDADES",
-            valor: t.valor,
-            fecha: t.fecha,
-            metadata: JSON.stringify({ fila: t.fila, concepto_raw: t.concepto }),
-          });
         }
       }
 
-      // Multas derivadas de las columnas L/M de la misma fila.
+      // Multas derivadas de las columnas L/M/N
       if (t.mora_ahorro > 0) {
         insMulta.run({
           socio_id: socioId,
-          concepto: "MORA_AHORRO",
+          tx_id: txId,
+          periodo_id: periodoId,
+          tipo: "MORA_AHORRO",
           valor: t.mora_ahorro,
-          periodo: t.periodo,
-        });
-        insMov.run({
-          socio_id: socioId,
-          tipo: "ingreso",
-          concepto: "MULTA",
-          valor: t.mora_ahorro,
-          fecha: t.fecha,
-          metadata: JSON.stringify({ fila: t.fila, tipo: "MORA_AHORRO" }),
+          dias: t.dias_atraso,
         });
       }
       if (t.mora_intereses > 0) {
         insMulta.run({
           socio_id: socioId,
-          concepto: "MORA_INTERESES",
+          tx_id: txId,
+          periodo_id: periodoId,
+          tipo: "MORA_INTERESES",
           valor: t.mora_intereses,
-          periodo: t.periodo,
-        });
-        insMov.run({
-          socio_id: socioId,
-          tipo: "ingreso",
-          concepto: "MULTA",
-          valor: t.mora_intereses,
-          fecha: t.fecha,
-          metadata: JSON.stringify({ fila: t.fila, tipo: "MORA_INTERESES" }),
+          dias: t.dias_atraso,
         });
       }
-
-      // Acumuladores para la validación posterior.
-      const key = t.concepto;
-      totalesPorConcepto.set(key, (totalesPorConcepto.get(key) || 0) + t.valor);
     }
 
-    // Validación DENTRO de la transacción: si no cuadra al centavo, lanzamos
-    // y `better-sqlite3` ejecuta ROLLBACK automáticamente. Ninguna fila queda
-    // persistida.
+    // 4) extractos bancarios
+    for (const m of plan.movimientos_banco) {
+      insBanco.run({
+        banco: m.banco,
+        fecha: m.fecha,
+        descripcion: m.descripcion,
+        monto: m.monto,
+        saldo_cuenta: m.saldo_cuenta,
+        detalle_origen: m.detalle_origen,
+        socio_id: m.socio_id ? Number(m.socio_id) : null,
+        fila: m.fila,
+      });
+    }
+
+    // 5) validación al centavo ANTES del COMMIT
     const val = validarSaldos(db, plan);
-    if (!val.ok) {
-      throw new ErrorValidacion(val);
-    }
+    if (!val.ok) throw new ErrorValidacion(val);
   });
 
-  ejecutar(); // BEGIN / (COMMIT o ROLLBACK) atómico
-
-  return { totalesPorConcepto };
+  ejecutar();
 }
 
-/** Error tipado para descuadres — el CLI lo captura sin tratarlo como bug. */
+// ------------------------------------------------------------
+// Validación exacta post-migración
+// ------------------------------------------------------------
+
+export function validarSaldos(db, plan) {
+  const conceptosDeAporte = new Set([
+    "AHORRO",
+    "ACTIVIDADES",
+    "ABONO_PRESTAMO",
+    "INTERESES_PRESTAMO",
+    "RIFA_CHANCE",
+  ]);
+  const esperado = plan.transacciones.reduce(
+    (acc, t) => (conceptosDeAporte.has(t.concepto) ? acc + t.valor : acc),
+    0,
+  );
+  const obtenido = db
+    .prepare(
+      `SELECT COALESCE(SUM(valor),0) AS total
+         FROM transacciones
+        WHERE concepto IN ('AHORRO','ACTIVIDADES','ABONO_PRESTAMO','INTERESES_PRESTAMO','RIFA_CHANCE')`,
+    )
+    .get().total;
+  const diferencia = obtenido - esperado;
+  if (diferencia !== 0) return { ok: false, diferencia, esperado, obtenido };
+  return { ok: true, esperado, obtenido };
+}
+
 export class ErrorValidacion extends Error {
   constructor({ esperado, obtenido, diferencia }) {
     super(
@@ -426,40 +530,101 @@ export class ErrorValidacion extends Error {
 }
 
 // ------------------------------------------------------------
-// Validación exacta post-migración
+// Reporte de reconciliación multi-nivel
 // ------------------------------------------------------------
 
-/**
- * Compara el total de ingresos de la BD contra la suma directa del Excel.
- * @returns {{ok:true} | {ok:false, diferencia:number, esperado:number, obtenido:number}}
- */
-export function validarSaldos(db, plan) {
-  // Total de AHORRO + ACTIVIDADES + ABONO PRESTAMO + INTERESES PRESTAMO + RIFA CHANCE
-  // en Excel (suma aritmética directa desde el plan en memoria)
-  const conceptosDeAporte = new Set([
-    "AHORRO",
-    "ACTIVIDADES",
-    "ABONO PRESTAMO",
-    "INTERESES PRESTAMO",
-    "RIFA CHANCE",
-  ]);
-  const esperado = plan.transacciones.reduce(
-    (acc, t) => (conceptosDeAporte.has(t.concepto) ? acc + t.valor : acc),
-    0,
+export function imprimirReporte(db, plan) {
+  const fmt = (n) => "$" + Number(n || 0).toLocaleString("es-CO");
+  console.log("\n" + "═".repeat(72));
+  console.log("  RECONCILIACIÓN Y CONSOLIDADO");
+  console.log("═".repeat(72));
+
+  const socios = db
+    .prepare(
+      "SELECT tipo, COUNT(*) as n FROM socios GROUP BY tipo",
+    )
+    .all();
+  console.log("\n▸ SOCIOS");
+  for (const r of socios) console.log(`    ${r.tipo.padEnd(15)} ${r.n}`);
+
+  console.log("\n▸ TOTALES POR CONCEPTO (transacciones)");
+  const totales = db
+    .prepare(
+      `SELECT concepto, tipo, COUNT(*) as n, SUM(valor) as total
+         FROM transacciones
+         GROUP BY concepto, tipo
+         ORDER BY total DESC`,
+    )
+    .all();
+  for (const r of totales) {
+    console.log(
+      `    ${r.concepto.padEnd(22)} ${r.tipo.padEnd(10)} ${String(r.n).padStart(5)} ${fmt(r.total).padStart(16)}`,
+    );
+  }
+
+  console.log("\n▸ AHORRO POR PERIODO");
+  const porPeriodo = db
+    .prepare(
+      `SELECT p.nombre, p.orden,
+              COALESCE(SUM(CASE WHEN t.concepto='AHORRO' THEN t.valor END),0) AS ahorro,
+              COUNT(t.id) AS n_tx
+         FROM periodos p
+         LEFT JOIN transacciones t ON t.periodo_id = p.id
+         GROUP BY p.id
+         ORDER BY p.orden`,
+    )
+    .all();
+  for (const r of porPeriodo) {
+    console.log(
+      `    ${String(r.orden).padStart(2)}. ${r.nombre.padEnd(12)} ${fmt(r.ahorro).padStart(16)}   (${r.n_tx} tx)`,
+    );
+  }
+
+  console.log("\n▸ EXTRACTOS BANCARIOS");
+  const bancos = db
+    .prepare(
+      `SELECT banco,
+              COUNT(*) AS n_movs,
+              SUM(CASE WHEN monto > 0 THEN monto ELSE 0 END) AS ingresos,
+              SUM(CASE WHEN monto < 0 THEN -monto ELSE 0 END) AS egresos,
+              SUM(CASE WHEN monto > 0 AND (detalle_origen IS NULL OR detalle_origen != 'PERSONAL') THEN monto ELSE 0 END) AS ingresos_natillera
+         FROM movimientos_banco
+         GROUP BY banco`,
+    )
+    .all();
+  for (const b of bancos) {
+    console.log(
+      `    ${b.banco.padEnd(12)} ${String(b.n_movs).padStart(5)} movs   ingresos ${fmt(b.ingresos).padStart(15)}   natillera ${fmt(b.ingresos_natillera).padStart(15)}`,
+    );
+  }
+
+  console.log("\n▸ TOP 10 SOCIOS POR TOTAL APORTADO");
+  const top = db
+    .prepare(
+      `SELECT nombre, total_aportado, ahorro, saldo_prestamos
+         FROM vw_saldo_por_socio
+        WHERE tipo = 'persona'
+        ORDER BY total_aportado DESC
+        LIMIT 10`,
+    )
+    .all();
+  for (const s of top) {
+    console.log(
+      `    ${s.nombre.padEnd(28)} aportado ${fmt(s.total_aportado).padStart(14)}   ahorro ${fmt(s.ahorro).padStart(14)}   deuda ${fmt(s.saldo_prestamos).padStart(12)}`,
+    );
+  }
+
+  const liq = db
+    .prepare(
+      `SELECT COALESCE(SUM(valor),0) as util FROM transacciones
+        WHERE concepto IN ('INTERESES_PRESTAMO','MULTA','RIFA_CHANCE')`,
+    )
+    .get();
+  console.log(
+    `\n▸ UTILIDAD DEL CICLO (intereses + multas + rifas): ${fmt(liq.util)}`,
   );
 
-  // El mismo agregado desde SQLite
-  const obtenido = db
-    .prepare(
-      `SELECT COALESCE(SUM(valor),0) AS total
-         FROM movimientos
-        WHERE concepto IN ('AHORRO','ACTIVIDADES','ABONO_PRESTAMO','INTERESES_PRESTAMO','RIFA_CHANCE')`,
-    )
-    .get().total;
-
-  const diferencia = obtenido - esperado;
-  if (diferencia !== 0) return { ok: false, diferencia, esperado, obtenido };
-  return { ok: true, esperado, obtenido };
+  console.log("═".repeat(72));
 }
 
 // ------------------------------------------------------------
@@ -489,10 +654,12 @@ async function main() {
   console.log(`📖 Leyendo ${filePath}…`);
   const plan = await procesarExcel(filePath);
   console.log(
-    `   Socios: ${plan.socios.length}, transacciones: ${plan.transacciones.length}, errores previos: ${plan.errores.length}`,
+    `   Socios: ${plan.socios.length}   Periodos: ${plan.periodos.length}   ` +
+      `Transacciones: ${plan.transacciones.length}   Movs banco: ${plan.movimientos_banco.length}   ` +
+      `Errores: ${plan.errores.length}`,
   );
   if (plan.errores.length > 0) {
-    console.warn("⚠️  Filas con problemas antes de tocar la BD:");
+    console.warn("⚠️  Filas con problemas:");
     for (const e of plan.errores.slice(0, 10)) console.warn(`   ${JSON.stringify(e)}`);
     if (plan.errores.length > 10) console.warn(`   … +${plan.errores.length - 10} más`);
   }
@@ -510,14 +677,15 @@ async function main() {
     migrar(db, plan);
     const val = validarSaldos(db, plan);
     console.log(
-      `✅ Migración validada al centavo. Total ingresos: ${val.obtenido.toLocaleString("es-CO")}`,
+      `\n✅ Migración validada al centavo. Total ingresos (aportes): ${val.obtenido.toLocaleString("es-CO")}`,
     );
+    imprimirReporte(db, plan);
   } catch (err) {
     if (err instanceof ErrorValidacion) {
-      console.error("❌ VALIDACIÓN FALLIDA — se ejecutó ROLLBACK completo.");
+      console.error("\n❌ VALIDACIÓN FALLIDA — se ejecutó ROLLBACK completo.");
       console.error(`   ${err.message}`);
     } else if (err && String(err.message).includes("UNIQUE constraint failed")) {
-      console.error("❌ La base de datos ya contiene esta migración.");
+      console.error("\n❌ La base de datos ya contiene esta migración.");
       console.error("   Corre `npm run reset` para borrar natillera.db y volver a importar.");
     } else {
       console.error(err instanceof Error ? err.stack || err.message : String(err));
@@ -528,7 +696,6 @@ async function main() {
   }
 }
 
-// Solo ejecutamos main() cuando se corre como CLI, no cuando se importa.
 const isMain = import.meta.url === `file://${process.argv[1]}`;
 if (isMain) {
   main().catch((err) => {
