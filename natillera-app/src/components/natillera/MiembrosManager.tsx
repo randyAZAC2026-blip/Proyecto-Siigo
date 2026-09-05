@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Plus, Trash2, Pencil, Check, X } from "lucide-react";
+import { Plus, Trash2, Pencil, Check, X, FileSpreadsheet } from "lucide-react";
+import { ImportarExcelDialog } from "@/components/natillera/ImportarExcelDialog";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,11 +21,15 @@ type Props = {
   miembros: Miembro[];
   cuotaBase: number;
   onAdd: (input: { nombre: string; cuotaMensual: number; notas?: string }) => void;
+  onAddBulk: (
+    inputs: { nombre: string; cuotaMensual: number; notas?: string }[],
+  ) => { agregados: number; omitidos: number };
   onUpdate: (id: string, patch: Partial<Omit<Miembro, "id" | "creadoEn">>) => void;
   onRemove: (id: string) => void;
 };
 
-export function MiembrosManager({ miembros, cuotaBase, onAdd, onUpdate, onRemove }: Props) {
+export function MiembrosManager({ miembros, cuotaBase, onAdd, onAddBulk, onUpdate, onRemove }: Props) {
+  const [importOpen, setImportOpen] = useState(false);
   const [nombre, setNombre] = useState("");
   const [cuota, setCuota] = useState("");
   const [notas, setNotas] = useState("");
@@ -63,12 +68,23 @@ export function MiembrosManager({ miembros, cuotaBase, onAdd, onUpdate, onRemove
 
   return (
     <Card className="rounded-[var(--radius-card)] border-[var(--color-border)]">
-      <CardHeader>
-        <CardTitle>Miembros</CardTitle>
-        <CardDescription>
-          Cada miembro puede tener su propia cuota mensual. Si dejas la cuota vacía se usa la cuota base
-          ({formatCOP(cuotaBase)}).
-        </CardDescription>
+      <CardHeader className="flex flex-row items-start justify-between gap-3">
+        <div>
+          <CardTitle>Miembros</CardTitle>
+          <CardDescription>
+            Cada miembro puede tener su propia cuota mensual. Si dejas la cuota vacía se usa la cuota base
+            ({formatCOP(cuotaBase)}).
+          </CardDescription>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setImportOpen(true)}
+          className="shrink-0"
+        >
+          <FileSpreadsheet className="size-4" />
+          Importar Excel
+        </Button>
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="grid gap-3 sm:grid-cols-[1fr_180px_1fr_auto] sm:items-end">
@@ -211,6 +227,19 @@ export function MiembrosManager({ miembros, cuotaBase, onAdd, onUpdate, onRemove
           </Table>
         )}
       </CardContent>
+
+      <ImportarExcelDialog
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        cuotaBase={cuotaBase}
+        onImportar={(filas) => {
+          const { agregados, omitidos } = onAddBulk(filas);
+          alert(
+            `Importados ${agregados} miembros.` +
+              (omitidos > 0 ? ` ${omitidos} omitidos por nombre duplicado.` : ""),
+          );
+        }}
+      />
     </Card>
   );
 }

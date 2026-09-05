@@ -81,6 +81,43 @@ export function useNatillera() {
     [],
   );
 
+  const addMiembrosBulk = useCallback(
+    (
+      inputs: { nombre: string; cuotaMensual: number; notas?: string }[],
+    ): { agregados: number; omitidos: number } => {
+      let agregados = 0;
+      let omitidos = 0;
+      setState((prev) => {
+        const nombresExistentes = new Set(
+          prev.miembros.map((m) => m.nombre.trim().toLowerCase()),
+        );
+        const nuevos: Miembro[] = [];
+        for (const input of inputs) {
+          const nombreLimpio = input.nombre.trim();
+          const claveNombre = nombreLimpio.toLowerCase();
+          if (!nombreLimpio || nombresExistentes.has(claveNombre)) {
+            omitidos++;
+            continue;
+          }
+          nombresExistentes.add(claveNombre);
+          nuevos.push({
+            id: makeId(),
+            nombre: nombreLimpio,
+            cuotaMensual: input.cuotaMensual,
+            activo: true,
+            notas: input.notas?.trim() || undefined,
+            creadoEn: new Date().toISOString(),
+          });
+          agregados++;
+        }
+        if (nuevos.length === 0) return prev;
+        return { ...prev, miembros: [...prev.miembros, ...nuevos] };
+      });
+      return { agregados, omitidos };
+    },
+    [],
+  );
+
   const updateMiembro = useCallback(
     (id: string, patch: Partial<Omit<Miembro, "id" | "creadoEn">>) => {
       setState((prev) => ({
@@ -169,6 +206,7 @@ export function useNatillera() {
     setCuotaBase,
     setAnioActivo,
     addMiembro,
+    addMiembrosBulk,
     updateMiembro,
     removeMiembro,
     upsertPago,

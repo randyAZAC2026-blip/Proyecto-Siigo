@@ -1,2 +1,5 @@
+packages:
+  - "natillera-app"
+
 allowBuilds:
   esbuild: true

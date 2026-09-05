@@ -13,6 +13,7 @@ export function NatilleraPage() {
     setCuotaBase,
     setAnioActivo,
     addMiembro,
+    addMiembrosBulk,
     updateMiembro,
     removeMiembro,
     upsertPago,
@@ -60,6 +61,7 @@ export function NatilleraPage() {
         miembros={state.miembros}
         cuotaBase={state.cuotaBase}
         onAdd={addMiembro}
+        onAddBulk={addMiembrosBulk}
         onUpdate={updateMiembro}
         onRemove={removeMiembro}
       />
