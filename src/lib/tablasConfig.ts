@@ -79,6 +79,40 @@ export const TABLAS: TablaConfig[] = [
       { key: "description", label: "Descripción", type: "text", nullable: true },
     ],
   },
+  {
+    slug: "obligaciones-dian",
+    table: "obligaciones_dian",
+    label: "Obligaciones DIAN (catálogo)",
+    primaryKey: "id",
+    orderBy: "nombre",
+    columns: [
+      { key: "codigo", label: "Código", type: "text" },
+      { key: "nombre", label: "Nombre", type: "text" },
+      { key: "entidad", label: "Entidad", type: "text" },
+      {
+        key: "frecuencia",
+        label: "Frecuencia",
+        type: "select",
+        options: ["mensual", "bimestral", "trimestral", "cuatrimestral", "semestral", "anual", "unica"],
+      },
+      { key: "descripcion", label: "Descripción", type: "text", nullable: true },
+      { key: "activo", label: "Activa", type: "select", options: ["true", "false"] },
+    ],
+  },
+  {
+    slug: "vencimientos",
+    table: "obligaciones_vencimientos",
+    label: "Vencimientos por dígito NIT",
+    primaryKey: "id",
+    orderBy: "year",
+    columns: [
+      { key: "obligacion_id", label: "Obligación (UUID)", type: "text" },
+      { key: "year", label: "Año", type: "number" },
+      { key: "periodo", label: "Periodo (nº)", type: "number", nullable: true },
+      { key: "ultimo_digito", label: "Últ. dígito (-1 = todos)", type: "number" },
+      { key: "fecha_vencimiento", label: "Fecha vencimiento", type: "text" },
+    ],
+  },
 ];
 
 export function getTablaConfig(slug: string): TablaConfig | undefined {

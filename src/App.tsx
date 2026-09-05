@@ -6,6 +6,8 @@ import { AdminRoute } from "@/components/layout/AdminRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { LoginPage } from "@/pages/LoginPage";
 import { CalculatorPage } from "@/pages/CalculatorPage";
+import { AgendaPage } from "@/pages/AgendaPage";
+import { ClientesPage } from "@/pages/ClientesPage";
 import { TablasAdminPage } from "@/pages/admin/TablasAdminPage";
 import { TablaEditorPage } from "@/pages/admin/TablaEditorPage";
 
@@ -22,6 +24,8 @@ export default function App() {
             <Route element={<ProtectedRoute />}>
               <Route element={<AppLayout />}>
                 <Route path="/" element={<CalculatorPage />} />
+                <Route path="/agenda" element={<AgendaPage />} />
+                <Route path="/clientes" element={<ClientesPage />} />
 
                 <Route element={<AdminRoute />}>
                   <Route path="/admin/tablas" element={<TablasAdminPage />} />
