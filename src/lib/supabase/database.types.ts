@@ -56,6 +56,73 @@ export interface TaxRegime {
   description: string | null;
 }
 
+// ============================================================
+// Módulo Agenda / Programador de Impuestos (migración 0002)
+// ============================================================
+
+export type TipoPersona = "natural" | "juridica";
+export type FrecuenciaObligacion =
+  | "mensual"
+  | "bimestral"
+  | "trimestral"
+  | "cuatrimestral"
+  | "semestral"
+  | "anual"
+  | "unica";
+export type PrioridadTarea = "baja" | "media" | "alta" | "urgente";
+export type EstadoTarea = "pendiente" | "en_proceso" | "en_revision" | "entregada" | "no_aplica";
+
+export interface Cliente {
+  id: string;
+  owner_id: string;
+  razon_social: string;
+  nit: string | null;
+  ultimo_digito_nit: number | null;
+  tipo_persona: TipoPersona;
+  regimen: string | null;
+  responsabilidades: string[];
+  notas: string | null;
+  created_at: string;
+}
+
+export interface ObligacionDian {
+  id: string;
+  codigo: string;
+  nombre: string;
+  entidad: string;
+  frecuencia: FrecuenciaObligacion;
+  descripcion: string | null;
+  activo: boolean;
+}
+
+export interface ObligacionVencimiento {
+  id: string;
+  obligacion_id: string;
+  year: number;
+  periodo: number | null;
+  ultimo_digito: number;
+  fecha_vencimiento: string;
+}
+
+export interface Tarea {
+  id: string;
+  owner_id: string;
+  cliente_id: string | null;
+  obligacion_id: string | null;
+  titulo: string;
+  descripcion: string | null;
+  periodo_year: number | null;
+  periodo_numero: number | null;
+  fecha_vencimiento: string | null;
+  fecha_entrega_interna: string | null;
+  prioridad: PrioridadTarea;
+  estado: EstadoTarea;
+  notas: string | null;
+  completada_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -89,6 +156,35 @@ export interface Database {
         Row: TaxRegime;
         Insert: Partial<TaxRegime> & { code: string; label: string };
         Update: Partial<TaxRegime>;
+        Relationships: [];
+      };
+      clientes: {
+        Row: Cliente;
+        Insert: Partial<Cliente> & { owner_id: string; razon_social: string };
+        Update: Partial<Cliente>;
+        Relationships: [];
+      };
+      obligaciones_dian: {
+        Row: ObligacionDian;
+        Insert: Partial<ObligacionDian> & { codigo: string; nombre: string; frecuencia: FrecuenciaObligacion };
+        Update: Partial<ObligacionDian>;
+        Relationships: [];
+      };
+      obligaciones_vencimientos: {
+        Row: ObligacionVencimiento;
+        Insert: Partial<ObligacionVencimiento> & {
+          obligacion_id: string;
+          year: number;
+          ultimo_digito: number;
+          fecha_vencimiento: string;
+        };
+        Update: Partial<ObligacionVencimiento>;
+        Relationships: [];
+      };
+      tareas: {
+        Row: Tarea;
+        Insert: Partial<Tarea> & { owner_id: string; titulo: string };
+        Update: Partial<Tarea>;
         Relationships: [];
       };
     };
