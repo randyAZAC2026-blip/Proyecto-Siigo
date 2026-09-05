@@ -6,6 +6,7 @@ import { AdminRoute } from "@/components/layout/AdminRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { LoginPage } from "@/pages/LoginPage";
 import { CalculatorPage } from "@/pages/CalculatorPage";
+import { NatilleraPage } from "@/pages/NatilleraPage";
 import { TablasAdminPage } from "@/pages/admin/TablasAdminPage";
 import { TablaEditorPage } from "@/pages/admin/TablaEditorPage";
 
@@ -22,6 +23,7 @@ export default function App() {
             <Route element={<ProtectedRoute />}>
               <Route element={<AppLayout />}>
                 <Route path="/" element={<CalculatorPage />} />
+                <Route path="/natillera" element={<NatilleraPage />} />
 
                 <Route element={<AdminRoute />}>
                   <Route path="/admin/tablas" element={<TablasAdminPage />} />
