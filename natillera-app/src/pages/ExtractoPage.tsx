@@ -7,6 +7,7 @@ import {
   Check,
   X,
   AlertCircle,
+  Plus,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -24,6 +25,10 @@ import {
 import { formatCOP } from "@/lib/natillera/format";
 import { api, type Extracto, type Socio } from "@/lib/dashboard/api";
 import { useApi } from "@/lib/dashboard/useApi";
+import {
+  RegistrarPagoModal,
+  type PagoPreset,
+} from "@/components/dashboard/RegistrarPagoModal";
 
 export function ExtractoPage({ onVolver }: { onVolver: () => void }) {
   const [banco, setBanco] = useState<string>("");
@@ -34,6 +39,8 @@ export function ExtractoPage({ onVolver }: { onVolver: () => void }) {
   const [q, setQ] = useState<string>("");
   const [offset, setOffset] = useState(0);
   const limit = 50;
+
+  const [modalPreset, setModalPreset] = useState<PagoPreset | null>(null);
 
   const filtros = useMemo(
     () => ({
@@ -178,6 +185,7 @@ export function ExtractoPage({ onVolver }: { onVolver: () => void }) {
                   fila={fila}
                   socios={sociosApi.data ?? []}
                   onCambio={reload}
+                  onRegistrarPago={(preset) => setModalPreset(preset)}
                 />
               ))}
               {!loading && data?.filas.length === 0 && (
@@ -213,6 +221,19 @@ export function ExtractoPage({ onVolver }: { onVolver: () => void }) {
           </div>
         </CardContent>
       </Card>
+
+      {modalPreset && (
+        <RegistrarPagoModal
+          open={true}
+          onClose={() => setModalPreset(null)}
+          onGuardado={() => {
+            reload();
+            setModalPreset(null);
+          }}
+          preset={modalPreset}
+          titulo="Registrar pago desde extracto"
+        />
+      )}
     </div>
   );
 }
@@ -221,10 +242,12 @@ function ExtractoRow({
   fila,
   socios,
   onCambio,
+  onRegistrarPago,
 }: {
   fila: Extracto;
   socios: Socio[];
   onCambio: () => void;
+  onRegistrarPago: (preset: PagoPreset) => void;
 }) {
   const [saving, setSaving] = useState(false);
 
@@ -257,13 +280,31 @@ function ExtractoRow({
         {fila.descripcion ?? "—"}
       </TableCell>
       <TableCell className="text-xs">{fila.socio_nombre ?? "—"}</TableCell>
-      <TableCell
-        className={`text-right tabular-nums text-xs ${
-          fila.monto < 0 ? "text-[var(--color-destructive)]" : "text-[var(--color-success)]"
-        }`}
-      >
-        {fila.monto < 0 ? "-" : "+"}
-        {formatCOP(Math.abs(fila.monto))}
+      <TableCell className="text-right p-0">
+        <button
+          type="button"
+          disabled={saving}
+          onClick={() =>
+            onRegistrarPago({
+              socio_id: fila.socio_id,
+              valor: Math.abs(fila.monto),
+              fecha_pago: fila.fecha ?? undefined,
+              concepto:
+                fila.monto < 0 ? "PRESTAMO" : "AHORRO",
+              extracto_id: fila.id,
+              notas: fila.descripcion ?? undefined,
+              origen_contexto: `Extracto ${fila.banco} · ${fila.fecha ?? "sin fecha"} · ${fila.descripcion ?? ""}`,
+            })
+          }
+          title="Registrar este movimiento como pago"
+          className={`w-full h-full px-2 py-1.5 text-right tabular-nums text-xs cursor-pointer hover:bg-[var(--color-primary)]/10 transition-colors ${
+            fila.monto < 0 ? "text-[var(--color-destructive)]" : "text-[var(--color-success)]"
+          }`}
+        >
+          {fila.monto < 0 ? "-" : "+"}
+          {formatCOP(Math.abs(fila.monto))}
+          <Plus className="inline size-3 ml-1 opacity-40" />
+        </button>
       </TableCell>
       <TableCell className="text-center">
         <select
