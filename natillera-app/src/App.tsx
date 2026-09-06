@@ -1,14 +1,23 @@
 import { useState } from "react";
-import { PiggyBank, BarChart3 } from "lucide-react";
+import { PiggyBank, BarChart3, ClipboardCheck, Landmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { NatilleraPage } from "@/pages/NatilleraPage";
 import { DashboardPage } from "@/pages/DashboardPage";
+import { ExtractoPage } from "@/pages/ExtractoPage";
+import { RegistrarPagoPage } from "@/pages/RegistrarPagoPage";
 
-type Vista = "local" | "consolidado";
+type Vista = "local" | "dashboard" | "extracto" | "registrar";
 
 export function App() {
-  const [vista, setVista] = useState<Vista>("local");
+  const [vista, setVista] = useState<Vista>("dashboard");
+
+  const nav = [
+    { key: "dashboard" as Vista, label: "Dashboard", Icon: BarChart3 },
+    { key: "registrar" as Vista, label: "Registrar pago", Icon: ClipboardCheck },
+    { key: "extracto" as Vista, label: "Extracto", Icon: Landmark },
+    { key: "local" as Vista, label: "Registro local", Icon: PiggyBank },
+  ];
 
   return (
     <div className="min-h-svh flex flex-col">
@@ -18,32 +27,32 @@ export function App() {
             <PiggyBank className="size-5 text-[var(--color-primary)]" />
             Natillera
           </div>
-          <nav className="flex items-center gap-1">
-            <Button
-              variant={vista === "local" ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => setVista("local")}
-            >
-              <PiggyBank className="size-4" />
-              Registro local
-            </Button>
-            <Button
-              variant={vista === "consolidado" ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => setVista("consolidado")}
-            >
-              <BarChart3 className="size-4" />
-              Dashboard (SQLite)
-            </Button>
+          <nav className="flex items-center gap-1 flex-wrap">
+            {nav.map(({ key, label, Icon }) => (
+              <Button
+                key={key}
+                variant={vista === key ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setVista(key)}
+              >
+                <Icon className="size-4" />
+                {label}
+              </Button>
+            ))}
           </nav>
         </div>
       </header>
       <main className="mx-auto w-full max-w-[1100px] flex-1 px-4 py-8">
         <ErrorBoundary>
-          {vista === "local" ? (
-            <NatilleraPage />
-          ) : (
+          {vista === "local" && <NatilleraPage />}
+          {vista === "dashboard" && (
             <DashboardPage onVolver={() => setVista("local")} />
+          )}
+          {vista === "extracto" && (
+            <ExtractoPage onVolver={() => setVista("dashboard")} />
+          )}
+          {vista === "registrar" && (
+            <RegistrarPagoPage onVolver={() => setVista("dashboard")} />
           )}
         </ErrorBoundary>
       </main>

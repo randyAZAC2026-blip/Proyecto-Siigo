@@ -35,7 +35,10 @@ const PORT = Number(process.env.NAT_PORT) || 4000;
 
 let db;
 try {
-  db = new DatabaseSync(DB_PATH, { readOnly: true });
+  // Modo lectura+escritura: los endpoints POST/PATCH permiten registrar
+  // pagos nuevos y conciliar movimientos bancarios sin volver al Excel.
+  db = new DatabaseSync(DB_PATH);
+  db.exec("PRAGMA foreign_keys = ON");
 } catch (err) {
   console.error(`❌ No se pudo abrir la BD en ${DB_PATH}`);
   console.error(`   ${err.message}`);
@@ -245,21 +248,310 @@ app.get("/api/morosos", (req, res) => {
   );
 });
 
+// ---------------- Catálogo de periodos (para selects) ----------------
+app.get("/api/periodos", (_req, res) => {
+  res.json(
+    query(`
+      SELECT id, nombre, orden, fecha_corte_ahorro, fecha_corte_actividad, estado
+        FROM periodos
+        ORDER BY orden
+    `),
+  );
+});
+
+// ---------------- Extracto bancario detallado ----------------
+// Filtros: banco, conciliado (true/false), origen (NATILLERA/PERSONAL/...),
+// desde, hasta, q (búsqueda libre en descripción/nombre), limit, offset.
+app.get("/api/extractos", (req, res) => {
+  const where = [];
+  const params = [];
+  if (req.query.banco) {
+    where.push("mb.banco = ?");
+    params.push(String(req.query.banco));
+  }
+  if (req.query.origen) {
+    where.push("mb.detalle_origen = ?");
+    params.push(String(req.query.origen));
+  }
+  if (req.query.conciliado === "true") {
+    where.push("mb.transaccion_id IS NOT NULL");
+  } else if (req.query.conciliado === "false") {
+    where.push("mb.transaccion_id IS NULL");
+  }
+  if (req.query.desde) {
+    where.push("mb.fecha >= ?");
+    params.push(String(req.query.desde));
+  }
+  if (req.query.hasta) {
+    where.push("mb.fecha <= ?");
+    params.push(String(req.query.hasta));
+  }
+  if (req.query.q) {
+    where.push("(mb.descripcion LIKE ? OR s.nombre LIKE ?)");
+    const like = `%${req.query.q}%`;
+    params.push(like, like);
+  }
+  if (req.query.socio_id) {
+    where.push("mb.socio_id = ?");
+    params.push(Number(req.query.socio_id));
+  }
+  const whereSql = where.length > 0 ? `WHERE ${where.join(" AND ")}` : "";
+  const limit = Math.min(Number(req.query.limit) || 200, 1000);
+  const offset = Number(req.query.offset) || 0;
+
+  const total = queryOne(
+    `SELECT COUNT(*) AS n
+       FROM movimientos_banco mb
+       LEFT JOIN socios s ON s.id = mb.socio_id
+       ${whereSql}`,
+    params,
+  ).n;
+
+  const filas = query(
+    `SELECT mb.id, mb.banco, mb.fecha, mb.descripcion, mb.monto, mb.saldo_cuenta,
+            mb.detalle_origen, mb.socio_id, s.nombre AS socio_nombre,
+            mb.transaccion_id
+       FROM movimientos_banco mb
+       LEFT JOIN socios s ON s.id = mb.socio_id
+       ${whereSql}
+       ORDER BY mb.fecha DESC, mb.id DESC
+       LIMIT ? OFFSET ?`,
+    [...params, limit, offset],
+  );
+
+  res.json({ total, limit, offset, filas });
+});
+
+// ---------------- Vincular movimiento bancario con transacción ----------------
+app.post("/api/extractos/:id/vincular", (req, res) => {
+  const id = Number(req.params.id);
+  const { transaccion_id } = req.body ?? {};
+  if (transaccion_id !== null && !Number.isInteger(transaccion_id)) {
+    return res.status(400).json({ error: "transaccion_id debe ser entero o null" });
+  }
+  const info = db
+    .prepare(`UPDATE movimientos_banco SET transaccion_id = ? WHERE id = ?`)
+    .run(transaccion_id, id);
+  if (info.changes === 0) {
+    return res.status(404).json({ error: "Movimiento no encontrado" });
+  }
+  res.json({ ok: true });
+});
+
+// ---------------- Marcar origen de un movimiento (NATILLERA/PERSONAL) ----------------
+app.post("/api/extractos/:id/origen", (req, res) => {
+  const id = Number(req.params.id);
+  const { detalle_origen } = req.body ?? {};
+  const validos = ["NATILLERA", "PERSONAL", "N/A", null];
+  if (!validos.includes(detalle_origen)) {
+    return res.status(400).json({
+      error: `detalle_origen debe ser uno de: ${validos.filter(Boolean).join(", ")} o null`,
+    });
+  }
+  const info = db
+    .prepare(`UPDATE movimientos_banco SET detalle_origen = ? WHERE id = ?`)
+    .run(detalle_origen, id);
+  if (info.changes === 0) return res.status(404).json({ error: "Movimiento no encontrado" });
+  res.json({ ok: true });
+});
+
+// ---------------- Registrar pago manual ----------------
+// Crea una fila en `transacciones` + entrada en `movimientos` (log auditoría).
+// Opcionalmente, vincula un movimiento bancario existente (extracto_id).
+const CONCEPTOS_VALIDOS = new Set([
+  "AHORRO",
+  "ACTIVIDADES",
+  "RIFA_CHANCE",
+  "PRESTAMO",
+  "ABONO_PRESTAMO",
+  "INTERESES_PRESTAMO",
+  "MULTA",
+]);
+const TIPO_POR_CONCEPTO = {
+  AHORRO: "ingreso",
+  ACTIVIDADES: "ingreso",
+  RIFA_CHANCE: "ingreso",
+  PRESTAMO: "egreso",
+  ABONO_PRESTAMO: "ingreso",
+  INTERESES_PRESTAMO: "ingreso",
+  MULTA: "ingreso",
+};
+
+app.post("/api/transacciones", (req, res) => {
+  const { socio_id, concepto, valor, fecha_pago, periodo_id, notas, extracto_id } =
+    req.body ?? {};
+
+  if (!Number.isInteger(socio_id))
+    return res.status(400).json({ error: "socio_id debe ser entero" });
+  if (!CONCEPTOS_VALIDOS.has(concepto))
+    return res.status(400).json({
+      error: `concepto inválido — usa: ${[...CONCEPTOS_VALIDOS].join(", ")}`,
+    });
+  const montoLimpio = Math.abs(Math.round(Number(valor) || 0));
+  if (montoLimpio <= 0)
+    return res.status(400).json({ error: "valor debe ser mayor que 0" });
+  if (fecha_pago && !/^\d{4}-\d{2}-\d{2}$/.test(fecha_pago))
+    return res.status(400).json({ error: "fecha_pago debe ser YYYY-MM-DD" });
+  if (periodo_id != null && !Number.isInteger(periodo_id))
+    return res.status(400).json({ error: "periodo_id debe ser entero o null" });
+
+  const socio = queryOne(`SELECT id FROM socios WHERE id = ?`, [socio_id]);
+  if (!socio) return res.status(400).json({ error: "socio_id no existe" });
+  if (periodo_id != null) {
+    const p = queryOne(`SELECT id FROM periodos WHERE id = ?`, [periodo_id]);
+    if (!p) return res.status(400).json({ error: "periodo_id no existe" });
+  }
+
+  const tipo = TIPO_POR_CONCEPTO[concepto];
+  // fila_origen negativo = registro manual (Excel es positivo).
+  const filaOrigen = -Date.now();
+
+  db.exec("BEGIN");
+  try {
+    const insTx = db.prepare(`
+      INSERT INTO transacciones (
+        socio_id, periodo_id, concepto, tipo, valor, fecha_pago, notas, fila_origen
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const info = insTx.run(
+      socio_id,
+      periodo_id ?? null,
+      concepto,
+      tipo,
+      montoLimpio,
+      fecha_pago || null,
+      notas || null,
+      filaOrigen,
+    );
+    const txId = Number(info.lastInsertRowid);
+
+    db.prepare(
+      `INSERT INTO movimientos (socio_id, transaccion_id, tipo, concepto, valor, fecha, metadata)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    ).run(
+      socio_id,
+      txId,
+      tipo,
+      concepto,
+      montoLimpio,
+      fecha_pago || null,
+      JSON.stringify({ origen: "manual", ip: req.ip }),
+    );
+
+    // Si viene con extracto_id, vinculamos el movimiento bancario.
+    if (extracto_id != null) {
+      const upd = db
+        .prepare(`UPDATE movimientos_banco SET transaccion_id = ? WHERE id = ?`)
+        .run(txId, extracto_id);
+      if (upd.changes === 0) {
+        db.exec("ROLLBACK");
+        return res.status(400).json({ error: "extracto_id no existe" });
+      }
+    }
+
+    db.exec("COMMIT");
+    res.json({ id: txId, socio_id, concepto, tipo, valor: montoLimpio });
+  } catch (err) {
+    db.exec("ROLLBACK");
+    console.error(err);
+    res.status(500).json({ error: err.message || String(err) });
+  }
+});
+
+// ---------------- Eliminar transacción manual ----------------
+// Solo permite eliminar transacciones creadas manualmente (fila_origen < 0).
+// Las importadas del Excel quedan protegidas (idempotencia con el archivo).
+app.delete("/api/transacciones/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const tx = queryOne(
+    `SELECT id, fila_origen FROM transacciones WHERE id = ?`,
+    [id],
+  );
+  if (!tx) return res.status(404).json({ error: "No existe" });
+  if (tx.fila_origen >= 0) {
+    return res.status(400).json({
+      error:
+        "No se puede borrar una transacción importada del Excel. Re-migra el archivo si quieres cambiarla.",
+    });
+  }
+  db.exec("BEGIN");
+  try {
+    db.prepare(`UPDATE movimientos_banco SET transaccion_id = NULL WHERE transaccion_id = ?`).run(id);
+    // El trigger de inmutabilidad de `movimientos` bloquea el DELETE.
+    // Como es un log de auditoría, dejamos la fila y solo borramos la
+    // transacción — la fila del log queda como registro histórico de que
+    // hubo ese movimiento (con FK ahora NULL por ON DELETE SET NULL).
+    db.prepare(`DELETE FROM transacciones WHERE id = ?`).run(id);
+    db.exec("COMMIT");
+    res.json({ ok: true });
+  } catch (err) {
+    db.exec("ROLLBACK");
+    res.status(500).json({ error: err.message || String(err) });
+  }
+});
+
+// ---------------- Búsqueda de transacciones para vincular ----------------
+app.get("/api/transacciones", (req, res) => {
+  const where = [];
+  const params = [];
+  if (req.query.socio_id) {
+    where.push("t.socio_id = ?");
+    params.push(Number(req.query.socio_id));
+  }
+  if (req.query.concepto) {
+    where.push("t.concepto = ?");
+    params.push(String(req.query.concepto));
+  }
+  if (req.query.desde) {
+    where.push("t.fecha_pago >= ?");
+    params.push(String(req.query.desde));
+  }
+  if (req.query.hasta) {
+    where.push("t.fecha_pago <= ?");
+    params.push(String(req.query.hasta));
+  }
+  const whereSql = where.length > 0 ? `WHERE ${where.join(" AND ")}` : "";
+  const limit = Math.min(Number(req.query.limit) || 100, 500);
+  res.json(
+    query(
+      `SELECT t.id, t.socio_id, s.nombre AS socio, t.concepto, t.tipo, t.valor,
+              t.fecha_pago, p.nombre AS periodo,
+              CASE WHEN t.fila_origen < 0 THEN 'manual' ELSE 'excel' END AS origen
+         FROM transacciones t
+         JOIN socios s ON s.id = t.socio_id
+         LEFT JOIN periodos p ON p.id = t.periodo_id
+         ${whereSql}
+         ORDER BY t.fecha_pago DESC, t.id DESC
+         LIMIT ?`,
+      [...params, limit],
+    ),
+  );
+});
+
 app.get("/", (_req, res) => {
   res.type("text/plain").send(
     "Natillera API\n\n" +
-      "Endpoints:\n" +
-      "  GET /api/health\n" +
-      "  GET /api/resumen\n" +
-      "  GET /api/socios[?tipo=todos]\n" +
-      "  GET /api/socios/:id\n" +
-      "  GET /api/matriz-ahorro\n" +
-      "  GET /api/matriz-actividades\n" +
-      "  GET /api/liquidacion\n" +
-      "  GET /api/bancos\n" +
-      "  GET /api/ahorros-por-periodo\n" +
-      "  GET /api/deudores\n" +
-      "  GET /api/morosos[?dias=60]\n",
+      "GET:\n" +
+      "  /api/health\n" +
+      "  /api/resumen\n" +
+      "  /api/socios[?tipo=todos]\n" +
+      "  /api/socios/:id\n" +
+      "  /api/matriz-ahorro\n" +
+      "  /api/matriz-actividades\n" +
+      "  /api/liquidacion\n" +
+      "  /api/bancos\n" +
+      "  /api/ahorros-por-periodo\n" +
+      "  /api/deudores\n" +
+      "  /api/morosos[?dias=60]\n" +
+      "  /api/periodos\n" +
+      "  /api/extractos[?banco&origen&conciliado&desde&hasta&q&socio_id&limit&offset]\n" +
+      "  /api/transacciones[?socio_id&concepto&desde&hasta&limit]\n\n" +
+      "POST:\n" +
+      "  /api/transacciones            {socio_id,concepto,valor,fecha_pago,periodo_id,notas,extracto_id?}\n" +
+      "  /api/extractos/:id/vincular   {transaccion_id}\n" +
+      "  /api/extractos/:id/origen     {detalle_origen:'NATILLERA'|'PERSONAL'|'N/A'|null}\n\n" +
+      "DELETE:\n" +
+      "  /api/transacciones/:id  (solo manuales)\n",
   );
 });
 

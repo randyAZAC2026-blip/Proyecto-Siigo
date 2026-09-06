@@ -11,6 +11,28 @@ async function get<T>(path: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+async function post<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`${res.status} ${res.statusText}${text ? " — " + text : ""}`);
+  }
+  return res.json() as Promise<T>;
+}
+
+async function del<T>(path: string): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, { method: "DELETE" });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`${res.status} ${res.statusText}${text ? " — " + text : ""}`);
+  }
+  return res.json() as Promise<T>;
+}
+
 export interface Resumen {
   socios_activos: number;
   cuentas_admin: number;
@@ -111,6 +133,69 @@ export interface HistorialSocio {
   }[];
 }
 
+export interface Periodo {
+  id: number;
+  nombre: string;
+  orden: number;
+  fecha_corte_ahorro: string | null;
+  fecha_corte_actividad: string | null;
+  estado: "abierto" | "cerrado";
+}
+
+export interface Extracto {
+  id: number;
+  banco: "Bancolombia" | "Nequi";
+  fecha: string | null;
+  descripcion: string | null;
+  monto: number;
+  saldo_cuenta: number | null;
+  detalle_origen: string | null;
+  socio_id: number | null;
+  socio_nombre: string | null;
+  transaccion_id: number | null;
+}
+
+export interface ExtractosPage {
+  total: number;
+  limit: number;
+  offset: number;
+  filas: Extracto[];
+}
+
+export interface FiltrosExtracto {
+  banco?: string;
+  origen?: string;
+  conciliado?: "true" | "false";
+  desde?: string;
+  hasta?: string;
+  q?: string;
+  socio_id?: number;
+  limit?: number;
+  offset?: number;
+}
+
+export interface Transaccion {
+  id: number;
+  socio_id: number;
+  socio: string;
+  concepto: string;
+  tipo: "ingreso" | "egreso";
+  valor: number;
+  fecha_pago: string | null;
+  periodo: string | null;
+  origen: "excel" | "manual";
+}
+
+export interface NuevaTransaccion {
+  socio_id: number;
+  concepto: string;
+  valor: number;
+  fecha_pago?: string;
+  periodo_id?: number | null;
+  notas?: string;
+  extracto_id?: number | null;
+}
+
 export const api = {
   resumen: () => get<Resumen>("/api/resumen"),
   socios: () => get<Socio[]>("/api/socios"),
@@ -123,4 +208,38 @@ export const api = {
   deudores: () => get<Deudor[]>("/api/deudores"),
   morosos: (dias = 60) => get<Moroso[]>(`/api/morosos?dias=${dias}`),
   health: () => get<{ ok: boolean; db: string }>("/api/health"),
+
+  periodos: () => get<Periodo[]>("/api/periodos"),
+  extractos: (filtros: FiltrosExtracto = {}) => {
+    const qs = new URLSearchParams();
+    for (const [k, v] of Object.entries(filtros)) {
+      if (v !== undefined && v !== "") qs.set(k, String(v));
+    }
+    const query = qs.toString();
+    return get<ExtractosPage>(`/api/extractos${query ? "?" + query : ""}`);
+  },
+  vincularExtracto: (id: number, transaccion_id: number | null) =>
+    post<{ ok: true }>(`/api/extractos/${id}/vincular`, { transaccion_id }),
+  marcarOrigenExtracto: (id: number, detalle_origen: string | null) =>
+    post<{ ok: true }>(`/api/extractos/${id}/origen`, { detalle_origen }),
+  crearTransaccion: (t: NuevaTransaccion) =>
+    post<{ id: number; socio_id: number; concepto: string; tipo: string; valor: number }>(
+      "/api/transacciones",
+      t,
+    ),
+  eliminarTransaccion: (id: number) => del<{ ok: true }>(`/api/transacciones/${id}`),
+  buscarTransacciones: (params: {
+    socio_id?: number;
+    concepto?: string;
+    desde?: string;
+    hasta?: string;
+    limit?: number;
+  }) => {
+    const qs = new URLSearchParams();
+    for (const [k, v] of Object.entries(params)) {
+      if (v !== undefined && v !== "") qs.set(k, String(v));
+    }
+    const query = qs.toString();
+    return get<Transaccion[]>(`/api/transacciones${query ? "?" + query : ""}`);
+  },
 };
