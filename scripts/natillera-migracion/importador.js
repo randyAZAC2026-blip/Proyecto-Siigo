@@ -13,6 +13,7 @@
 // Uso:
 //   node importador.js <ruta-al-xlsm> [--db=natillera.db] [--dry-run]
 
+import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
@@ -679,6 +680,31 @@ async function main() {
   }
 
   const dbPath = path.resolve(args.db);
+
+  // Backup automático: si ya existe una BD previa, copiarla con timestamp
+  // antes de escribir la nueva. La carpeta backups/ queda al lado de la BD.
+  if (fs.existsSync(dbPath)) {
+    const dir = path.join(path.dirname(dbPath), "backups");
+    fs.mkdirSync(dir, { recursive: true });
+    const stamp = new Date()
+      .toISOString()
+      .replace(/[:.]/g, "-")
+      .replace("T", "_")
+      .slice(0, 19);
+    const bak = path.join(dir, `natillera-${stamp}.db`);
+    fs.copyFileSync(dbPath, bak);
+    console.log(`🗄  Backup previo guardado en ${bak}`);
+    // Retener solo los últimos 10 backups automáticos.
+    const previos = fs
+      .readdirSync(dir)
+      .filter((n) => /^natillera-.*\.db$/.test(n))
+      .map((n) => ({ n, t: fs.statSync(path.join(dir, n)).mtimeMs }))
+      .sort((a, b) => b.t - a.t);
+    for (const viejo of previos.slice(10)) {
+      fs.unlinkSync(path.join(dir, viejo.n));
+    }
+  }
+
   const db = inicializarDB(dbPath);
   console.log(`💾 SQLite: ${dbPath}`);
 

@@ -1,5 +1,14 @@
 import { useMemo, useState } from "react";
-import { FileText, Search, TrendingUp, TrendingDown, AlertCircle, Printer } from "lucide-react";
+import {
+  FileText,
+  Search,
+  TrendingUp,
+  TrendingDown,
+  AlertCircle,
+  Printer,
+  MessageCircle,
+  ClipboardCheck,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -42,7 +51,7 @@ export function EstadoCuentaPage({ onVolver }: { onVolver: () => void }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-start justify-between gap-3" data-print="hide">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold text-[var(--color-text)]">
             <FileText className="size-6 text-[var(--color-primary)]" />
@@ -57,8 +66,8 @@ export function EstadoCuentaPage({ onVolver }: { onVolver: () => void }) {
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-[280px_1fr]">
-        <Card className="rounded-[var(--radius-card)] border-[var(--color-border)] h-fit">
+      <div className="grid gap-4 md:grid-cols-[280px_1fr]" data-print="single-col">
+        <Card className="rounded-[var(--radius-card)] border-[var(--color-border)] h-fit" data-print="hide">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Socios</CardTitle>
           </CardHeader>
@@ -118,6 +127,7 @@ export function EstadoCuentaPage({ onVolver }: { onVolver: () => void }) {
 
           {detalle.data && (
             <>
+              <PrintHeader socio={detalle.data.socio} />
               <SaldoResumen socio={detalle.data.socio} />
               <ConceptoFiltros
                 actual={filtroConcepto}
@@ -125,6 +135,7 @@ export function EstadoCuentaPage({ onVolver }: { onVolver: () => void }) {
                 total={detalle.data.historial.length}
                 filtrado={historialFiltrado.length}
                 onPrint={() => window.print()}
+                socio={detalle.data.socio}
               />
               <HistorialTabla filas={historialFiltrado} />
             </>
@@ -133,6 +144,46 @@ export function EstadoCuentaPage({ onVolver }: { onVolver: () => void }) {
       </div>
     </div>
   );
+}
+
+function PrintHeader({ socio }: { socio: Socio }) {
+  const hoy = new Date().toLocaleDateString("es-CO", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  return (
+    <div data-print="header">
+      <h1>Estado de cuenta — Natillera</h1>
+      <p>
+        Socio: <strong>{socio.nombre}</strong> (ID #{socio.id}) · Generado el {hoy}
+      </p>
+    </div>
+  );
+}
+
+function armarMensajeWhatsApp(socio: Socio): string {
+  const fmt = (n: number) => "$" + Number(n || 0).toLocaleString("es-CO");
+  const hoy = new Date().toLocaleDateString("es-CO");
+  const lineas = [
+    `📊 *Estado de cuenta — Natillera*`,
+    `Socio: ${socio.nombre}`,
+    `Corte: ${hoy}`,
+    ``,
+    `💰 Ahorros:      ${fmt(socio.ahorro)}`,
+    `🎉 Actividades:  ${fmt(socio.actividades)}`,
+    `🎲 Rifa chance:  ${fmt(socio.rifa_chance)}`,
+    `💵 Intereses:    ${fmt(socio.intereses_pagados)}`,
+    `⚠️ Multas:       ${fmt(socio.multas_pagadas)}`,
+    ``,
+    `✅ *Total aportado: ${fmt(socio.total_aportado)}*`,
+    socio.saldo_prestamos > 0
+      ? `⚠️ Deuda préstamo pendiente: ${fmt(socio.saldo_prestamos)}`
+      : `✔️ Sin deuda pendiente`,
+    ``,
+    `_Esta información es orientativa y no reemplaza el estado oficial._`,
+  ];
+  return lineas.join("\n");
 }
 
 function SaldoResumen({ socio }: { socio: Socio }) {
@@ -216,15 +267,44 @@ function ConceptoFiltros({
   total,
   filtrado,
   onPrint,
+  socio,
 }: {
   actual: string;
   onChange: (v: string) => void;
   total: number;
   filtrado: number;
   onPrint: () => void;
+  socio: Socio;
 }) {
+  const [copiado, setCopiado] = useState(false);
+
+  async function copiarParaWhatsApp() {
+    const texto = armarMensajeWhatsApp(socio);
+    try {
+      await navigator.clipboard.writeText(texto);
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 2000);
+    } catch {
+      // Fallback: seleccionar en un textarea temporal
+      const ta = document.createElement("textarea");
+      ta.value = texto;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 2000);
+    }
+  }
+
+  function abrirWhatsApp() {
+    const texto = encodeURIComponent(armarMensajeWhatsApp(socio));
+    // Sin número específico → el usuario elige el contacto en WhatsApp.
+    window.open(`https://wa.me/?text=${texto}`, "_blank");
+  }
+
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div className="flex flex-wrap items-center gap-1.5" data-print="hide">
       <button
         onClick={() => onChange("")}
         className={`rounded-md border px-2 py-1 text-[11px] transition-colors ${
@@ -248,8 +328,41 @@ function ConceptoFiltros({
           {c}
         </button>
       ))}
-      <div className="ml-auto text-xs text-[var(--color-muted)]">
-        Mostrando {filtrado} · <Button variant="ghost" size="sm" onClick={onPrint} className="h-6 px-2 gap-1"><Printer className="size-3" />Imprimir</Button>
+      <div className="ml-auto flex items-center gap-1">
+        <span className="text-xs text-[var(--color-muted)]">{filtrado} movimientos</span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={copiarParaWhatsApp}
+          className="h-7 px-2 gap-1"
+          title="Copia el resumen al portapapeles"
+        >
+          {copiado ? (
+            <>
+              <ClipboardCheck className="size-3 text-[var(--color-success)]" />
+              Copiado
+            </>
+          ) : (
+            <>
+              <ClipboardCheck className="size-3" />
+              Copiar
+            </>
+          )}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={abrirWhatsApp}
+          className="h-7 px-2 gap-1"
+          title="Abre WhatsApp con el mensaje prellenado"
+        >
+          <MessageCircle className="size-3 text-[var(--color-success)]" />
+          WhatsApp
+        </Button>
+        <Button variant="outline" size="sm" onClick={onPrint} className="h-7 px-2 gap-1">
+          <Printer className="size-3" />
+          Imprimir / PDF
+        </Button>
       </div>
     </div>
   );

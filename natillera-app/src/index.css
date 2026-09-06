@@ -77,3 +77,111 @@ body {
 #root {
   min-height: 100svh;
 }
+
+/* --------------------------------------------------------------
+   Impresión: se usa Ctrl+P (o botón "Imprimir") desde Estado
+   cuenta para generar un PDF profesional por socio.
+   -------------------------------------------------------------- */
+@media print {
+  @page {
+    size: A4;
+    margin: 1.5cm;
+  }
+
+  html,
+  body,
+  #root {
+    background: #fff !important;
+    color: #000 !important;
+    min-height: 0 !important;
+  }
+
+  /* Oculta header, nav, sidebar de selección de socio y botones. */
+  header,
+  nav,
+  [data-print="hide"],
+  button {
+    display: none !important;
+  }
+
+  main {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Fuerza el layout de una sola columna (colapsa el grid del estado de cuenta). */
+  [data-print="single-col"] {
+    display: block !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Aparece solo al imprimir: encabezado con nombre de la natillera y fecha. */
+  [data-print="header"] {
+    display: block !important;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #333;
+  }
+
+  [data-print="header"] h1 {
+    margin: 0;
+    font-size: 20pt;
+    color: #000 !important;
+  }
+
+  [data-print="header"] p {
+    margin: 0.25rem 0 0 0;
+    font-size: 10pt;
+    color: #666 !important;
+  }
+
+  /* Cada estado de cuenta empieza en una página nueva (para PDF batch). */
+  [data-print="page-break"] {
+    page-break-before: always;
+  }
+
+  /* Cards sin sombras ni bordes de color. */
+  .rounded-\[var\(--radius-card\)\] {
+    border: 1px solid #ccc !important;
+    background: #fff !important;
+    box-shadow: none !important;
+  }
+
+  /* Tablas legibles con separadores nítidos. */
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+    font-size: 9pt;
+  }
+
+  table th,
+  table td {
+    border: 1px solid #ccc !important;
+    padding: 4px 6px !important;
+    color: #000 !important;
+  }
+
+  table thead {
+    background: #f0f0f0 !important;
+  }
+
+  /* Colores tenues para badges e íconos monocromáticos. */
+  .text-\[var\(--color-success\)\] {
+    color: #050 !important;
+  }
+  .text-\[var\(--color-destructive\)\] {
+    color: #a00 !important;
+  }
+  .text-\[var\(--color-warning\)\] {
+    color: #a60 !important;
+  }
+  .text-\[var\(--color-primary\)\] {
+    color: #000 !important;
+  }
+}
+
+/* Por defecto (pantalla), el encabezado de impresión está oculto. */
+[data-print="header"] {
+  display: none;
+}

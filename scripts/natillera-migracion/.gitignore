@@ -4,3 +4,4 @@ natillera.db-shm
 natillera.db-wal
 *.db
 *.db-journal
+backups/
