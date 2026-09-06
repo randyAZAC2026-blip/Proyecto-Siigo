@@ -6,6 +6,7 @@
   "description": "Script ETL para migrar la natillera del Excel a SQLite con validación exacta de saldos.",
   "scripts": {
     "importar": "node importador.js",
+    "explorar": "node explorar.js",
     "reset": "node -e \"import('node:fs').then(fs => fs.default.rmSync('natillera.db', { force: true }))\""
   },
   "dependencies": {
