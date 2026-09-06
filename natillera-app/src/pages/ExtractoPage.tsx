@@ -8,6 +8,8 @@ import {
   X,
   AlertCircle,
   Plus,
+  Upload,
+  PlusCircle,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -29,6 +31,8 @@ import {
   RegistrarPagoModal,
   type PagoPreset,
 } from "@/components/dashboard/RegistrarPagoModal";
+import { AgregarMovimientoModal } from "@/components/dashboard/AgregarMovimientoModal";
+import { ImportarExtractoModal } from "@/components/dashboard/ImportarExtractoModal";
 
 export function ExtractoPage({ onVolver }: { onVolver: () => void }) {
   const [banco, setBanco] = useState<string>("");
@@ -41,6 +45,8 @@ export function ExtractoPage({ onVolver }: { onVolver: () => void }) {
   const limit = 50;
 
   const [modalPreset, setModalPreset] = useState<PagoPreset | null>(null);
+  const [modalAgregar, setModalAgregar] = useState(false);
+  const [modalImportar, setModalImportar] = useState(false);
 
   const filtros = useMemo(
     () => ({
@@ -65,7 +71,7 @@ export function ExtractoPage({ onVolver }: { onVolver: () => void }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold text-[var(--color-text)]">
             <Landmark className="size-6 text-[var(--color-primary)]" />
@@ -76,9 +82,29 @@ export function ExtractoPage({ onVolver }: { onVolver: () => void }) {
             PERSONAL, o vincula a una transacción registrada.
           </p>
         </div>
-        <Button variant="ghost" size="sm" onClick={onVolver}>
-          ← Volver
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setModalAgregar(true)}
+            className="gap-1"
+          >
+            <PlusCircle className="size-4" />
+            Agregar movimiento
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setModalImportar(true)}
+            className="gap-1"
+          >
+            <Upload className="size-4" />
+            Importar extracto
+          </Button>
+          <Button variant="ghost" size="sm" onClick={onVolver}>
+            ← Volver
+          </Button>
+        </div>
       </div>
 
       <Card className="rounded-[var(--radius-card)] border-[var(--color-border)]">
@@ -234,6 +260,18 @@ export function ExtractoPage({ onVolver }: { onVolver: () => void }) {
           titulo="Registrar pago desde extracto"
         />
       )}
+
+      <AgregarMovimientoModal
+        open={modalAgregar}
+        onClose={() => setModalAgregar(false)}
+        onGuardado={reload}
+      />
+
+      <ImportarExtractoModal
+        open={modalImportar}
+        onClose={() => setModalImportar(false)}
+        onImportado={reload}
+      />
     </div>
   );
 }

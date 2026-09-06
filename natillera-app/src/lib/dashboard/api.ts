@@ -341,6 +341,20 @@ export const api = {
       "/api/transacciones/desglose",
       d,
     ),
+  crearMovimientoBanco: (m: {
+    banco: string;
+    fecha: string;
+    descripcion?: string;
+    monto: number;
+    saldo_cuenta?: number | null;
+    detalle_origen?: string | null;
+    socio_id?: number | null;
+  }) => post<{ creado: boolean; id?: number; id_existente?: number }>("/api/extractos", m),
+  importarExtracto: (banco: string, movimientos: unknown[]) =>
+    post<{ insertados: number; duplicados: number; errores: { fila: number; motivo: string }[] }>(
+      "/api/extractos/importar",
+      { banco, movimientos },
+    ),
   eliminarTransaccion: (id: number) => del<{ ok: true }>(`/api/transacciones/${id}`),
   buscarTransacciones: (params: {
     socio_id?: number;

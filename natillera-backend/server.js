@@ -964,6 +964,110 @@ app.get("/api/transacciones", (req, res) => {
   );
 });
 
+// ---------------- Crear movimiento bancario manual ----------------
+// Sirve para agregar movimientos recientes sin re-migrar el Excel.
+// Detecta duplicados por (banco, fecha, monto, descripcion) y devuelve
+// { creado: true } o { creado: false, id_existente }.
+const BANCOS_VALIDOS = new Set(["Bancolombia", "Nequi"]);
+const ORIGEN_VALIDO = new Set(["NATILLERA", "PERSONAL", "N/A"]);
+
+function crearMovimientoBanco(datos, opts = {}) {
+  const banco = String(datos.banco || "").trim();
+  if (!BANCOS_VALIDOS.has(banco))
+    throw new Error(`banco inválido — usa: ${[...BANCOS_VALIDOS].join(", ")}`);
+  if (!datos.fecha || !/^\d{4}-\d{2}-\d{2}$/.test(datos.fecha))
+    throw new Error("fecha debe ser YYYY-MM-DD");
+  if (typeof datos.monto !== "number" && Number.isNaN(Number(datos.monto)))
+    throw new Error("monto debe ser numérico (positivo o negativo)");
+  const monto = Math.round(Number(datos.monto));
+  const descripcion = String(datos.descripcion ?? "").trim() || null;
+  const saldo = datos.saldo_cuenta != null ? Math.round(Number(datos.saldo_cuenta)) : null;
+  const detalle = datos.detalle_origen ?? null;
+  if (detalle != null && !ORIGEN_VALIDO.has(detalle))
+    throw new Error(`detalle_origen inválido — usa: ${[...ORIGEN_VALIDO].join(", ")} o null`);
+  const socioId = datos.socio_id != null ? Number(datos.socio_id) : null;
+
+  if (!opts.omitirDedupe) {
+    const dup = db
+      .prepare(
+        `SELECT id FROM movimientos_banco
+          WHERE banco = ? AND fecha = ? AND monto = ?
+            AND COALESCE(descripcion,'') = COALESCE(?, '')
+          LIMIT 1`,
+      )
+      .get(banco, datos.fecha, monto, descripcion);
+    if (dup) return { creado: false, id_existente: dup.id };
+  }
+
+  const info = db
+    .prepare(
+      `INSERT INTO movimientos_banco (
+        banco, fecha, descripcion, monto, saldo_cuenta,
+        detalle_origen, socio_id, fila_origen
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .run(
+      banco,
+      datos.fecha,
+      descripcion,
+      monto,
+      saldo,
+      detalle,
+      socioId,
+      -Date.now() - Math.floor(Math.random() * 1000),
+    );
+  return { creado: true, id: Number(info.lastInsertRowid) };
+}
+
+app.post("/api/extractos", (req, res) => {
+  try {
+    const r = crearMovimientoBanco(req.body ?? {});
+    res.json(r);
+  } catch (err) {
+    res.status(400).json({ error: err.message || String(err) });
+  }
+});
+
+// ---------------- Importar movimientos bancarios en batch ----------------
+// Body: { banco, movimientos: [{fecha, descripcion, monto, saldo?, detalle?}] }
+// Reporta cuántos entraron nuevos y cuántos se omitieron por duplicado.
+app.post("/api/extractos/importar", (req, res) => {
+  const { banco, movimientos } = req.body ?? {};
+  if (!BANCOS_VALIDOS.has(banco))
+    return res.status(400).json({
+      error: `banco inválido — usa: ${[...BANCOS_VALIDOS].join(", ")}`,
+    });
+  if (!Array.isArray(movimientos) || movimientos.length === 0)
+    return res.status(400).json({ error: "movimientos debe ser un array no vacío" });
+
+  const resultado = { insertados: 0, duplicados: 0, errores: [] };
+  db.exec("BEGIN");
+  try {
+    for (const [i, m] of movimientos.entries()) {
+      try {
+        const r = crearMovimientoBanco({
+          banco,
+          fecha: m.fecha,
+          descripcion: m.descripcion,
+          monto: m.monto,
+          saldo_cuenta: m.saldo_cuenta ?? m.saldo ?? null,
+          detalle_origen: m.detalle_origen ?? m.detalle ?? null,
+          socio_id: m.socio_id ?? null,
+        });
+        if (r.creado) resultado.insertados++;
+        else resultado.duplicados++;
+      } catch (err) {
+        resultado.errores.push({ fila: i + 1, motivo: err.message || String(err) });
+      }
+    }
+    db.exec("COMMIT");
+    res.json(resultado);
+  } catch (err) {
+    db.exec("ROLLBACK");
+    res.status(500).json({ error: err.message || String(err) });
+  }
+});
+
 app.get("/", (_req, res) => {
   res.type("text/plain").send(
     "Natillera API\n\n" +
@@ -988,6 +1092,8 @@ app.get("/", (_req, res) => {
       "POST:\n" +
       "  /api/transacciones            {socio_id,concepto,valor,fecha_pago,periodo_id,notas,extracto_id?}\n" +
       "  /api/transacciones/desglose   {socio_id,fecha_pago,periodo_id,extracto_id?,lineas:[{concepto,valor,notas?}]}\n" +
+      "  /api/extractos                {banco,fecha,descripcion,monto,saldo_cuenta?,detalle_origen?}\n" +
+      "  /api/extractos/importar       {banco,movimientos:[{fecha,descripcion,monto,saldo?,detalle?}]}\n" +
       "  /api/extractos/:id/vincular   {transaccion_id}\n" +
       "  /api/extractos/:id/origen     {detalle_origen:'NATILLERA'|'PERSONAL'|'N/A'|null}\n\n" +
       "DELETE:\n" +
