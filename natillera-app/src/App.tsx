@@ -9,7 +9,6 @@ import {
   AlertTriangle,
   Landmark,
   Link2,
-  ClipboardCheck,
   FileText,
   HardDrive,
 } from "lucide-react";
@@ -23,9 +22,9 @@ import { ControlPagosPage } from "@/pages/ControlPagosPage";
 import { LiquidacionPage } from "@/pages/LiquidacionPage";
 import { PrestamosActivosPage } from "@/pages/PrestamosActivosPage";
 import { MatrizPrestamosPage } from "@/pages/MatrizPrestamosPage";
+import { MoraInteresesPage } from "@/pages/MoraInteresesPage";
 import { ConciliacionPage } from "@/pages/ConciliacionPage";
 import { ExtractoPage } from "@/pages/ExtractoPage";
-import { RegistrarPagoPage } from "@/pages/RegistrarPagoPage";
 import { EstadoCuentaPage } from "@/pages/EstadoCuentaPage";
 
 type Vista =
@@ -36,10 +35,10 @@ type Vista =
   | "control"
   | "prestamos"
   | "matriz-prestamos"
+  | "mora-intereses"
   | "liquidacion"
   | "conciliacion"
   | "extracto"
-  | "registrar"
   | "local";
 
 interface Modulo {
@@ -77,6 +76,7 @@ const GRUPOS: Grupo[] = [
     items: [
       { key: "prestamos", label: "Préstamos activos", Icon: AlertTriangle },
       { key: "matriz-prestamos", label: "Matriz de préstamos", Icon: BarChart3 },
+      { key: "mora-intereses", label: "Mora intereses", Icon: AlertTriangle },
       { key: "liquidacion", label: "Liquidación", Icon: Wallet },
     ],
   },
@@ -88,11 +88,8 @@ const GRUPOS: Grupo[] = [
     ],
   },
   {
-    titulo: "Registro",
-    items: [
-      { key: "registrar", label: "Registrar pago", Icon: ClipboardCheck },
-      { key: "local", label: "Local (offline)", Icon: HardDrive },
-    ],
+    titulo: "Otros",
+    items: [{ key: "local", label: "Local (offline)", Icon: HardDrive }],
   },
 ];
 
@@ -176,10 +173,10 @@ export function App() {
             {vista === "control" && <ControlPagosPage onVolver={volverPanel} />}
             {vista === "prestamos" && <PrestamosActivosPage onVolver={volverPanel} />}
             {vista === "matriz-prestamos" && <MatrizPrestamosPage onVolver={volverPanel} />}
+            {vista === "mora-intereses" && <MoraInteresesPage onVolver={volverPanel} />}
             {vista === "liquidacion" && <LiquidacionPage onVolver={volverPanel} />}
             {vista === "conciliacion" && <ConciliacionPage onVolver={volverPanel} />}
             {vista === "extracto" && <ExtractoPage onVolver={volverPanel} />}
-            {vista === "registrar" && <RegistrarPagoPage onVolver={volverPanel} />}
             {vista === "local" && <NatilleraPage />}
           </ErrorBoundary>
         </main>

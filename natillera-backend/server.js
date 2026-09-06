@@ -169,17 +169,171 @@ function pivot(filas) {
 
 // ---------------- Liquidación real ----------------
 // Cada socio recibe lo que aportó (ahorro + actividades + rifa +
-// intereses pagados) menos sus deudas pendientes (saldo préstamo + multas).
+// intereses pagados) menos sus deudas pendientes (saldo préstamo + multas
+// + mora de intereses calculada dinámicamente por socio).
 app.get("/api/liquidacion", (_req, res) => {
-  res.json(
-    query(`
-      SELECT id, nombre, cuota_sostenimiento,
-             ahorro, actividades, rifa_chance, intereses_pagados, total_aportes,
-             deducc_prestamo, deducc_multas, neto_a_recibir
-        FROM vw_liquidacion_anual
-        ORDER BY neto_a_recibir DESC
-    `),
+  const base = query(`
+    SELECT id, nombre, cuota_sostenimiento,
+           ahorro, actividades, rifa_chance, intereses_pagados, total_aportes,
+           deducc_prestamo, deducc_multas, neto_a_recibir
+      FROM vw_liquidacion_anual
+  `);
+  // Sumamos la mora pendiente por socio (todas sus préstamos activos).
+  const moras = calcularMoraPrestamos(db);
+  const moraPorSocio = new Map();
+  for (const m of moras) {
+    moraPorSocio.set(
+      m.socio_id,
+      (moraPorSocio.get(m.socio_id) || 0) + m.mora_pendiente,
+    );
+  }
+  const enriquecido = base.map((r) => {
+    const mora = moraPorSocio.get(r.id) || 0;
+    return {
+      ...r,
+      deducc_mora_intereses: mora,
+      neto_a_recibir: r.neto_a_recibir - mora,
+    };
+  });
+  enriquecido.sort((a, b) => b.neto_a_recibir - a.neto_a_recibir);
+  res.json(enriquecido);
+});
+
+// ---------------- Mora por intereses de préstamo ----------------
+// Regla de negocio:
+//   Cada préstamo tiene un aniversario mensual = mismo día del mes que su
+//   fecha_desembolso. Ej: préstamo 17-ago genera vencimientos el 17-sep,
+//   17-oct, 17-nov… Si el interés se paga después del vencimiento, se
+//   cobra $500 por cada día de atraso. Si aún no se ha pagado, la mora
+//   crece día a día hasta el momento del cálculo.
+//
+// Se hace matching FIFO: el pago #1 de intereses cubre el vencimiento #1,
+// el pago #2 cubre el vencimiento #2, y así sucesivamente. La fecha del
+// pago vs la fecha del vencimiento determina la mora de esa cuota.
+const MORA_POR_DIA = 500;
+
+function calcularMoraPrestamos(db, hoyISO) {
+  const hoy = new Date((hoyISO || new Date().toISOString().slice(0, 10)) + "T00:00:00");
+  const prestamos = db
+    .prepare(
+      `SELECT p.id, p.socio_id, p.fecha_desembolso, p.monto_prestado,
+              s.nombre AS socio
+         FROM prestamos p
+         JOIN socios s ON s.id = p.socio_id
+        WHERE p.estado = 'activo'
+          AND p.monto_prestado > 0
+          AND p.fecha_desembolso IS NOT NULL`,
+    )
+    .all();
+
+  const resultado = [];
+  for (const p of prestamos) {
+    const desembolso = new Date(p.fecha_desembolso + "T00:00:00");
+    if (Number.isNaN(desembolso.getTime())) continue;
+
+    // Genera todos los vencimientos mensuales (mismo día) hasta hoy.
+    const vencimientos = [];
+    const cursor = new Date(desembolso);
+    cursor.setMonth(cursor.getMonth() + 1);
+    while (cursor <= hoy) {
+      vencimientos.push(new Date(cursor));
+      cursor.setMonth(cursor.getMonth() + 1);
+    }
+
+    // Pagos de intereses ordenados por fecha (FIFO).
+    const pagos = db
+      .prepare(
+        `SELECT fecha_abono, intereses_pagados
+           FROM abonos_prestamos
+          WHERE prestamo_id = ? AND intereses_pagados > 0
+          ORDER BY fecha_abono, id`,
+      )
+      .all(p.id);
+
+    let moraPagada = 0;
+    let moraPendiente = 0;
+    let sinPagar = 0;
+    let pagadosATiempo = 0;
+    let pagadosTarde = 0;
+    const detalle = [];
+
+    for (let i = 0; i < vencimientos.length; i++) {
+      const venc = vencimientos[i];
+      const vencISO = venc.toISOString().slice(0, 10);
+      const pago = pagos[i];
+      if (pago && pago.fecha_abono) {
+        const fechaPago = new Date(pago.fecha_abono + "T00:00:00");
+        const dias = Math.max(
+          0,
+          Math.round((fechaPago - venc) / 86400000),
+        );
+        const mora = dias * MORA_POR_DIA;
+        moraPagada += mora;
+        if (dias > 0) pagadosTarde++;
+        else pagadosATiempo++;
+        detalle.push({
+          vencimiento: vencISO,
+          fecha_pago: pago.fecha_abono,
+          dias_atraso: dias,
+          mora,
+          estado: dias > 0 ? "pagado_tarde" : "pagado_a_tiempo",
+        });
+      } else {
+        const dias = Math.max(0, Math.round((hoy - venc) / 86400000));
+        const mora = dias * MORA_POR_DIA;
+        moraPendiente += mora;
+        sinPagar++;
+        detalle.push({
+          vencimiento: vencISO,
+          fecha_pago: null,
+          dias_atraso: dias,
+          mora,
+          estado: "sin_pagar",
+        });
+      }
+    }
+
+    resultado.push({
+      socio_id: p.socio_id,
+      socio: p.socio,
+      prestamo_id: p.id,
+      fecha_desembolso: p.fecha_desembolso,
+      monto_prestado: p.monto_prestado,
+      total_vencimientos: vencimientos.length,
+      pagados_a_tiempo: pagadosATiempo,
+      pagados_tarde: pagadosTarde,
+      sin_pagar: sinPagar,
+      mora_pagada: moraPagada,
+      mora_pendiente: moraPendiente,
+      mora_total: moraPagada + moraPendiente,
+      detalle,
+    });
+  }
+  return resultado;
+}
+
+app.get("/api/mora-intereses", (req, res) => {
+  const rows = calcularMoraPrestamos(db, req.query.hoy);
+  const totales = rows.reduce(
+    (a, r) => ({
+      mora_pagada: a.mora_pagada + r.mora_pagada,
+      mora_pendiente: a.mora_pendiente + r.mora_pendiente,
+      mora_total: a.mora_total + r.mora_total,
+      sin_pagar: a.sin_pagar + r.sin_pagar,
+    }),
+    { mora_pagada: 0, mora_pendiente: 0, mora_total: 0, sin_pagar: 0 },
   );
+  // Sin `?detalle=true` no devolvemos el detalle por vencimiento para
+  // mantener el payload liviano en la lista.
+  const conDetalle = req.query.detalle === "true";
+  res.json({
+    hoy: (req.query.hoy || new Date().toISOString().slice(0, 10)),
+    regla: { mora_por_dia: MORA_POR_DIA, aniversario: "día del mes = día del desembolso" },
+    totales,
+    prestamos: rows
+      .sort((a, b) => b.mora_pendiente - a.mora_pendiente)
+      .map((r) => (conDetalle ? r : { ...r, detalle: undefined })),
+  });
 });
 
 // ---------------- Matriz de préstamos ----------------
@@ -500,6 +654,118 @@ app.post("/api/transacciones", (req, res) => {
   }
 });
 
+// ---------------- Registrar desglose de un pago bancario ----------------
+// Un movimiento bancario puede corresponder a varios conceptos.
+// Ejemplo: $205 recibidos → 100 AHORRO + 50 ABONO_PRESTAMO + 20 INTERESES + 30 ACTIVIDADES + 5 RIFA.
+// Todas las líneas se crean en una sola transacción SQL; si algo falla,
+// no queda nada persistido. El extracto se vincula a la primera línea.
+app.post("/api/transacciones/desglose", (req, res) => {
+  const { socio_id, extracto_id, fecha_pago, periodo_id, notas, lineas } =
+    req.body ?? {};
+
+  if (!Number.isInteger(socio_id))
+    return res.status(400).json({ error: "socio_id debe ser entero" });
+  if (!Array.isArray(lineas) || lineas.length === 0)
+    return res.status(400).json({ error: "lineas debe ser un array con al menos un ítem" });
+  if (extracto_id != null && !Number.isInteger(extracto_id))
+    return res.status(400).json({ error: "extracto_id debe ser entero o null" });
+  if (periodo_id != null && !Number.isInteger(periodo_id))
+    return res.status(400).json({ error: "periodo_id debe ser entero o null" });
+  if (fecha_pago && !/^\d{4}-\d{2}-\d{2}$/.test(fecha_pago))
+    return res.status(400).json({ error: "fecha_pago debe ser YYYY-MM-DD" });
+
+  const socio = queryOne(`SELECT id FROM socios WHERE id = ?`, [socio_id]);
+  if (!socio) return res.status(400).json({ error: "socio_id no existe" });
+  if (periodo_id != null) {
+    const p = queryOne(`SELECT id FROM periodos WHERE id = ?`, [periodo_id]);
+    if (!p) return res.status(400).json({ error: "periodo_id no existe" });
+  }
+  if (extracto_id != null) {
+    const e = queryOne(`SELECT id FROM movimientos_banco WHERE id = ?`, [extracto_id]);
+    if (!e) return res.status(400).json({ error: "extracto_id no existe" });
+  }
+
+  // Validar cada línea
+  const preparadas = [];
+  for (const [i, l] of lineas.entries()) {
+    if (!CONCEPTOS_VALIDOS.has(l?.concepto))
+      return res.status(400).json({
+        error: `Línea ${i + 1}: concepto inválido "${l?.concepto}"`,
+      });
+    const valor = Math.abs(Math.round(Number(l.valor) || 0));
+    if (valor <= 0)
+      return res.status(400).json({ error: `Línea ${i + 1}: valor debe ser > 0` });
+    preparadas.push({
+      concepto: l.concepto,
+      tipo: TIPO_POR_CONCEPTO[l.concepto],
+      valor,
+      notas: l.notas ?? null,
+    });
+  }
+
+  db.exec("BEGIN");
+  try {
+    const insTx = db.prepare(`
+      INSERT INTO transacciones (
+        socio_id, periodo_id, concepto, tipo, valor, fecha_pago, notas, fila_origen
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const insMov = db.prepare(`
+      INSERT INTO movimientos (socio_id, transaccion_id, tipo, concepto, valor, fecha, metadata)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    const ids = [];
+    // fila_origen negativo (Date.now() con offset por línea para que sean únicos)
+    const baseFila = -Date.now();
+    for (const [i, l] of preparadas.entries()) {
+      const info = insTx.run(
+        socio_id,
+        periodo_id ?? null,
+        l.concepto,
+        l.tipo,
+        l.valor,
+        fecha_pago || null,
+        l.notas || notas || null,
+        baseFila - i,
+      );
+      const txId = Number(info.lastInsertRowid);
+      ids.push(txId);
+      insMov.run(
+        socio_id,
+        txId,
+        l.tipo,
+        l.concepto,
+        l.valor,
+        fecha_pago || null,
+        JSON.stringify({
+          origen: "manual",
+          desglose: true,
+          extracto_id: extracto_id ?? null,
+        }),
+      );
+    }
+
+    // Vincular el extracto a la primera transacción del desglose.
+    if (extracto_id != null && ids.length > 0) {
+      db.prepare(
+        `UPDATE movimientos_banco SET transaccion_id = ? WHERE id = ?`,
+      ).run(ids[0], extracto_id);
+    }
+
+    db.exec("COMMIT");
+    res.json({
+      ids,
+      extracto_id: extracto_id ?? null,
+      total: preparadas.reduce((a, l) => a + l.valor, 0),
+    });
+  } catch (err) {
+    db.exec("ROLLBACK");
+    console.error(err);
+    res.status(500).json({ error: err.message || String(err) });
+  }
+});
+
 // ---------------- Eliminar transacción manual ----------------
 // Solo permite eliminar transacciones creadas manualmente (fila_origen < 0).
 // Las importadas del Excel quedan protegidas (idempotencia con el archivo).
@@ -585,12 +851,14 @@ app.get("/", (_req, res) => {
       "  /api/bancos\n" +
       "  /api/ahorros-por-periodo\n" +
       "  /api/deudores\n" +
+      "  /api/mora-intereses[?detalle=true&hoy=YYYY-MM-DD]\n" +
       "  /api/morosos[?dias=60]\n" +
       "  /api/periodos\n" +
       "  /api/extractos[?banco&origen&conciliado&desde&hasta&q&socio_id&limit&offset]\n" +
       "  /api/transacciones[?socio_id&concepto&desde&hasta&limit]\n\n" +
       "POST:\n" +
       "  /api/transacciones            {socio_id,concepto,valor,fecha_pago,periodo_id,notas,extracto_id?}\n" +
+      "  /api/transacciones/desglose   {socio_id,fecha_pago,periodo_id,extracto_id?,lineas:[{concepto,valor,notas?}]}\n" +
       "  /api/extractos/:id/vincular   {transaccion_id}\n" +
       "  /api/extractos/:id/origen     {detalle_origen:'NATILLERA'|'PERSONAL'|'N/A'|null}\n\n" +
       "DELETE:\n" +

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { CircleCheck, AlertCircle, Search } from "lucide-react";
+import { CircleCheck, AlertCircle, Search, Plus, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -11,91 +11,90 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { formatCOP, parseCOP } from "@/lib/natillera/format";
 import { api, type Socio, type Periodo } from "@/lib/dashboard/api";
 import { useApi } from "@/lib/dashboard/useApi";
 
-// Los conceptos agrupados por categoría para que el usuario los ubique rápido.
-const CONCEPTOS_GRUPOS = [
-  {
-    grupo: "Aportes",
-    items: [
-      { key: "AHORRO", label: "Ahorro mensual" },
-      { key: "ACTIVIDADES", label: "Actividades" },
-      { key: "RIFA_CHANCE", label: "Rifa chance" },
-    ],
-  },
-  {
-    grupo: "Préstamos",
-    items: [
-      { key: "ABONO_PRESTAMO", label: "Abono a préstamo (capital)" },
-      { key: "INTERESES_PRESTAMO", label: "Intereses de préstamo" },
-      { key: "PRESTAMO", label: "Desembolso de préstamo (egreso)" },
-    ],
-  },
-  {
-    grupo: "Otros",
-    items: [{ key: "MULTA", label: "Multa" }],
-  },
+const CONCEPTOS = [
+  { key: "AHORRO", label: "Ahorro" },
+  { key: "ACTIVIDADES", label: "Actividades" },
+  { key: "RIFA_CHANCE", label: "Rifa chance" },
+  { key: "ABONO_PRESTAMO", label: "Abono a préstamo" },
+  { key: "INTERESES_PRESTAMO", label: "Intereses préstamo" },
+  { key: "MULTA", label: "Multa" },
+  { key: "PRESTAMO", label: "Desembolso préstamo" },
 ];
 
 export interface PagoPreset {
   socio_id?: number | null;
   concepto?: string;
-  valor?: number;
+  valor?: number; // total del movimiento del extracto
   fecha_pago?: string;
   periodo_id?: number | null;
   notas?: string;
   extracto_id?: number | null;
-  origen_contexto?: string; // "Desde extracto: banco fecha descripción" etc.
+  origen_contexto?: string;
+}
+
+interface Linea {
+  id: number;
+  concepto: string;
+  valor: string;
 }
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  onGuardado?: (txId: number) => void;
+  onGuardado?: () => void;
   preset: PagoPreset;
   titulo?: string;
 }
+
+let idSeq = 1;
 
 export function RegistrarPagoModal({ open, onClose, onGuardado, preset, titulo }: Props) {
   const socios = useApi(() => api.socios(), []);
   const periodos = useApi(() => api.periodos(), []);
 
   const [socioId, setSocioId] = useState<string>("");
-  const [concepto, setConcepto] = useState<string>("AHORRO");
-  const [valor, setValor] = useState<string>("");
   const [fecha, setFecha] = useState<string>("");
   const [periodoId, setPeriodoId] = useState<string>("");
-  const [notas, setNotas] = useState<string>("");
+  const [notasGlobal, setNotasGlobal] = useState<string>("");
   const [busqueda, setBusqueda] = useState<string>("");
+  const [lineas, setLineas] = useState<Linea[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [ok, setOk] = useState<string | null>(null);
 
-  // Cuando se abre, sembramos con el preset y elegimos un periodo sensato.
   useEffect(() => {
     if (!open) return;
     setSocioId(preset.socio_id ? String(preset.socio_id) : "");
-    setConcepto(preset.concepto || "AHORRO");
-    setValor(preset.valor ? String(preset.valor) : "");
     setFecha(preset.fecha_pago || new Date().toISOString().slice(0, 10));
-    setNotas(preset.notas || "");
+    setNotasGlobal(preset.notas || "");
+    setBusqueda("");
     setError(null);
     setOk(null);
-    // Auto-selecciona periodo por el mes de la fecha (o del hoy)
-    if (!preset.periodo_id && periodos.data) {
-      const iso = preset.fecha_pago || new Date().toISOString().slice(0, 10);
-      const mes = new Date(iso + "T00:00:00").getMonth() + 1; // 1..12
-      const orden = ((mes + 1) % 12) + 1; // DIC=1 en nuestro catálogo
-      const match = periodos.data.find((p) => p.orden === orden);
-      setPeriodoId(match ? String(match.id) : "");
-    } else {
-      setPeriodoId(preset.periodo_id ? String(preset.periodo_id) : "");
+    // Auto-selecciona periodo por mes
+    if (periodos.data) {
+      if (preset.periodo_id) {
+        setPeriodoId(String(preset.periodo_id));
+      } else {
+        const iso = preset.fecha_pago || new Date().toISOString().slice(0, 10);
+        const mes = new Date(iso + "T00:00:00").getMonth() + 1;
+        const orden = ((mes + 1) % 12) + 1;
+        const match = periodos.data.find((p) => p.orden === orden);
+        setPeriodoId(match ? String(match.id) : "");
+      }
     }
-    setBusqueda("");
+    // Línea inicial con el valor completo
+    setLineas([
+      {
+        id: idSeq++,
+        concepto: preset.concepto || "AHORRO",
+        valor: preset.valor ? String(preset.valor) : "",
+      },
+    ]);
   }, [open, preset, periodos.data]);
 
   const sociosFiltrados = useMemo(() => {
@@ -106,29 +105,70 @@ export function RegistrarPagoModal({ open, onClose, onGuardado, preset, titulo }
   }, [socios.data, busqueda]);
 
   const socioSel = (socios.data ?? []).find((s) => String(s.id) === socioId);
-  const cuotaSug = socioSel?.cuota_sostenimiento ?? 0;
+  const totalObjetivo = preset.valor ?? 0;
+  const totalAsignado = lineas.reduce((a, l) => a + parseCOP(l.valor), 0);
+  const restante = totalObjetivo - totalAsignado;
+
+  function addLinea(conceptoInicial = "AHORRO", valorInicial = "") {
+    setLineas((prev) => [
+      ...prev,
+      { id: idSeq++, concepto: conceptoInicial, valor: valorInicial },
+    ]);
+  }
+
+  function updateLinea(id: number, patch: Partial<Linea>) {
+    setLineas((prev) => prev.map((l) => (l.id === id ? { ...l, ...patch } : l)));
+  }
+
+  function removeLinea(id: number) {
+    setLineas((prev) => (prev.length > 1 ? prev.filter((l) => l.id !== id) : prev));
+  }
+
+  function autocompletar() {
+    // Pone el "restante" en la última línea vacía o la última.
+    if (restante <= 0) return;
+    const ultimaVacia = [...lineas].reverse().find((l) => parseCOP(l.valor) === 0);
+    if (ultimaVacia) {
+      updateLinea(ultimaVacia.id, { valor: String(parseCOP(ultimaVacia.valor) + restante) });
+    } else if (lineas.length > 0) {
+      const ultima = lineas[lineas.length - 1];
+      updateLinea(ultima.id, { valor: String(parseCOP(ultima.valor) + restante) });
+    }
+  }
 
   async function guardar(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setOk(null);
     if (!socioId) return setError("Elige un socio");
-    const montoLimpio = parseCOP(valor);
-    if (montoLimpio <= 0) return setError("El valor debe ser mayor que 0");
+    const preparadas = lineas
+      .map((l) => ({ concepto: l.concepto, valor: parseCOP(l.valor) }))
+      .filter((l) => l.valor > 0);
+    if (preparadas.length === 0)
+      return setError("Ingresa al menos un valor mayor a 0");
+
+    if (totalObjetivo > 0 && Math.abs(totalAsignado - totalObjetivo) > 0) {
+      const diff = totalObjetivo - totalAsignado;
+      if (!confirm(
+        `El total desglosado (${formatCOP(totalAsignado)}) es distinto al del extracto (${formatCOP(totalObjetivo)}). Diferencia: ${formatCOP(diff)}. ¿Guardar de todas formas?`,
+      )) return;
+    }
+
     setEnviando(true);
     try {
-      const res = await api.crearTransaccion({
+      const res = await api.crearDesglose({
         socio_id: Number(socioId),
-        concepto,
-        valor: montoLimpio,
         fecha_pago: fecha || undefined,
         periodo_id: periodoId ? Number(periodoId) : null,
-        notas: notas || undefined,
+        notas: notasGlobal || undefined,
         extracto_id: preset.extracto_id ?? null,
+        lineas: preparadas,
       });
-      setOk(`Guardado tx #${res.id}`);
-      onGuardado?.(res.id);
-      setTimeout(() => onClose(), 800);
+      setOk(
+        `Guardado ${res.ids.length} concepto${res.ids.length > 1 ? "s" : ""} · Total ${formatCOP(res.total)}`,
+      );
+      onGuardado?.();
+      setTimeout(() => onClose(), 900);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -138,7 +178,7 @@ export function RegistrarPagoModal({ open, onClose, onGuardado, preset, titulo }
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{titulo || "Registrar pago"}</DialogTitle>
           {preset.origen_contexto && (
@@ -179,64 +219,14 @@ export function RegistrarPagoModal({ open, onClose, onGuardado, preset, titulo }
               </select>
               {socioSel && (
                 <p className="text-xs text-[var(--color-muted)]">
-                  Cuota base {formatCOP(cuotaSug)} · aportado {formatCOP(socioSel.total_aportado)}
+                  Cuota base {formatCOP(socioSel.cuota_sostenimiento)} · aportado{" "}
+                  {formatCOP(socioSel.total_aportado)}
                 </p>
               )}
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <Label>Concepto *</Label>
-            <div className="grid gap-1.5 sm:grid-cols-3">
-              {CONCEPTOS_GRUPOS.map((g) => (
-                <div key={g.grupo} className="space-y-1">
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
-                    {g.grupo}
-                  </p>
-                  <div className="flex flex-col gap-1">
-                    {g.items.map((c) => {
-                      const activo = concepto === c.key;
-                      return (
-                        <button
-                          key={c.key}
-                          type="button"
-                          onClick={() => setConcepto(c.key)}
-                          className={`rounded-md border px-2 py-1.5 text-left text-xs transition-colors ${
-                            activo
-                              ? "border-[var(--color-primary)] bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
-                              : "border-[var(--color-border)] hover:border-[var(--color-primary)]/50"
-                          }`}
-                        >
-                          {c.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
           <div className="grid gap-3 sm:grid-cols-3">
-            <div className="space-y-1.5">
-              <Label>Valor *</Label>
-              <Input
-                inputMode="numeric"
-                value={valor}
-                onChange={(e) => setValor(e.target.value)}
-                placeholder={cuotaSug ? String(cuotaSug) : "50000"}
-                required
-              />
-              {cuotaSug > 0 && concepto === "AHORRO" && (
-                <button
-                  type="button"
-                  onClick={() => setValor(String(cuotaSug))}
-                  className="text-[10px] text-[var(--color-primary)] hover:underline"
-                >
-                  Usar cuota base
-                </button>
-              )}
-            </div>
             <div className="space-y-1.5">
               <Label>Fecha</Label>
               <Input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
@@ -256,17 +246,116 @@ export function RegistrarPagoModal({ open, onClose, onGuardado, preset, titulo }
                 ))}
               </select>
             </div>
+            <div className="space-y-1.5">
+              <Label>Notas generales</Label>
+              <Input
+                value={notasGlobal}
+                onChange={(e) => setNotasGlobal(e.target.value)}
+                placeholder="Comentario del pago"
+                maxLength={200}
+              />
+            </div>
           </div>
 
-          <div className="space-y-1.5">
-            <Label>Notas</Label>
-            <Textarea
-              value={notas}
-              onChange={(e) => setNotas(e.target.value)}
-              rows={2}
-              maxLength={300}
-              placeholder="Referencia, comentario…"
-            />
+          <div className="rounded-md border border-[var(--color-border)] p-3 space-y-3 bg-[var(--color-primary)]/[0.03]">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div>
+                <Label className="text-sm">Desglose del pago</Label>
+                <p className="text-[11px] text-[var(--color-muted)]">
+                  Distribuye el monto entre los conceptos que correspondan.
+                </p>
+              </div>
+              {totalObjetivo > 0 && (
+                <div className="flex items-center gap-2 text-xs">
+                  <div className="text-right">
+                    <div className="text-[10px] text-[var(--color-muted)]">Total extracto</div>
+                    <div className="font-semibold tabular-nums">
+                      {formatCOP(totalObjetivo)}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[10px] text-[var(--color-muted)]">Asignado</div>
+                    <div
+                      className={`font-semibold tabular-nums ${
+                        totalAsignado === totalObjetivo
+                          ? "text-[var(--color-success)]"
+                          : "text-[var(--color-warning)]"
+                      }`}
+                    >
+                      {formatCOP(totalAsignado)}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[10px] text-[var(--color-muted)]">Falta</div>
+                    <div
+                      className={`font-semibold tabular-nums ${
+                        restante === 0
+                          ? "text-[var(--color-success)]"
+                          : "text-[var(--color-warning)]"
+                      }`}
+                    >
+                      {formatCOP(restante)}
+                    </div>
+                  </div>
+                  {restante > 0 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={autocompletar}
+                      className="h-7 px-2 text-[11px]"
+                    >
+                      Autocompletar
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              {lineas.map((l) => (
+                <div key={l.id} className="flex items-center gap-2">
+                  <select
+                    className="flex-1 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1.5 text-sm"
+                    value={l.concepto}
+                    onChange={(e) => updateLinea(l.id, { concepto: e.target.value })}
+                  >
+                    {CONCEPTOS.map((c) => (
+                      <option key={c.key} value={c.key}>
+                        {c.label}
+                      </option>
+                    ))}
+                  </select>
+                  <Input
+                    inputMode="numeric"
+                    value={l.valor}
+                    onChange={(e) => updateLinea(l.id, { valor: e.target.value })}
+                    placeholder="Valor"
+                    className="w-32 tabular-nums"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeLinea(l.id)}
+                    disabled={lineas.length === 1}
+                    className="h-8 w-8 p-0 text-[var(--color-destructive)]"
+                  >
+                    <X className="size-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => addLinea()}
+                className="w-full gap-1"
+              >
+                <Plus className="size-4" />
+                Agregar concepto
+              </Button>
+            </div>
           </div>
 
           {preset.extracto_id != null && (
@@ -275,7 +364,7 @@ export function RegistrarPagoModal({ open, onClose, onGuardado, preset, titulo }
                 Extracto #{preset.extracto_id}
               </Badge>
               <span className="text-xs text-[var(--color-text)]">
-                Se vinculará automáticamente al guardar.
+                Se vinculará al primer concepto del desglose.
               </span>
             </div>
           )}

@@ -6,7 +6,6 @@ import {
   Wallet,
   AlertTriangle,
   Landmark,
-  ClipboardCheck,
   FileText,
   CheckCircle2,
 } from "lucide-react";
@@ -74,6 +73,13 @@ const ACCESOS: {
     color: "var(--color-warning)",
   },
   {
+    key: "mora-intereses",
+    label: "Mora intereses",
+    desc: "Cálculo automático $500/día",
+    Icon: AlertTriangle,
+    color: "var(--color-destructive)",
+  },
+  {
     key: "conciliacion",
     label: "Conciliación banco",
     desc: "Resumen Bancolombia + Nequi",
@@ -92,13 +98,6 @@ const ACCESOS: {
     label: "Estado de cuenta",
     desc: "Detallado por socio (PDF/WhatsApp)",
     Icon: FileText,
-    color: "var(--color-primary)",
-  },
-  {
-    key: "registrar",
-    label: "Registrar pago",
-    desc: "Nuevo aporte / abono / préstamo",
-    Icon: ClipboardCheck,
     color: "var(--color-primary)",
   },
 ];

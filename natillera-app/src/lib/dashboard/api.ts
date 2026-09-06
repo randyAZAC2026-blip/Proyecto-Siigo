@@ -78,7 +78,44 @@ export interface Liquidacion {
   total_aportes: number;
   deducc_prestamo: number;
   deducc_multas: number;
+  deducc_mora_intereses: number;
   neto_a_recibir: number;
+}
+
+export interface MoraDetalle {
+  vencimiento: string;
+  fecha_pago: string | null;
+  dias_atraso: number;
+  mora: number;
+  estado: "pagado_a_tiempo" | "pagado_tarde" | "sin_pagar";
+}
+
+export interface MoraPrestamo {
+  socio_id: number;
+  socio: string;
+  prestamo_id: number;
+  fecha_desembolso: string | null;
+  monto_prestado: number;
+  total_vencimientos: number;
+  pagados_a_tiempo: number;
+  pagados_tarde: number;
+  sin_pagar: number;
+  mora_pagada: number;
+  mora_pendiente: number;
+  mora_total: number;
+  detalle?: MoraDetalle[];
+}
+
+export interface MoraReporte {
+  hoy: string;
+  regla: { mora_por_dia: number; aniversario: string };
+  totales: {
+    mora_pagada: number;
+    mora_pendiente: number;
+    mora_total: number;
+    sin_pagar: number;
+  };
+  prestamos: MoraPrestamo[];
 }
 
 export interface MatrizPrestamos {
@@ -212,6 +249,21 @@ export interface NuevaTransaccion {
   extracto_id?: number | null;
 }
 
+export interface LineaDesglose {
+  concepto: string;
+  valor: number;
+  notas?: string;
+}
+
+export interface DesglosePago {
+  socio_id: number;
+  fecha_pago?: string;
+  periodo_id?: number | null;
+  notas?: string;
+  extracto_id?: number | null;
+  lineas: LineaDesglose[];
+}
+
 export const api = {
   resumen: () => get<Resumen>("/api/resumen"),
   socios: () => get<Socio[]>("/api/socios"),
@@ -219,6 +271,8 @@ export const api = {
   matrizAhorro: () => get<Matriz>("/api/matriz-ahorro"),
   matrizActividades: () => get<Matriz>("/api/matriz-actividades"),
   matrizPrestamos: () => get<MatrizPrestamos>("/api/matriz-prestamos"),
+  moraIntereses: (detalle = false) =>
+    get<MoraReporte>(`/api/mora-intereses${detalle ? "?detalle=true" : ""}`),
   liquidacion: () => get<Liquidacion[]>("/api/liquidacion"),
   bancos: () => get<Banco[]>("/api/bancos"),
   ahorrosPorPeriodo: () => get<PeriodoResumen[]>("/api/ahorros-por-periodo"),
@@ -243,6 +297,11 @@ export const api = {
     post<{ id: number; socio_id: number; concepto: string; tipo: string; valor: number }>(
       "/api/transacciones",
       t,
+    ),
+  crearDesglose: (d: DesglosePago) =>
+    post<{ ids: number[]; extracto_id: number | null; total: number }>(
+      "/api/transacciones/desglose",
+      d,
     ),
   eliminarTransaccion: (id: number) => del<{ ok: true }>(`/api/transacciones/${id}`),
   buscarTransacciones: (params: {
