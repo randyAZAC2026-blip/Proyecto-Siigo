@@ -167,16 +167,58 @@ function pivot(filas) {
   return { meses, socios: [...porSocio.values()] };
 }
 
-// ---------------- Liquidación estimada ----------------
+// ---------------- Liquidación real ----------------
+// Cada socio recibe lo que aportó (ahorro + actividades + rifa +
+// intereses pagados) menos sus deudas pendientes (saldo préstamo + multas).
 app.get("/api/liquidacion", (_req, res) => {
   res.json(
     query(`
-      SELECT id, nombre, cuota_sostenimiento, ahorro_socio,
-             proporcion, utilidad_estimada, neto_a_pagar_estimado
+      SELECT id, nombre, cuota_sostenimiento,
+             ahorro, actividades, rifa_chance, intereses_pagados, total_aportes,
+             deducc_prestamo, deducc_multas, neto_a_recibir
         FROM vw_liquidacion_anual
-        ORDER BY neto_a_pagar_estimado DESC
+        ORDER BY neto_a_recibir DESC
     `),
   );
+});
+
+// ---------------- Matriz de préstamos ----------------
+app.get("/api/matriz-prestamos", (_req, res) => {
+  const filas = query(`
+    SELECT socio_id, nombre, periodo, orden_periodo, abono, intereses, total
+      FROM vw_matriz_prestamos
+      ORDER BY nombre, orden_periodo
+  `);
+  const meses = [];
+  const porSocio = new Map();
+  for (const f of filas) {
+    if (!meses.find((m) => m.nombre === f.periodo)) {
+      meses.push({ nombre: f.periodo, orden: f.orden_periodo });
+    }
+    if (!porSocio.has(f.socio_id)) {
+      porSocio.set(f.socio_id, {
+        socio_id: f.socio_id,
+        nombre: f.nombre,
+        celdas: {},
+        totalAbono: 0,
+        totalIntereses: 0,
+        total: 0,
+      });
+    }
+    const row = porSocio.get(f.socio_id);
+    row.celdas[f.periodo] = {
+      abono: f.abono,
+      intereses: f.intereses,
+      total: f.total,
+    };
+    row.totalAbono += f.abono;
+    row.totalIntereses += f.intereses;
+    row.total += f.total;
+  }
+  meses.sort((a, b) => a.orden - b.orden);
+  // Solo socios con al menos un movimiento de préstamo
+  const socios = [...porSocio.values()].filter((s) => s.total > 0);
+  res.json({ meses, socios });
 });
 
 // ---------------- Conciliación bancaria ----------------
@@ -538,6 +580,7 @@ app.get("/", (_req, res) => {
       "  /api/socios/:id\n" +
       "  /api/matriz-ahorro\n" +
       "  /api/matriz-actividades\n" +
+      "  /api/matriz-prestamos\n" +
       "  /api/liquidacion\n" +
       "  /api/bancos\n" +
       "  /api/ahorros-por-periodo\n" +

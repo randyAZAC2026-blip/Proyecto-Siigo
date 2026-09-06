@@ -71,10 +71,26 @@ export interface Liquidacion {
   id: number;
   nombre: string;
   cuota_sostenimiento: number;
-  ahorro_socio: number;
-  proporcion: number;
-  utilidad_estimada: number;
-  neto_a_pagar_estimado: number;
+  ahorro: number;
+  actividades: number;
+  rifa_chance: number;
+  intereses_pagados: number;
+  total_aportes: number;
+  deducc_prestamo: number;
+  deducc_multas: number;
+  neto_a_recibir: number;
+}
+
+export interface MatrizPrestamos {
+  meses: { nombre: string; orden: number }[];
+  socios: {
+    socio_id: number;
+    nombre: string;
+    celdas: Record<string, { abono: number; intereses: number; total: number }>;
+    totalAbono: number;
+    totalIntereses: number;
+    total: number;
+  }[];
 }
 
 export interface Matriz {
@@ -202,6 +218,7 @@ export const api = {
   socioById: (id: number) => get<HistorialSocio>(`/api/socios/${id}`),
   matrizAhorro: () => get<Matriz>("/api/matriz-ahorro"),
   matrizActividades: () => get<Matriz>("/api/matriz-actividades"),
+  matrizPrestamos: () => get<MatrizPrestamos>("/api/matriz-prestamos"),
   liquidacion: () => get<Liquidacion[]>("/api/liquidacion"),
   bancos: () => get<Banco[]>("/api/bancos"),
   ahorrosPorPeriodo: () => get<PeriodoResumen[]>("/api/ahorros-por-periodo"),

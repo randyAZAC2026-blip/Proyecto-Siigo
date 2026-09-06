@@ -263,48 +263,77 @@ export function inicializarDB(dbPath) {
     FROM transacciones
     GROUP BY concepto, tipo;
 
-    -- Liquidación anual: reemplaza las hojas "Liquidacion" y "Resumen liquidacion"
-    -- Utilidad = intereses cobrados + multas + rifas
-    -- Se reparte proporcional al ahorro de cada socio (regla clásica de natillera).
+    -- Liquidación REAL por socio (no estimada / proporcional).
+    -- Cada socio recibe lo suyo:
+    --   (+) ahorro individual
+    --   (+) actividades individual
+    --   (+) rifa chance individual
+    --   (+) intereses que él pagó a la caja (aportó)
+    --   (−) saldo pendiente de sus préstamos vigentes
+    --   (−) multas que se le cobraron
     DROP VIEW IF EXISTS vw_liquidacion_anual;
     CREATE VIEW vw_liquidacion_anual AS
-    WITH
-      util AS (
-        SELECT SUM(valor) AS utilidad_total FROM transacciones
-        WHERE concepto IN ('INTERESES_PRESTAMO','MULTA','RIFA_CHANCE')
-      ),
-      total_ah AS (
-        SELECT SUM(valor) AS total_ahorro FROM transacciones WHERE concepto = 'AHORRO'
-      ),
-      por_socio AS (
-        SELECT s.id, s.nombre, s.cuota_sostenimiento,
-               COALESCE(SUM(CASE WHEN t.concepto='AHORRO' THEN t.valor END),0) AS ahorro_socio
-        FROM socios s
-        LEFT JOIN transacciones t ON t.socio_id = s.id
-        WHERE s.tipo = 'persona'
-        GROUP BY s.id
-      )
     SELECT
-      ps.id, ps.nombre, ps.cuota_sostenimiento,
-      ps.ahorro_socio,
-      CASE WHEN (SELECT total_ahorro FROM total_ah) > 0
-        THEN CAST(ps.ahorro_socio AS REAL) / (SELECT total_ahorro FROM total_ah)
-        ELSE 0 END AS proporcion,
-      CAST(
-        CASE WHEN (SELECT total_ahorro FROM total_ah) > 0
-          THEN (SELECT utilidad_total FROM util) *
-               CAST(ps.ahorro_socio AS REAL) / (SELECT total_ahorro FROM total_ah)
-          ELSE 0 END
-        AS INTEGER
-      ) AS utilidad_estimada,
-      ps.ahorro_socio + CAST(
-        CASE WHEN (SELECT total_ahorro FROM total_ah) > 0
-          THEN (SELECT utilidad_total FROM util) *
-               CAST(ps.ahorro_socio AS REAL) / (SELECT total_ahorro FROM total_ah)
-          ELSE 0 END
-        AS INTEGER
-      ) AS neto_a_pagar_estimado
-    FROM por_socio ps;
+      s.id,
+      s.nombre,
+      s.cuota_sostenimiento,
+      COALESCE(SUM(CASE WHEN t.concepto = 'AHORRO' THEN t.valor END), 0)             AS ahorro,
+      COALESCE(SUM(CASE WHEN t.concepto = 'ACTIVIDADES' THEN t.valor END), 0)         AS actividades,
+      COALESCE(SUM(CASE WHEN t.concepto = 'RIFA_CHANCE' THEN t.valor END), 0)         AS rifa_chance,
+      COALESCE(SUM(CASE WHEN t.concepto = 'INTERESES_PRESTAMO' THEN t.valor END), 0)  AS intereses_pagados,
+      -- Suma de aportes individuales
+      COALESCE(SUM(CASE WHEN t.concepto IN ('AHORRO','ACTIVIDADES','RIFA_CHANCE','INTERESES_PRESTAMO')
+                        THEN t.valor END), 0) AS total_aportes,
+      -- Deducciones
+      COALESCE((
+        SELECT SUM(monto_prestado - (
+          SELECT COALESCE(SUM(capital_pagado), 0)
+          FROM abonos_prestamos WHERE prestamo_id = p.id
+        ))
+        FROM prestamos p WHERE p.socio_id = s.id AND p.estado = 'activo'
+      ), 0) AS deducc_prestamo,
+      COALESCE((SELECT SUM(m.valor) FROM multas m
+                WHERE m.socio_id = s.id AND m.estado = 'pendiente'), 0) AS deducc_multas,
+      -- Neto a recibir = aportes − deducciones
+      (
+        COALESCE(SUM(CASE WHEN t.concepto IN ('AHORRO','ACTIVIDADES','RIFA_CHANCE','INTERESES_PRESTAMO')
+                          THEN t.valor END), 0)
+        - COALESCE((
+            SELECT SUM(monto_prestado - (
+              SELECT COALESCE(SUM(capital_pagado), 0)
+              FROM abonos_prestamos WHERE prestamo_id = p.id
+            ))
+            FROM prestamos p WHERE p.socio_id = s.id AND p.estado = 'activo'
+          ), 0)
+        - COALESCE((SELECT SUM(m.valor) FROM multas m
+                    WHERE m.socio_id = s.id AND m.estado = 'pendiente'), 0)
+      ) AS neto_a_recibir
+    FROM socios s
+    LEFT JOIN transacciones t ON t.socio_id = s.id
+    WHERE s.tipo = 'persona'
+    GROUP BY s.id;
+
+    -- Matriz de préstamos socios × mes.
+    -- Suma abonos y intereses pagados por cada socio en cada mes.
+    DROP VIEW IF EXISTS vw_matriz_prestamos;
+    CREATE VIEW vw_matriz_prestamos AS
+    SELECT
+      s.id AS socio_id,
+      s.nombre,
+      p.nombre AS periodo,
+      p.orden  AS orden_periodo,
+      COALESCE(SUM(CASE WHEN t.concepto = 'ABONO_PRESTAMO'     THEN t.valor END), 0) AS abono,
+      COALESCE(SUM(CASE WHEN t.concepto = 'INTERESES_PRESTAMO' THEN t.valor END), 0) AS intereses,
+      COALESCE(SUM(CASE WHEN t.concepto IN ('ABONO_PRESTAMO','INTERESES_PRESTAMO')
+                        THEN t.valor END), 0) AS total
+    FROM socios s
+    CROSS JOIN periodos p
+    LEFT JOIN transacciones t
+      ON t.socio_id = s.id
+     AND t.periodo_id = p.id
+     AND t.concepto IN ('ABONO_PRESTAMO', 'INTERESES_PRESTAMO')
+    WHERE s.tipo = 'persona'
+    GROUP BY s.id, p.id;
 
     -- Conciliación bancaria: ingresos NATILLERA en el banco vs transacciones.
     DROP VIEW IF EXISTS vw_conciliacion_bancaria;

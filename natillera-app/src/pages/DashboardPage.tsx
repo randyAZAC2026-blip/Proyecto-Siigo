@@ -67,6 +67,13 @@ const ACCESOS: {
     color: "var(--color-warning)",
   },
   {
+    key: "matriz-prestamos",
+    label: "Matriz de préstamos",
+    desc: "Abonos + intereses mes × socio",
+    Icon: BarChart3,
+    color: "var(--color-warning)",
+  },
+  {
     key: "conciliacion",
     label: "Conciliación banco",
     desc: "Resumen Bancolombia + Nequi",
