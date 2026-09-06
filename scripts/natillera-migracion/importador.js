@@ -350,7 +350,7 @@ export function migrar(db, plan) {
 
   const findPeriodoId = db.prepare(`SELECT id FROM periodos WHERE nombre = ?`);
 
-  const ejecutar = db.transaction(() => {
+  const ejecutar = () => {
     // 1) socios
     for (const s of plan.socios) {
       insSocio.run({
@@ -484,9 +484,17 @@ export function migrar(db, plan) {
     // 5) validación al centavo ANTES del COMMIT
     const val = validarSaldos(db, plan);
     if (!val.ok) throw new ErrorValidacion(val);
-  });
+  };
 
-  ejecutar();
+  // Transacción manual (node:sqlite no tiene db.transaction(fn)).
+  db.exec("BEGIN");
+  try {
+    ejecutar();
+    db.exec("COMMIT");
+  } catch (err) {
+    db.exec("ROLLBACK");
+    throw err;
+  }
 }
 
 // ------------------------------------------------------------

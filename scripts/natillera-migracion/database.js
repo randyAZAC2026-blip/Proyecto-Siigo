@@ -12,20 +12,29 @@
 //   - Las hojas BD/Estado Socios/Liquidacion se reemplazan por VIEWs
 //     calculadas al vuelo, así nunca hay dos "versiones" del mismo total.
 
-import Database from "better-sqlite3";
+// Silencia el "ExperimentalWarning" de node:sqlite — el módulo es estable
+// para nuestros usos y ya está incluido en Node 22+.
+// Se usa import dinámico para que el filtro esté activo antes de cargar el módulo.
+process.removeAllListeners("warning");
+process.on("warning", (w) => {
+  if (w.name === "ExperimentalWarning" && /SQLite/i.test(w.message)) return;
+  console.warn(`(node) ${w.name}: ${w.message}`);
+});
+
+const { DatabaseSync } = await import("node:sqlite");
 import path from "node:path";
 
 /**
  * Abre (o crea) la base de datos y garantiza el esquema completo.
  * @param {string} dbPath Ruta al archivo .db
- * @returns {import("better-sqlite3").Database}
+ * @returns {DatabaseSync}
  */
 export function inicializarDB(dbPath) {
   const abs = path.resolve(dbPath);
-  const db = new Database(abs);
+  const db = new DatabaseSync(abs);
 
-  db.pragma("foreign_keys = ON");
-  db.pragma("journal_mode = WAL");
+  db.exec("PRAGMA foreign_keys = ON");
+  db.exec("PRAGMA journal_mode = WAL");
 
   db.exec(`
     -- ============================================================
@@ -317,8 +326,12 @@ export function inicializarDB(dbPath) {
 
 /**
  * Cierra la conexión de forma segura.
- * @param {import("better-sqlite3").Database} db
+ * @param {DatabaseSync} db
  */
 export function cerrarDB(db) {
-  if (db && db.open) db.close();
+  try {
+    if (db) db.close();
+  } catch {
+    // ya cerrada
+  }
 }

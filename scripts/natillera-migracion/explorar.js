@@ -6,7 +6,13 @@
 //   node explorar.js socio Nilson → historial del socio que coincide con "Nilson"
 //   node explorar.js sql "SELECT * FROM socios LIMIT 5"  → SQL libre
 
-import Database from "better-sqlite3";
+process.removeAllListeners("warning");
+process.on("warning", (w) => {
+  if (w.name === "ExperimentalWarning" && /SQLite/i.test(w.message)) return;
+  console.warn(`(node) ${w.name}: ${w.message}`);
+});
+const { DatabaseSync } = await import("node:sqlite");
+
 import path from "node:path";
 import readline from "node:readline";
 
@@ -14,7 +20,7 @@ const DB_PATH = path.resolve(process.env.NAT_DB || "natillera.db");
 
 function abrirDB() {
   try {
-    return new Database(DB_PATH, { readonly: true });
+    return new DatabaseSync(DB_PATH, { readOnly: true });
   } catch (err) {
     console.error(`❌ No pude abrir ${DB_PATH}`);
     console.error(`   ${err.message}`);

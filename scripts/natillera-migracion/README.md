@@ -14,7 +14,8 @@ Esta migración reemplaza todo eso con un modelo relacional donde `transacciones
 
 ## Requisitos
 
-- Node.js ≥ 20
+- **Node.js ≥ 22** — este script usa `node:sqlite`, el driver SQLite built-in
+  de Node 22+. No requiere compilar código nativo ni Visual Studio C++.
 - El Excel `.xlsm` de la natillera con las hojas: `BD`, `BASE DE DATOS`, `Datos`, `Bancolombia`, `Nequi`.
 
 ## Instalación

@@ -3,14 +3,16 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Script ETL para migrar la natillera del Excel a SQLite con validación exacta de saldos.",
+  "description": "Script ETL para migrar la natillera del Excel a SQLite con validación exacta de saldos. Usa node:sqlite (built-in de Node 22+) — no requiere compilar código C++.",
   "scripts": {
     "importar": "node importador.js",
     "explorar": "node explorar.js",
     "reset": "node -e \"import('node:fs').then(fs => fs.default.rmSync('natillera.db', { force: true }))\""
   },
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "dependencies": {
-    "better-sqlite3": "^11.3.0",
     "exceljs": "^4.4.0"
   }
 }
