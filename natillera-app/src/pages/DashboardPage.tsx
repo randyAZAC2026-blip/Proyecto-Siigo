@@ -52,6 +52,13 @@ const ACCESOS: {
     color: "var(--color-success)",
   },
   {
+    key: "mora-ahorros",
+    label: "Mora ahorros",
+    desc: "Cálculo automático $500/día",
+    Icon: AlertTriangle,
+    color: "var(--color-destructive)",
+  },
+  {
     key: "liquidacion",
     label: "Liquidación",
     desc: "Cuánto le tocaría a cada socio hoy",

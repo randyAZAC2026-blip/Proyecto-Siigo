@@ -79,6 +79,7 @@ export interface Liquidacion {
   deducc_prestamo: number;
   deducc_multas: number;
   deducc_mora_intereses: number;
+  deducc_mora_ahorro: number;
   neto_a_recibir: number;
 }
 
@@ -116,6 +117,41 @@ export interface MoraReporte {
     sin_pagar: number;
   };
   prestamos: MoraPrestamo[];
+}
+
+export interface MoraAhorroDetalle {
+  periodo: string;
+  fecha_corte: string | null;
+  fecha_pago: string | null;
+  dias_atraso: number;
+  mora: number;
+  estado: "pagado_a_tiempo" | "pagado_tarde" | "sin_pagar";
+}
+
+export interface MoraAhorroSocio {
+  socio_id: number;
+  socio: string;
+  cuota_sostenimiento: number;
+  total_periodos: number;
+  pagados_a_tiempo: number;
+  pagados_tarde: number;
+  sin_pagar: number;
+  mora_pagada: number;
+  mora_pendiente: number;
+  mora_total: number;
+  detalle?: MoraAhorroDetalle[];
+}
+
+export interface MoraAhorroReporte {
+  hoy: string;
+  regla: { mora_por_dia: number; criterio: string };
+  totales: {
+    mora_pagada: number;
+    mora_pendiente: number;
+    mora_total: number;
+    sin_pagar: number;
+  };
+  socios: MoraAhorroSocio[];
 }
 
 export interface MatrizPrestamos {
@@ -273,6 +309,8 @@ export const api = {
   matrizPrestamos: () => get<MatrizPrestamos>("/api/matriz-prestamos"),
   moraIntereses: (detalle = false) =>
     get<MoraReporte>(`/api/mora-intereses${detalle ? "?detalle=true" : ""}`),
+  moraAhorros: (detalle = false) =>
+    get<MoraAhorroReporte>(`/api/mora-ahorros${detalle ? "?detalle=true" : ""}`),
   liquidacion: () => get<Liquidacion[]>("/api/liquidacion"),
   bancos: () => get<Banco[]>("/api/bancos"),
   ahorrosPorPeriodo: () => get<PeriodoResumen[]>("/api/ahorros-por-periodo"),

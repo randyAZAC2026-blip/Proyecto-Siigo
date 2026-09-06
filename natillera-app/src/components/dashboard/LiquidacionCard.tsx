@@ -21,9 +21,10 @@ export function LiquidacionCard({ filas }: { filas: Liquidacion[] }) {
       prestamos: acc.prestamos + f.deducc_prestamo,
       multas: acc.multas + f.deducc_multas,
       mora: acc.mora + (f.deducc_mora_intereses ?? 0),
+      moraAho: acc.moraAho + (f.deducc_mora_ahorro ?? 0),
       neto: acc.neto + f.neto_a_recibir,
     }),
-    { ahorro: 0, actividades: 0, rifa: 0, intereses: 0, aportes: 0, prestamos: 0, multas: 0, mora: 0, neto: 0 },
+    { ahorro: 0, actividades: 0, rifa: 0, intereses: 0, aportes: 0, prestamos: 0, multas: 0, mora: 0, moraAho: 0, neto: 0 },
   );
 
   return (
@@ -44,7 +45,7 @@ export function LiquidacionCard({ filas }: { filas: Liquidacion[] }) {
               <TableHead className="text-center border-l" colSpan={4}>
                 Aportes (+)
               </TableHead>
-              <TableHead className="text-center border-l" colSpan={3}>
+              <TableHead className="text-center border-l" colSpan={4}>
                 Deducciones (−)
               </TableHead>
               <TableHead rowSpan={2} className="text-right border-l">
@@ -58,6 +59,7 @@ export function LiquidacionCard({ filas }: { filas: Liquidacion[] }) {
               <TableHead className="text-right text-[10px]">Int. pag.</TableHead>
               <TableHead className="text-right text-[10px] border-l">Préstamo</TableHead>
               <TableHead className="text-right text-[10px]">Multas</TableHead>
+              <TableHead className="text-right text-[10px]">Mora ahorro</TableHead>
               <TableHead className="text-right text-[10px]">Mora int.</TableHead>
             </TableRow>
           </TableHeader>
@@ -84,6 +86,11 @@ export function LiquidacionCard({ filas }: { filas: Liquidacion[] }) {
                   </TableCell>
                   <TableCell className="text-right tabular-nums text-xs text-[var(--color-warning)]">
                     {f.deducc_multas > 0 ? "-" + formatCOP(f.deducc_multas) : "—"}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums text-xs text-[var(--color-destructive)]">
+                    {(f.deducc_mora_ahorro ?? 0) > 0
+                      ? "-" + formatCOP(f.deducc_mora_ahorro)
+                      : "—"}
                   </TableCell>
                   <TableCell className="text-right tabular-nums text-xs text-[var(--color-destructive)]">
                     {(f.deducc_mora_intereses ?? 0) > 0
@@ -118,6 +125,9 @@ export function LiquidacionCard({ filas }: { filas: Liquidacion[] }) {
               </TableCell>
               <TableCell className="text-right tabular-nums font-semibold text-xs text-[var(--color-warning)]">
                 -{formatCOP(totales.multas)}
+              </TableCell>
+              <TableCell className="text-right tabular-nums font-semibold text-xs text-[var(--color-destructive)]">
+                -{formatCOP(totales.moraAho)}
               </TableCell>
               <TableCell className="text-right tabular-nums font-semibold text-xs text-[var(--color-destructive)]">
                 -{formatCOP(totales.mora)}

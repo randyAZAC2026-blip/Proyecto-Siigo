@@ -178,21 +178,24 @@ app.get("/api/liquidacion", (_req, res) => {
            deducc_prestamo, deducc_multas, neto_a_recibir
       FROM vw_liquidacion_anual
   `);
-  // Sumamos la mora pendiente por socio (todas sus préstamos activos).
-  const moras = calcularMoraPrestamos(db);
-  const moraPorSocio = new Map();
-  for (const m of moras) {
-    moraPorSocio.set(
-      m.socio_id,
-      (moraPorSocio.get(m.socio_id) || 0) + m.mora_pendiente,
-    );
+  // Sumamos la mora pendiente por socio (préstamos + ahorros).
+  const moraInt = calcularMoraPrestamos(db);
+  const idxInt = new Map();
+  for (const m of moraInt) {
+    idxInt.set(m.socio_id, (idxInt.get(m.socio_id) || 0) + m.mora_pendiente);
   }
+  const moraAho = calcularMoraAhorros(db);
+  const idxAho = new Map();
+  for (const m of moraAho) idxAho.set(m.socio_id, m.mora_pendiente);
+
   const enriquecido = base.map((r) => {
-    const mora = moraPorSocio.get(r.id) || 0;
+    const mInt = idxInt.get(r.id) || 0;
+    const mAho = idxAho.get(r.id) || 0;
     return {
       ...r,
-      deducc_mora_intereses: mora,
-      neto_a_recibir: r.neto_a_recibir - mora,
+      deducc_mora_intereses: mInt,
+      deducc_mora_ahorro: mAho,
+      neto_a_recibir: r.neto_a_recibir - mInt - mAho,
     };
   });
   enriquecido.sort((a, b) => b.neto_a_recibir - a.neto_a_recibir);
@@ -311,6 +314,131 @@ function calcularMoraPrestamos(db, hoyISO) {
   }
   return resultado;
 }
+
+// ---------------- Mora por ahorro tardío ----------------
+// Regla:
+//   Cada periodo tiene fecha_corte_ahorro (viene de la hoja "Datos" del
+//   Excel). Si el socio paga después de esa fecha, o si aún no ha pagado
+//   y ya pasó, se cobra $500 por cada día de atraso.
+//
+// Solo se consideran periodos cuya fecha de corte ya llegó, para no cobrar
+// mora por meses futuros.
+function calcularMoraAhorros(db, hoyISO) {
+  const hoy = new Date((hoyISO || new Date().toISOString().slice(0, 10)) + "T00:00:00");
+  const periodos = db
+    .prepare(
+      `SELECT id, nombre, orden, fecha_corte_ahorro
+         FROM periodos
+        WHERE fecha_corte_ahorro IS NOT NULL
+        ORDER BY orden`,
+    )
+    .all()
+    .filter((p) => new Date(p.fecha_corte_ahorro + "T00:00:00") <= hoy);
+
+  const socios = db
+    .prepare(
+      `SELECT id, nombre, cuota_sostenimiento FROM socios
+         WHERE tipo = 'persona' AND estado = 'activo'`,
+    )
+    .all();
+
+  // Un pago por socio+periodo (si hay varios, tomamos el primero por fecha)
+  const pagos = db
+    .prepare(
+      `SELECT socio_id, periodo_id, MIN(fecha_pago) AS primer_pago
+         FROM transacciones
+        WHERE concepto = 'AHORRO' AND periodo_id IS NOT NULL
+        GROUP BY socio_id, periodo_id`,
+    )
+    .all();
+  const idxPagos = new Map();
+  for (const p of pagos) idxPagos.set(`${p.socio_id}:${p.periodo_id}`, p.primer_pago);
+
+  const resultado = [];
+  for (const s of socios) {
+    let moraPagada = 0;
+    let moraPendiente = 0;
+    let sinPagar = 0;
+    let pagadosATiempo = 0;
+    let pagadosTarde = 0;
+    const detalle = [];
+
+    for (const p of periodos) {
+      const corte = new Date(p.fecha_corte_ahorro + "T00:00:00");
+      const pago = idxPagos.get(`${s.id}:${p.id}`);
+      if (pago) {
+        const fechaPago = new Date(pago + "T00:00:00");
+        const dias = Math.max(0, Math.round((fechaPago - corte) / 86400000));
+        const mora = dias * MORA_POR_DIA;
+        moraPagada += mora;
+        if (dias > 0) pagadosTarde++;
+        else pagadosATiempo++;
+        detalle.push({
+          periodo: p.nombre,
+          fecha_corte: p.fecha_corte_ahorro,
+          fecha_pago: pago,
+          dias_atraso: dias,
+          mora,
+          estado: dias > 0 ? "pagado_tarde" : "pagado_a_tiempo",
+        });
+      } else {
+        const dias = Math.max(0, Math.round((hoy - corte) / 86400000));
+        const mora = dias * MORA_POR_DIA;
+        moraPendiente += mora;
+        sinPagar++;
+        detalle.push({
+          periodo: p.nombre,
+          fecha_corte: p.fecha_corte_ahorro,
+          fecha_pago: null,
+          dias_atraso: dias,
+          mora,
+          estado: "sin_pagar",
+        });
+      }
+    }
+
+    resultado.push({
+      socio_id: s.id,
+      socio: s.nombre,
+      cuota_sostenimiento: s.cuota_sostenimiento,
+      total_periodos: periodos.length,
+      pagados_a_tiempo: pagadosATiempo,
+      pagados_tarde: pagadosTarde,
+      sin_pagar: sinPagar,
+      mora_pagada: moraPagada,
+      mora_pendiente: moraPendiente,
+      mora_total: moraPagada + moraPendiente,
+      detalle,
+    });
+  }
+  return resultado;
+}
+
+app.get("/api/mora-ahorros", (req, res) => {
+  const rows = calcularMoraAhorros(db, req.query.hoy);
+  const totales = rows.reduce(
+    (a, r) => ({
+      mora_pagada: a.mora_pagada + r.mora_pagada,
+      mora_pendiente: a.mora_pendiente + r.mora_pendiente,
+      mora_total: a.mora_total + r.mora_total,
+      sin_pagar: a.sin_pagar + r.sin_pagar,
+    }),
+    { mora_pagada: 0, mora_pendiente: 0, mora_total: 0, sin_pagar: 0 },
+  );
+  const conDetalle = req.query.detalle === "true";
+  res.json({
+    hoy: req.query.hoy || new Date().toISOString().slice(0, 10),
+    regla: {
+      mora_por_dia: MORA_POR_DIA,
+      criterio: "días desde la fecha_corte_ahorro del periodo",
+    },
+    totales,
+    socios: rows
+      .filter((r) => r.mora_total > 0 || r.sin_pagar > 0)
+      .sort((a, b) => b.mora_pendiente - a.mora_pendiente)
+      .map((r) => (conDetalle ? r : { ...r, detalle: undefined })),
+  });
+});
 
 app.get("/api/mora-intereses", (req, res) => {
   const rows = calcularMoraPrestamos(db, req.query.hoy);
@@ -852,6 +980,7 @@ app.get("/", (_req, res) => {
       "  /api/ahorros-por-periodo\n" +
       "  /api/deudores\n" +
       "  /api/mora-intereses[?detalle=true&hoy=YYYY-MM-DD]\n" +
+      "  /api/mora-ahorros[?detalle=true&hoy=YYYY-MM-DD]\n" +
       "  /api/morosos[?dias=60]\n" +
       "  /api/periodos\n" +
       "  /api/extractos[?banco&origen&conciliado&desde&hasta&q&socio_id&limit&offset]\n" +
