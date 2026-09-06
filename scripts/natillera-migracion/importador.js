@@ -15,6 +15,7 @@
 
 import path from "node:path";
 import process from "node:process";
+import { fileURLToPath } from "node:url";
 import ExcelJS from "exceljs";
 import { inicializarDB, cerrarDB } from "./database.js";
 
@@ -704,8 +705,17 @@ async function main() {
   }
 }
 
-const isMain = import.meta.url === `file://${process.argv[1]}`;
-if (isMain) {
+// Detección "¿este archivo es el punto de entrada?" que funciona en Windows
+// y Unix (import.meta.url usa file:/// mientras process.argv[1] usa \\ nativo).
+function esPuntoDeEntrada() {
+  try {
+    return fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
+  } catch {
+    return false;
+  }
+}
+
+if (esPuntoDeEntrada()) {
   main().catch((err) => {
     console.error(err);
     process.exit(1);
