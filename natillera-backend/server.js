@@ -18,12 +18,21 @@ process.on("warning", (w) => {
   if (w.name === "ExperimentalWarning" && /SQLite/i.test(w.message)) return;
   console.warn(`(node) ${w.name}: ${w.message}`);
 });
-const { DatabaseSync } = await import("node:sqlite");
 
 import path from "node:path";
+import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import express from "express";
 import cors from "cors";
+
+// Reutilizamos el schema/DDL/vistas del script de migración para que
+// una versión nueva del backend recree automáticamente cualquier vista
+// añadida (evita "no such table: vw_xxx" cuando la BD fue creada con
+// una versión previa). inicializarDB() usa CREATE TABLE IF NOT EXISTS
+// y DROP VIEW IF EXISTS + CREATE VIEW — nunca borra datos.
+const { inicializarDB } = await import(
+  "../scripts/natillera-migracion/database.js"
+);
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -33,18 +42,22 @@ const DB_PATH = path.resolve(
 );
 const PORT = Number(process.env.NAT_PORT) || 4000;
 
-let db;
-try {
-  // Modo lectura+escritura: los endpoints POST/PATCH permiten registrar
-  // pagos nuevos y conciliar movimientos bancarios sin volver al Excel.
-  db = new DatabaseSync(DB_PATH);
-  db.exec("PRAGMA foreign_keys = ON");
-} catch (err) {
-  console.error(`❌ No se pudo abrir la BD en ${DB_PATH}`);
-  console.error(`   ${err.message}`);
+if (!fs.existsSync(DB_PATH)) {
+  console.error(`❌ No existe la BD en ${DB_PATH}`);
   console.error("   Corre primero el importador:");
   console.error("     cd scripts/natillera-migracion");
   console.error('     node importador.js "ruta\\a\\tu\\excel.xlsm"');
+  process.exit(1);
+}
+
+let db;
+try {
+  // Modo lectura+escritura + refresca schema/vistas.
+  db = inicializarDB(DB_PATH);
+  console.log("🔄 Schema y vistas sincronizadas.");
+} catch (err) {
+  console.error(`❌ Error abriendo la BD en ${DB_PATH}`);
+  console.error(`   ${err.message}`);
   process.exit(1);
 }
 
