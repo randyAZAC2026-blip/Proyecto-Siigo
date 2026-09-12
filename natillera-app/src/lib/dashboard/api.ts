@@ -365,7 +365,7 @@ export interface DesglosePago {
   lineas: LineaDesglose[];
 }
 
-export const api = {
+const apiHttp = {
   resumen: () => get<Resumen>("/api/resumen"),
   socios: () => get<Socio[]>("/api/socios"),
   socioById: (id: number) => get<HistorialSocio>(`/api/socios/${id}`),
@@ -438,3 +438,27 @@ export const api = {
     return get<Transaccion[]>(`/api/transacciones${query ? "?" + query : ""}`);
   },
 };
+
+// Selector de origen de datos según VITE_NAT_DATA_SOURCE.
+// Import dinámico para no cargar el cliente Supabase cuando no se usa.
+const source = (import.meta.env.VITE_NAT_DATA_SOURCE as string | undefined) ?? "express";
+
+async function loadSupabaseApi() {
+  const mod = await import("./apiSupabase");
+  return mod.apiSupabase;
+}
+
+// Proxy que reenvía cada llamada a la implementación elegida.
+// Con source="express" es sincrónico; con "supabase" espera al módulo lazy.
+type ApiShape = typeof apiHttp;
+let apiSupabaseCache: ApiShape | null = null;
+
+export const api: ApiShape = new Proxy({} as ApiShape, {
+  get(_target, prop: string) {
+    if (source !== "supabase") return (apiHttp as any)[prop];
+    return async (...args: unknown[]) => {
+      if (!apiSupabaseCache) apiSupabaseCache = (await loadSupabaseApi()) as unknown as ApiShape;
+      return (apiSupabaseCache as any)[prop](...args);
+    };
+  },
+});
