@@ -66,6 +66,13 @@ const ACCESOS: {
     color: "var(--color-success)",
   },
   {
+    key: "simulador",
+    label: "Simulador cierre",
+    desc: "What-if — sin tocar la BD",
+    Icon: Wallet,
+    color: "var(--color-primary)",
+  },
+  {
     key: "prestamos",
     label: "Préstamos activos",
     desc: "Deudores y saldos pendientes",

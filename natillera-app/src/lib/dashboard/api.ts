@@ -154,6 +154,60 @@ export interface MoraAhorroReporte {
   socios: MoraAhorroSocio[];
 }
 
+export type ModoMora = "cobrar" | "porcentaje" | "condonar" | "manual";
+export type ModoPrestamos = "total" | "capital_vencido" | "no_descontar";
+export type ModoUtilidad = "toda" | "reserva" | "porcentaje" | "no_repartir";
+export type ModoReparto = "igual" | "proporcional_ahorro" | "proporcional_aportes";
+
+export interface SimuladorParams {
+  fecha_corte?: string;
+  mora_ahorros?: { modo: ModoMora; valor?: number };
+  mora_intereses?: { modo: ModoMora; valor?: number };
+  prestamos?: { modo: ModoPrestamos };
+  utilidad?: { modo: ModoUtilidad; reserva?: number; porcentaje?: number };
+  reparto?: { modo: ModoReparto };
+}
+
+export interface SimuladorSocio {
+  id: number;
+  nombre: string;
+  ahorro: number;
+  actividades: number;
+  rifa_chance: number;
+  intereses_pagados: number;
+  total_aportes: number;
+  mora_ahorro_bruta: number;
+  mora_intereses_bruta: number;
+  deducc_prestamo_aplicada: number;
+  deducc_multas: number;
+  deducc_mora_ahorro: number;
+  deducc_mora_intereses: number;
+  participacion_utilidad: number;
+  proporcion: number;
+  neto_a_recibir: number;
+}
+
+export interface SimuladorResultado {
+  parametros: SimuladorParams;
+  totales: {
+    total_ahorros: number;
+    total_aportes: number;
+    utilidad_total: number;
+    utilidad_a_repartir: number;
+    reserva: number;
+    total_prestamos: number;
+    total_multas: number;
+    total_mora_ahorro_bruta: number;
+    total_mora_intereses_bruta: number;
+    total_mora_ahorro_cobrada: number;
+    total_mora_intereses_cobrada: number;
+    total_neto: number;
+    socios_negativos: number;
+    socios_positivos: number;
+  };
+  socios: SimuladorSocio[];
+}
+
 export interface MatrizPrestamos {
   meses: { nombre: string; orden: number }[];
   socios: {
@@ -355,6 +409,8 @@ export const api = {
       "/api/extractos/importar",
       { banco, movimientos },
     ),
+  simularLiquidacion: (params: SimuladorParams) =>
+    post<SimuladorResultado>("/api/liquidacion/simular", params),
   eliminarTransaccion: (id: number) => del<{ ok: true }>(`/api/transacciones/${id}`),
   buscarTransacciones: (params: {
     socio_id?: number;

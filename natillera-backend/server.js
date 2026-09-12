@@ -477,6 +477,166 @@ app.get("/api/mora-intereses", (req, res) => {
   });
 });
 
+// ---------------- Simulador de liquidación (NO persiste nada) ----------------
+// Recalcula la liquidación con parámetros ajustables para proyectar escenarios
+// antes de aprobar un cierre. Todos los cálculos son en memoria — no toca la BD.
+//
+// Body:
+// {
+//   fecha_corte: "YYYY-MM-DD",
+//   mora_ahorros:   { modo: "cobrar"|"porcentaje"|"condonar"|"manual",  valor?: number },
+//   mora_intereses: { modo: "cobrar"|"porcentaje"|"condonar"|"manual",  valor?: number },
+//   prestamos:      { modo: "total"|"capital_vencido"|"no_descontar" },
+//   utilidad:       { modo: "toda"|"reserva"|"porcentaje"|"no_repartir",
+//                     reserva?: number, porcentaje?: number },
+//   reparto:        { modo: "igual"|"proporcional_ahorro"|"proporcional_aportes" }
+// }
+function aplicarModo(valorBase, cfg) {
+  if (!cfg || cfg.modo === "cobrar") return valorBase;
+  if (cfg.modo === "condonar") return 0;
+  if (cfg.modo === "porcentaje")
+    return Math.round(valorBase * (Number(cfg.valor) || 0));
+  if (cfg.modo === "manual") return Math.max(0, Math.round(Number(cfg.valor) || 0));
+  return valorBase;
+}
+
+app.post("/api/liquidacion/simular", (req, res) => {
+  try {
+    const params = req.body ?? {};
+    const fechaCorte = params.fecha_corte || new Date().toISOString().slice(0, 10);
+
+    // 1) Base — mismo cálculo que /api/liquidacion pero con la fecha_corte
+    // en las moras.
+    const base = query(`
+      SELECT id, nombre, cuota_sostenimiento,
+             ahorro, actividades, rifa_chance, intereses_pagados, total_aportes,
+             deducc_prestamo, deducc_multas
+        FROM vw_liquidacion_anual
+    `);
+
+    // 2) Moras calculadas dinámicamente con la fecha de corte.
+    const moraInt = calcularMoraPrestamos(db, fechaCorte);
+    const moraAho = calcularMoraAhorros(db, fechaCorte);
+    const idxMoraInt = new Map();
+    for (const m of moraInt) {
+      idxMoraInt.set(m.socio_id, (idxMoraInt.get(m.socio_id) || 0) + m.mora_pendiente);
+    }
+    const idxMoraAho = new Map();
+    for (const m of moraAho) idxMoraAho.set(m.socio_id, m.mora_pendiente);
+
+    // 3) Aplicar los modos configurados para cada deducción.
+    const filas = base.map((r) => {
+      const moraAhorroBruta = idxMoraAho.get(r.id) || 0;
+      const moraIntBruta = idxMoraInt.get(r.id) || 0;
+      return {
+        ...r,
+        mora_ahorro_bruta: moraAhorroBruta,
+        mora_intereses_bruta: moraIntBruta,
+        deducc_mora_ahorro: aplicarModo(moraAhorroBruta, params.mora_ahorros),
+        deducc_mora_intereses: aplicarModo(moraIntBruta, params.mora_intereses),
+        deducc_prestamo_aplicada:
+          params.prestamos?.modo === "no_descontar"
+            ? 0
+            : r.deducc_prestamo, // TODO: "capital_vencido" requiere lógica de vencimiento
+      };
+    });
+
+    // 4) Utilidad total (intereses + multas + rifas + moras cobradas)
+    const totalIntPagados = filas.reduce((a, f) => a + f.intereses_pagados, 0);
+    const totalMultasCobradas = filas.reduce((a, f) => a + f.deducc_multas, 0);
+    const totalRifa = filas.reduce((a, f) => a + f.rifa_chance, 0);
+    const totalMoraAhCobrada = filas.reduce((a, f) => a + f.deducc_mora_ahorro, 0);
+    const totalMoraIntCobrada = filas.reduce((a, f) => a + f.deducc_mora_intereses, 0);
+
+    // La utilidad "disponible" para repartir = intereses + moras cobradas +
+    // multas cobradas + rifas (todo lo que fue ingreso extra a la caja).
+    const utilidadTotal =
+      totalIntPagados + totalMoraAhCobrada + totalMoraIntCobrada + totalRifa;
+
+    // 5) Cuánto de esa utilidad se reparte según el modo.
+    const cfgUtil = params.utilidad ?? { modo: "toda" };
+    let utilidadARepartir = utilidadTotal;
+    let reserva = 0;
+    if (cfgUtil.modo === "no_repartir") utilidadARepartir = 0;
+    else if (cfgUtil.modo === "reserva") {
+      reserva = Math.max(0, Math.round(Number(cfgUtil.reserva) || 0));
+      utilidadARepartir = Math.max(0, utilidadTotal - reserva);
+    } else if (cfgUtil.modo === "porcentaje") {
+      utilidadARepartir = Math.round(utilidadTotal * (Number(cfgUtil.porcentaje) || 0));
+      reserva = utilidadTotal - utilidadARepartir;
+    }
+
+    // 6) Reparto de la utilidad a repartir según el modo.
+    const reparto = params.reparto?.modo || "proporcional_ahorro";
+    const totalAhorro = filas.reduce((a, f) => a + f.ahorro, 0);
+    const totalAportes = filas.reduce((a, f) => a + f.total_aportes, 0);
+    const nSocios = filas.length;
+
+    for (const f of filas) {
+      let base = 0;
+      let denom = 0;
+      if (reparto === "igual") {
+        base = 1;
+        denom = nSocios;
+      } else if (reparto === "proporcional_aportes") {
+        base = f.total_aportes;
+        denom = totalAportes;
+      } else {
+        // "proporcional_ahorro" (default)
+        base = f.ahorro;
+        denom = totalAhorro;
+      }
+      const prop = denom > 0 ? base / denom : 0;
+      f.participacion_utilidad = Math.round(utilidadARepartir * prop);
+      f.proporcion = prop;
+
+      // Neto final = aportes + participación utilidad − deducciones
+      f.neto_a_recibir =
+        f.total_aportes +
+        f.participacion_utilidad -
+        f.deducc_prestamo_aplicada -
+        f.deducc_multas -
+        f.deducc_mora_ahorro -
+        f.deducc_mora_intereses;
+    }
+    filas.sort((a, b) => b.neto_a_recibir - a.neto_a_recibir);
+
+    // 7) Totales globales
+    const totales = {
+      total_ahorros: totalAhorro,
+      total_aportes: totalAportes,
+      utilidad_total: utilidadTotal,
+      utilidad_a_repartir: utilidadARepartir,
+      reserva,
+      total_prestamos: filas.reduce((a, f) => a + f.deducc_prestamo_aplicada, 0),
+      total_multas: totalMultasCobradas,
+      total_mora_ahorro_bruta: filas.reduce((a, f) => a + f.mora_ahorro_bruta, 0),
+      total_mora_intereses_bruta: filas.reduce((a, f) => a + f.mora_intereses_bruta, 0),
+      total_mora_ahorro_cobrada: totalMoraAhCobrada,
+      total_mora_intereses_cobrada: totalMoraIntCobrada,
+      total_neto: filas.reduce((a, f) => a + f.neto_a_recibir, 0),
+      socios_negativos: filas.filter((f) => f.neto_a_recibir < 0).length,
+      socios_positivos: filas.filter((f) => f.neto_a_recibir > 0).length,
+    };
+
+    res.json({
+      parametros: {
+        fecha_corte: fechaCorte,
+        mora_ahorros: params.mora_ahorros ?? { modo: "cobrar" },
+        mora_intereses: params.mora_intereses ?? { modo: "cobrar" },
+        prestamos: params.prestamos ?? { modo: "total" },
+        utilidad: cfgUtil,
+        reparto: params.reparto ?? { modo: "proporcional_ahorro" },
+      },
+      totales,
+      socios: filas,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message || String(err) });
+  }
+});
+
 // ---------------- Matriz de préstamos ----------------
 app.get("/api/matriz-prestamos", (_req, res) => {
   const filas = query(`
