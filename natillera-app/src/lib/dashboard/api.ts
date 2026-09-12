@@ -109,7 +109,13 @@ export interface MoraPrestamo {
 
 export interface MoraReporte {
   hoy: string;
-  regla: { mora_por_dia: number; aniversario: string };
+  regla: {
+    habilitada?: boolean;
+    mora_por_dia: number;
+    aniversario?: string;
+    aplica_desde?: string;
+    criterio?: string;
+  };
   totales: {
     mora_pagada: number;
     mora_pendiente: number;
@@ -144,7 +150,12 @@ export interface MoraAhorroSocio {
 
 export interface MoraAhorroReporte {
   hoy: string;
-  regla: { mora_por_dia: number; criterio: string };
+  regla: {
+    habilitada?: boolean;
+    mora_por_dia: number;
+    criterio?: string;
+    aplica_desde?: string;
+  };
   totales: {
     mora_pagada: number;
     mora_pendiente: number;

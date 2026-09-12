@@ -51,7 +51,23 @@ export function MoraInteresesPage({ onVolver }: { onVolver: () => void }) {
         </div>
       </div>
 
-      {data && (
+      {data && data.regla.habilitada === false && (
+        <Card className="rounded-[var(--radius-card)] border-[var(--color-warning)]/40 bg-[var(--color-warning)]/5">
+          <CardContent className="py-4 flex items-start gap-2">
+            <AlertCircle className="size-4 text-[var(--color-warning)] shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="text-[var(--color-text)]">
+                <strong>Regla de mora DESACTIVADA.</strong> No se cobra mora en este momento.
+              </p>
+              <p className="text-xs text-[var(--color-muted)] mt-1">
+                Para activarla, arranca el backend con la variable de entorno{" "}
+                <code>MORA_HABILITADA=true</code>.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      {data && data.regla.habilitada !== false && (
         <Card className="rounded-[var(--radius-card)] border-[var(--color-primary)]/30 bg-[var(--color-primary)]/5">
           <CardContent className="py-4 flex items-start gap-2">
             <Info className="size-4 text-[var(--color-primary)] shrink-0 mt-0.5" />

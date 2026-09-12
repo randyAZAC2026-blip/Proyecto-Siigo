@@ -230,6 +230,10 @@ const MORA_POR_DIA = 500;
 // Fecha desde la cual empieza a aplicar la regla de mora. Nada anterior
 // a esta fecha genera mora, aunque el vencimiento sea previo.
 const MORA_APLICA_DESDE = process.env.MORA_DESDE || "2026-08-01";
+// Interruptor maestro. Por defecto la regla está DESACTIVADA — las cifras
+// que se calculaban no reflejaban mora real. Para activarla: env
+// MORA_HABILITADA=true al arrancar el backend.
+const MORA_HABILITADA = process.env.MORA_HABILITADA === "true";
 
 function calcularMoraPrestamos(db, hoyISO) {
   const hoy = new Date((hoyISO || new Date().toISOString().slice(0, 10)) + "T00:00:00");
@@ -291,7 +295,7 @@ function calcularMoraPrestamos(db, hoyISO) {
       if (pago && pago.fecha_abono) {
         const fechaPago = new Date(pago.fecha_abono + "T00:00:00");
         const dias = Math.max(0, Math.round((fechaPago - venc) / 86400000));
-        const mora = aplicaMora ? dias * MORA_POR_DIA : 0;
+        const mora = MORA_HABILITADA && aplicaMora ? dias * MORA_POR_DIA : 0;
         moraPagada += mora;
         if (dias > 0) pagadosTarde++;
         else pagadosATiempo++;
@@ -310,12 +314,14 @@ function calcularMoraPrestamos(db, hoyISO) {
         // mora contando SOLO los días desde el 2026-08-01 hasta hoy.
         let mora = 0;
         let diasCobrables = 0;
-        if (aplicaMora) {
-          diasCobrables = dias;
-          mora = diasCobrables * MORA_POR_DIA;
-        } else if (hoy >= moraDesde) {
-          diasCobrables = Math.max(0, Math.round((hoy - moraDesde) / 86400000));
-          mora = diasCobrables * MORA_POR_DIA;
+        if (MORA_HABILITADA) {
+          if (aplicaMora) {
+            diasCobrables = dias;
+            mora = diasCobrables * MORA_POR_DIA;
+          } else if (hoy >= moraDesde) {
+            diasCobrables = Math.max(0, Math.round((hoy - moraDesde) / 86400000));
+            mora = diasCobrables * MORA_POR_DIA;
+          }
         }
         moraPendiente += mora;
         sinPagar++;
@@ -409,7 +415,7 @@ function calcularMoraAhorros(db, hoyISO) {
       if (pago) {
         const fechaPago = new Date(pago + "T00:00:00");
         const dias = Math.max(0, Math.round((fechaPago - corte) / 86400000));
-        const mora = aplicaMora ? dias * MORA_POR_DIA : 0;
+        const mora = MORA_HABILITADA && aplicaMora ? dias * MORA_POR_DIA : 0;
         moraPagada += mora;
         if (dias > 0) pagadosTarde++;
         else pagadosATiempo++;
@@ -427,12 +433,14 @@ function calcularMoraAhorros(db, hoyISO) {
         // Vencido pero sin pagar: solo cobramos desde MAX(corte, moraDesde)
         let diasCobrables = 0;
         let mora = 0;
-        if (aplicaMora) {
-          diasCobrables = dias;
-          mora = diasCobrables * MORA_POR_DIA;
-        } else if (hoy >= moraDesde) {
-          diasCobrables = Math.max(0, Math.round((hoy - moraDesde) / 86400000));
-          mora = diasCobrables * MORA_POR_DIA;
+        if (MORA_HABILITADA) {
+          if (aplicaMora) {
+            diasCobrables = dias;
+            mora = diasCobrables * MORA_POR_DIA;
+          } else if (hoy >= moraDesde) {
+            diasCobrables = Math.max(0, Math.round((hoy - moraDesde) / 86400000));
+            mora = diasCobrables * MORA_POR_DIA;
+          }
         }
         moraPendiente += mora;
         sinPagar++;
@@ -481,6 +489,7 @@ app.get("/api/mora-ahorros", (req, res) => {
   res.json({
     hoy: req.query.hoy || new Date().toISOString().slice(0, 10),
     regla: {
+      habilitada: MORA_HABILITADA,
       mora_por_dia: MORA_POR_DIA,
       aplica_desde: MORA_APLICA_DESDE,
       criterio:
@@ -512,6 +521,7 @@ app.get("/api/mora-intereses", (req, res) => {
   res.json({
     hoy: (req.query.hoy || new Date().toISOString().slice(0, 10)),
     regla: {
+      habilitada: MORA_HABILITADA,
       mora_por_dia: MORA_POR_DIA,
       aplica_desde: MORA_APLICA_DESDE,
       aniversario: "día del mes = día del desembolso",
