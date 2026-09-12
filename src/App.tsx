@@ -4,10 +4,13 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { AdminRoute } from "@/components/layout/AdminRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { NatilleraStandaloneLayout } from "@/components/natillera/NatilleraStandaloneLayout";
 import { LoginPage } from "@/pages/LoginPage";
 import { CalculatorPage } from "@/pages/CalculatorPage";
+import { NatilleraPage } from "@/pages/NatilleraPage";
 import { TablasAdminPage } from "@/pages/admin/TablasAdminPage";
 import { TablaEditorPage } from "@/pages/admin/TablaEditorPage";
+import { supabaseConfigured } from "@/lib/supabase/client";
 
 const queryClient = new QueryClient();
 
@@ -17,6 +20,11 @@ export default function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
+            {/* /natillera es pública y usa localStorage — funciona sin Supabase */}
+            <Route element={<NatilleraStandaloneLayout />}>
+              <Route path="/natillera" element={<NatilleraPage />} />
+            </Route>
+
             <Route path="/login" element={<LoginPage />} />
 
             <Route element={<ProtectedRoute />}>
@@ -30,7 +38,10 @@ export default function App() {
               </Route>
             </Route>
 
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route
+              path="*"
+              element={<Navigate to={supabaseConfigured ? "/" : "/natillera"} replace />}
+            />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
