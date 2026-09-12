@@ -227,6 +227,9 @@ app.get("/api/liquidacion", (_req, res) => {
 // el pago #2 cubre el vencimiento #2, y así sucesivamente. La fecha del
 // pago vs la fecha del vencimiento determina la mora de esa cuota.
 const MORA_POR_DIA = 500;
+// Fecha desde la cual empieza a aplicar la regla de mora. Nada anterior
+// a esta fecha genera mora, aunque el vencimiento sea previo.
+const MORA_APLICA_DESDE = process.env.MORA_DESDE || "2026-08-01";
 
 function calcularMoraPrestamos(db, hoyISO) {
   const hoy = new Date((hoyISO || new Date().toISOString().slice(0, 10)) + "T00:00:00");
@@ -241,6 +244,10 @@ function calcularMoraPrestamos(db, hoyISO) {
           AND p.fecha_desembolso IS NOT NULL`,
     )
     .all();
+
+  // La regla de mora aplica solo desde MORA_APLICA_DESDE (ej: 2026-08-01)
+  // — vencimientos anteriores existen pero NO generan mora.
+  const moraDesde = new Date(MORA_APLICA_DESDE + "T00:00:00");
 
   const resultado = [];
   for (const p of prestamos) {
@@ -277,13 +284,14 @@ function calcularMoraPrestamos(db, hoyISO) {
       const venc = vencimientos[i];
       const vencISO = venc.toISOString().slice(0, 10);
       const pago = pagos[i];
+      // La regla solo aplica desde MORA_APLICA_DESDE — vencimientos previos
+      // se procesan (para no perder el FIFO) pero no generan mora.
+      const aplicaMora = venc >= moraDesde;
+
       if (pago && pago.fecha_abono) {
         const fechaPago = new Date(pago.fecha_abono + "T00:00:00");
-        const dias = Math.max(
-          0,
-          Math.round((fechaPago - venc) / 86400000),
-        );
-        const mora = dias * MORA_POR_DIA;
+        const dias = Math.max(0, Math.round((fechaPago - venc) / 86400000));
+        const mora = aplicaMora ? dias * MORA_POR_DIA : 0;
         moraPagada += mora;
         if (dias > 0) pagadosTarde++;
         else pagadosATiempo++;
@@ -292,18 +300,32 @@ function calcularMoraPrestamos(db, hoyISO) {
           fecha_pago: pago.fecha_abono,
           dias_atraso: dias,
           mora,
+          aplica_regla: aplicaMora,
           estado: dias > 0 ? "pagado_tarde" : "pagado_a_tiempo",
         });
       } else {
         const dias = Math.max(0, Math.round((hoy - venc) / 86400000));
-        const mora = dias * MORA_POR_DIA;
+        // Si aplica la regla, cobramos desde MAX(vencimiento, MORA_APLICA_DESDE)
+        // hasta hoy. Un vencimiento previo a agosto pero aún sin pagar cobra
+        // mora contando SOLO los días desde el 2026-08-01 hasta hoy.
+        let mora = 0;
+        let diasCobrables = 0;
+        if (aplicaMora) {
+          diasCobrables = dias;
+          mora = diasCobrables * MORA_POR_DIA;
+        } else if (hoy >= moraDesde) {
+          diasCobrables = Math.max(0, Math.round((hoy - moraDesde) / 86400000));
+          mora = diasCobrables * MORA_POR_DIA;
+        }
         moraPendiente += mora;
         sinPagar++;
         detalle.push({
           vencimiento: vencISO,
           fecha_pago: null,
           dias_atraso: dias,
+          dias_cobrables: diasCobrables,
           mora,
+          aplica_regla: aplicaMora || hoy >= moraDesde,
           estado: "sin_pagar",
         });
       }
@@ -338,6 +360,10 @@ function calcularMoraPrestamos(db, hoyISO) {
 // mora por meses futuros.
 function calcularMoraAhorros(db, hoyISO) {
   const hoy = new Date((hoyISO || new Date().toISOString().slice(0, 10)) + "T00:00:00");
+  // La regla solo aplica desde MORA_APLICA_DESDE — periodos con fecha de
+  // corte anteriores existen y siguen mostrándose (para no pagar / pagado),
+  // pero no generan mora acumulada anterior a esa fecha.
+  const moraDesde = new Date(MORA_APLICA_DESDE + "T00:00:00");
   const periodos = db
     .prepare(
       `SELECT id, nombre, orden, fecha_corte_ahorro
@@ -378,11 +404,12 @@ function calcularMoraAhorros(db, hoyISO) {
 
     for (const p of periodos) {
       const corte = new Date(p.fecha_corte_ahorro + "T00:00:00");
+      const aplicaMora = corte >= moraDesde;
       const pago = idxPagos.get(`${s.id}:${p.id}`);
       if (pago) {
         const fechaPago = new Date(pago + "T00:00:00");
         const dias = Math.max(0, Math.round((fechaPago - corte) / 86400000));
-        const mora = dias * MORA_POR_DIA;
+        const mora = aplicaMora ? dias * MORA_POR_DIA : 0;
         moraPagada += mora;
         if (dias > 0) pagadosTarde++;
         else pagadosATiempo++;
@@ -392,11 +419,21 @@ function calcularMoraAhorros(db, hoyISO) {
           fecha_pago: pago,
           dias_atraso: dias,
           mora,
+          aplica_regla: aplicaMora,
           estado: dias > 0 ? "pagado_tarde" : "pagado_a_tiempo",
         });
       } else {
         const dias = Math.max(0, Math.round((hoy - corte) / 86400000));
-        const mora = dias * MORA_POR_DIA;
+        // Vencido pero sin pagar: solo cobramos desde MAX(corte, moraDesde)
+        let diasCobrables = 0;
+        let mora = 0;
+        if (aplicaMora) {
+          diasCobrables = dias;
+          mora = diasCobrables * MORA_POR_DIA;
+        } else if (hoy >= moraDesde) {
+          diasCobrables = Math.max(0, Math.round((hoy - moraDesde) / 86400000));
+          mora = diasCobrables * MORA_POR_DIA;
+        }
         moraPendiente += mora;
         sinPagar++;
         detalle.push({
@@ -404,7 +441,9 @@ function calcularMoraAhorros(db, hoyISO) {
           fecha_corte: p.fecha_corte_ahorro,
           fecha_pago: null,
           dias_atraso: dias,
+          dias_cobrables: diasCobrables,
           mora,
+          aplica_regla: aplicaMora || hoy >= moraDesde,
           estado: "sin_pagar",
         });
       }
@@ -443,7 +482,10 @@ app.get("/api/mora-ahorros", (req, res) => {
     hoy: req.query.hoy || new Date().toISOString().slice(0, 10),
     regla: {
       mora_por_dia: MORA_POR_DIA,
-      criterio: "días desde la fecha_corte_ahorro del periodo",
+      aplica_desde: MORA_APLICA_DESDE,
+      criterio:
+        "$500 por día atrasado desde fecha_corte_ahorro; solo cuenta desde " +
+        MORA_APLICA_DESDE,
     },
     totales,
     socios: rows
@@ -469,7 +511,14 @@ app.get("/api/mora-intereses", (req, res) => {
   const conDetalle = req.query.detalle === "true";
   res.json({
     hoy: (req.query.hoy || new Date().toISOString().slice(0, 10)),
-    regla: { mora_por_dia: MORA_POR_DIA, aniversario: "día del mes = día del desembolso" },
+    regla: {
+      mora_por_dia: MORA_POR_DIA,
+      aplica_desde: MORA_APLICA_DESDE,
+      aniversario: "día del mes = día del desembolso",
+      criterio:
+        "$500 por día de atraso desde el vencimiento; solo cuenta desde " +
+        MORA_APLICA_DESDE,
+    },
     totales,
     prestamos: rows
       .sort((a, b) => b.mora_pendiente - a.mora_pendiente)
