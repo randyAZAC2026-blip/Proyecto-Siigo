@@ -2,10 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Landmark,
   Search,
-  Link2,
-  Link2Off,
-  Check,
-  X,
   AlertCircle,
   Plus,
   Upload,
@@ -15,7 +11,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -25,7 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatCOP } from "@/lib/natillera/format";
-import { api, type Extracto, type Socio } from "@/lib/dashboard/api";
+import { api, type Extracto } from "@/lib/dashboard/api";
 import { useApi } from "@/lib/dashboard/useApi";
 import {
   RegistrarPagoModal,
@@ -65,7 +60,6 @@ export function ExtractoPage({ onVolver }: { onVolver: () => void }) {
   const { data, loading, error, reload } = useApi(() => api.extractos(filtros), [
     filtros,
   ]);
-  const sociosApi = useApi(() => api.socios(), []);
 
   useEffect(() => setOffset(0), [banco, origen, conciliado, desde, hasta, q]);
 
@@ -201,7 +195,6 @@ export function ExtractoPage({ onVolver }: { onVolver: () => void }) {
                 <TableHead>Socio</TableHead>
                 <TableHead className="text-right">Monto</TableHead>
                 <TableHead className="text-center">Origen</TableHead>
-                <TableHead className="text-center">Conciliado</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -209,14 +202,12 @@ export function ExtractoPage({ onVolver }: { onVolver: () => void }) {
                 <ExtractoRow
                   key={fila.id}
                   fila={fila}
-                  socios={sociosApi.data ?? []}
-                  onCambio={reload}
                   onRegistrarPago={(preset) => setModalPreset(preset)}
                 />
               ))}
               {!loading && data?.filas.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-sm text-[var(--color-muted)]">
+                  <TableCell colSpan={6} className="text-center text-sm text-[var(--color-muted)]">
                     Sin movimientos con esos filtros
                   </TableCell>
                 </TableRow>
@@ -278,13 +269,9 @@ export function ExtractoPage({ onVolver }: { onVolver: () => void }) {
 
 function ExtractoRow({
   fila,
-  socios,
-  onCambio,
   onRegistrarPago,
 }: {
   fila: Extracto;
-  socios: Socio[];
-  onCambio: () => void;
   onRegistrarPago: (preset: PagoPreset) => void;
 }) {
   const [saving, setSaving] = useState(false);
@@ -293,18 +280,6 @@ function ExtractoRow({
     setSaving(true);
     try {
       await api.marcarOrigenExtracto(fila.id, v || null);
-      onCambio();
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function desvincular() {
-    if (!confirm("¿Desvincular este movimiento de su transacción?")) return;
-    setSaving(true);
-    try {
-      await api.vincularExtracto(fila.id, null);
-      onCambio();
     } finally {
       setSaving(false);
     }
@@ -357,99 +332,6 @@ function ExtractoRow({
           <option value="N/A">N/A</option>
         </select>
       </TableCell>
-      <TableCell className="text-center">
-        {fila.transaccion_id ? (
-          <div className="flex items-center justify-center gap-1">
-            <Badge className="bg-[var(--color-success)]/15 text-[var(--color-success)] hover:bg-[var(--color-success)]/20 gap-1">
-              <Check className="size-3" />#{fila.transaccion_id}
-            </Badge>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-6 px-1 text-[var(--color-destructive)]"
-              onClick={desvincular}
-              title="Desvincular"
-            >
-              <Link2Off className="size-3" />
-            </Button>
-          </div>
-        ) : (
-          <VincularBoton fila={fila} socios={socios} onCambio={onCambio} />
-        )}
-      </TableCell>
     </TableRow>
-  );
-}
-
-function VincularBoton({
-  fila,
-  socios: _socios,
-  onCambio,
-}: {
-  fila: Extracto;
-  socios: Socio[];
-  onCambio: () => void;
-}) {
-  const [abierto, setAbierto] = useState(false);
-  const [txId, setTxId] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-
-  async function vincular() {
-    setError(null);
-    setSaving(true);
-    try {
-      const n = Number(txId);
-      if (!Number.isInteger(n) || n <= 0) throw new Error("ID inválido");
-      await api.vincularExtracto(fila.id, n);
-      setAbierto(false);
-      setTxId("");
-      onCambio();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  if (!abierto) {
-    return (
-      <Button
-        size="sm"
-        variant="ghost"
-        className="h-6 px-2 text-xs gap-1 text-[var(--color-muted)]"
-        onClick={() => setAbierto(true)}
-      >
-        <Link2 className="size-3" />
-        Vincular
-      </Button>
-    );
-  }
-
-  return (
-    <div className="flex items-center gap-1">
-      <Input
-        autoFocus
-        className="h-6 w-16 px-1 text-xs"
-        placeholder="Tx #"
-        value={txId}
-        onChange={(e) => setTxId(e.target.value)}
-      />
-      <Button size="sm" variant="ghost" className="h-6 px-1" onClick={vincular} disabled={saving}>
-        <Check className="size-3" />
-      </Button>
-      <Button
-        size="sm"
-        variant="ghost"
-        className="h-6 px-1"
-        onClick={() => {
-          setAbierto(false);
-          setError(null);
-        }}
-      >
-        <X className="size-3" />
-      </Button>
-      {error && <span className="text-[10px] text-[var(--color-destructive)]">{error}</span>}
-    </div>
   );
 }
