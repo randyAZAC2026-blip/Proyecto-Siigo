@@ -8,7 +8,6 @@ import {
   Wallet,
   AlertTriangle,
   Landmark,
-  Link2,
   FileText,
   HardDrive,
 } from "lucide-react";
@@ -24,8 +23,7 @@ import { PrestamosPage } from "@/pages/PrestamosPage";
 import { MoraInteresesPage } from "@/pages/MoraInteresesPage";
 import { MoraAhorrosPage } from "@/pages/MoraAhorrosPage";
 import { SimuladorLiquidacionPage } from "@/pages/SimuladorLiquidacionPage";
-import { ConciliacionPage } from "@/pages/ConciliacionPage";
-import { ExtractoPage } from "@/pages/ExtractoPage";
+import { BancoPage } from "@/pages/BancoPage";
 import { EstadoCuentaPage } from "@/pages/EstadoCuentaPage";
 
 type Vista =
@@ -39,8 +37,7 @@ type Vista =
   | "mora-intereses"
   | "liquidacion"
   | "simulador"
-  | "conciliacion"
-  | "extracto"
+  | "banco"
   | "local";
 
 interface Modulo {
@@ -85,10 +82,7 @@ const GRUPOS: Grupo[] = [
   },
   {
     titulo: "Banco",
-    items: [
-      { key: "conciliacion", label: "Conciliación", Icon: Landmark },
-      { key: "extracto", label: "Extracto detallado", Icon: Link2 },
-    ],
+    items: [{ key: "banco", label: "Banco", Icon: Landmark }],
   },
   {
     titulo: "Otros",
@@ -179,8 +173,7 @@ export function App() {
             {vista === "mora-intereses" && <MoraInteresesPage onVolver={volverPanel} />}
             {vista === "liquidacion" && <LiquidacionPage onVolver={volverPanel} />}
             {vista === "simulador" && <SimuladorLiquidacionPage onVolver={volverPanel} />}
-            {vista === "conciliacion" && <ConciliacionPage onVolver={volverPanel} />}
-            {vista === "extracto" && <ExtractoPage onVolver={volverPanel} />}
+            {vista === "banco" && <BancoPage onVolver={volverPanel} />}
             {vista === "local" && <NatilleraPage />}
           </ErrorBoundary>
         </main>

@@ -6,6 +6,7 @@ import {
   Plus,
   Upload,
   PlusCircle,
+  RefreshCw,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -29,8 +30,9 @@ import {
 import { AgregarMovimientoModal } from "@/components/dashboard/AgregarMovimientoModal";
 import { ImportarExtractoModal } from "@/components/dashboard/ImportarExtractoModal";
 
-export function ExtractoPage({ onVolver }: { onVolver: () => void }) {
-  const [banco, setBanco] = useState<string>("");
+const BANCO_FIJO = "Bancolombia";
+
+export function BancoPage({ onVolver }: { onVolver: () => void }) {
   const [origen, setOrigen] = useState<string>("");
   const [conciliado, setConciliado] = useState<string>("");
   const [desde, setDesde] = useState<string>("");
@@ -45,7 +47,7 @@ export function ExtractoPage({ onVolver }: { onVolver: () => void }) {
 
   const filtros = useMemo(
     () => ({
-      banco: banco || undefined,
+      banco: BANCO_FIJO,
       origen: origen || undefined,
       conciliado: (conciliado as "true" | "false") || undefined,
       desde: desde || undefined,
@@ -54,14 +56,15 @@ export function ExtractoPage({ onVolver }: { onVolver: () => void }) {
       limit,
       offset,
     }),
-    [banco, origen, conciliado, desde, hasta, q, offset],
+    [origen, conciliado, desde, hasta, q, offset],
   );
 
-  const { data, loading, error, reload } = useApi(() => api.extractos(filtros), [
-    filtros,
-  ]);
+  const { data, loading, error, reload } = useApi(() => api.extractos(filtros), [filtros]);
+  const bancosQ = useApi(() => api.bancos(), []);
 
-  useEffect(() => setOffset(0), [banco, origen, conciliado, desde, hasta, q]);
+  useEffect(() => setOffset(0), [origen, conciliado, desde, hasta, q]);
+
+  const resumen = bancosQ.data?.find((b) => b.banco === BANCO_FIJO);
 
   return (
     <div className="space-y-4">
@@ -69,14 +72,25 @@ export function ExtractoPage({ onVolver }: { onVolver: () => void }) {
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold text-[var(--color-text)]">
             <Landmark className="size-6 text-[var(--color-primary)]" />
-            Extracto bancario
+            Banco
           </h1>
           <p className="text-sm text-[var(--color-muted)] mt-1">
-            {data?.total ?? 0} movimientos totales · filtra y marca cada uno como NATILLERA /
-            PERSONAL, o vincula a una transacción registrada.
+            Resumen de la cuenta de {BANCO_FIJO} y detalle de sus movimientos.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              reload();
+              bancosQ.reload();
+            }}
+            disabled={loading}
+          >
+            <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
+            Actualizar
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -101,24 +115,37 @@ export function ExtractoPage({ onVolver }: { onVolver: () => void }) {
         </div>
       </div>
 
+      {resumen && (
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
+          <MiniTile
+            label="Movimientos"
+            value={String(resumen.n_movs)}
+            color="var(--color-muted)"
+          />
+          <MiniTile
+            label="Ingresos totales"
+            value={formatCOP(resumen.ingresos)}
+            color="var(--color-success)"
+          />
+          <MiniTile
+            label="Egresos totales"
+            value={formatCOP(resumen.egresos)}
+            color="var(--color-destructive)"
+          />
+          <MiniTile
+            label="Ingresos natillera"
+            value={formatCOP(resumen.ingresos_natillera)}
+            color="var(--color-primary)"
+          />
+        </div>
+      )}
+
       <Card className="rounded-[var(--radius-card)] border-[var(--color-border)]">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Filtros</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 sm:grid-cols-6">
-            <div className="space-y-1.5">
-              <Label>Banco</Label>
-              <select
-                className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1.5 text-sm"
-                value={banco}
-                onChange={(e) => setBanco(e.target.value)}
-              >
-                <option value="">Todos</option>
-                <option value="Bancolombia">Bancolombia</option>
-                <option value="Nequi">Nequi</option>
-              </select>
-            </div>
+          <div className="grid gap-3 sm:grid-cols-5">
             <div className="space-y-1.5">
               <Label>Origen</Label>
               <select
@@ -190,7 +217,6 @@ export function ExtractoPage({ onVolver }: { onVolver: () => void }) {
             <TableHeader>
               <TableRow>
                 <TableHead>Fecha</TableHead>
-                <TableHead>Banco</TableHead>
                 <TableHead>Descripción</TableHead>
                 <TableHead>Socio</TableHead>
                 <TableHead className="text-right">Monto</TableHead>
@@ -207,7 +233,7 @@ export function ExtractoPage({ onVolver }: { onVolver: () => void }) {
               ))}
               {!loading && data?.filas.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-sm text-[var(--color-muted)]">
+                  <TableCell colSpan={5} className="text-center text-sm text-[var(--color-muted)]">
                     Sin movimientos con esos filtros
                   </TableCell>
                 </TableRow>
@@ -267,6 +293,21 @@ export function ExtractoPage({ onVolver }: { onVolver: () => void }) {
   );
 }
 
+function MiniTile({ label, value, color }: { label: string; value: string; color: string }) {
+  return (
+    <Card className="rounded-[var(--radius-card)] border-[var(--color-border)]">
+      <CardContent className="py-3">
+        <div className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
+          {label}
+        </div>
+        <div className="text-lg font-semibold tabular-nums mt-1" style={{ color }}>
+          {value}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function ExtractoRow({
   fila,
   onRegistrarPago,
@@ -288,8 +329,7 @@ function ExtractoRow({
   return (
     <TableRow>
       <TableCell className="text-xs">{fila.fecha ?? "—"}</TableCell>
-      <TableCell className="text-xs">{fila.banco}</TableCell>
-      <TableCell className="max-w-[280px] truncate text-xs" title={fila.descripcion ?? ""}>
+      <TableCell className="max-w-[320px] truncate text-xs" title={fila.descripcion ?? ""}>
         {fila.descripcion ?? "—"}
       </TableCell>
       <TableCell className="text-xs">{fila.socio_nombre ?? "—"}</TableCell>
@@ -302,8 +342,7 @@ function ExtractoRow({
               socio_id: fila.socio_id,
               valor: Math.abs(fila.monto),
               fecha_pago: fila.fecha ?? undefined,
-              concepto:
-                fila.monto < 0 ? "PRESTAMO" : "AHORRO",
+              concepto: fila.monto < 0 ? "PRESTAMO" : "AHORRO",
               extracto_id: fila.id,
               notas: fila.descripcion ?? undefined,
               origen_contexto: `Extracto ${fila.banco} · ${fila.fecha ?? "sin fecha"} · ${fila.descripcion ?? ""}`,
