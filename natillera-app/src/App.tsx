@@ -21,7 +21,6 @@ import { MatrizAhorrosPage } from "@/pages/MatrizAhorrosPage";
 import { ControlPagosPage } from "@/pages/ControlPagosPage";
 import { LiquidacionPage } from "@/pages/LiquidacionPage";
 import { PrestamosActivosPage } from "@/pages/PrestamosActivosPage";
-import { MatrizPrestamosPage } from "@/pages/MatrizPrestamosPage";
 import { MoraInteresesPage } from "@/pages/MoraInteresesPage";
 import { MoraAhorrosPage } from "@/pages/MoraAhorrosPage";
 import { SimuladorLiquidacionPage } from "@/pages/SimuladorLiquidacionPage";
@@ -37,7 +36,6 @@ type Vista =
   | "control"
   | "mora-ahorros"
   | "prestamos"
-  | "matriz-prestamos"
   | "mora-intereses"
   | "liquidacion"
   | "simulador"
@@ -80,7 +78,6 @@ const GRUPOS: Grupo[] = [
     titulo: "Préstamos",
     items: [
       { key: "prestamos", label: "Préstamos activos", Icon: AlertTriangle },
-      { key: "matriz-prestamos", label: "Matriz de préstamos", Icon: BarChart3 },
       { key: "mora-intereses", label: "Mora intereses", Icon: AlertTriangle },
       { key: "liquidacion", label: "Liquidación", Icon: Wallet },
       { key: "simulador", label: "Simulador cierre", Icon: Wallet },
@@ -179,7 +176,6 @@ export function App() {
             {vista === "control" && <ControlPagosPage onVolver={volverPanel} />}
             {vista === "mora-ahorros" && <MoraAhorrosPage onVolver={volverPanel} />}
             {vista === "prestamos" && <PrestamosActivosPage onVolver={volverPanel} />}
-            {vista === "matriz-prestamos" && <MatrizPrestamosPage onVolver={volverPanel} />}
             {vista === "mora-intereses" && <MoraInteresesPage onVolver={volverPanel} />}
             {vista === "liquidacion" && <LiquidacionPage onVolver={volverPanel} />}
             {vista === "simulador" && <SimuladorLiquidacionPage onVolver={volverPanel} />}
