@@ -75,6 +75,9 @@ importers:
 
   natillera-app:
     dependencies:
+      '@supabase/supabase-js':
+        specifier: ^2.110.3
+        version: 2.110.3
       '@tailwindcss/vite':
         specifier: ^4.3.2
         version: 4.3.2(vite@8.1.4(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.1))
