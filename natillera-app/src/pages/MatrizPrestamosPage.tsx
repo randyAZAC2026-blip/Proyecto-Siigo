@@ -16,8 +16,7 @@ export function MatrizPrestamosPage({ onVolver }: { onVolver: () => void }) {
             Matriz de préstamos
           </h1>
           <p className="text-sm text-[var(--color-muted)] mt-1">
-            Abonos y pagos de intereses por socio × mes. Alterna entre "Abono + Intereses",
-            "Solo capital" y "Solo intereses".
+            Abonos y pagos de intereses por socio × mes. Alterna entre "Solo capital" y "Solo intereses".
           </p>
         </div>
         <div className="flex gap-2">

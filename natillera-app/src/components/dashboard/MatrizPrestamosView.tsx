@@ -11,51 +11,42 @@ import {
 import { formatCOP } from "@/lib/natillera/format";
 import type { MatrizPrestamos } from "@/lib/dashboard/api";
 
-type Modo = "total" | "abono" | "intereses";
+type Modo = "abono" | "intereses";
 
 export function MatrizPrestamosView({ matriz }: { matriz: MatrizPrestamos }) {
-  const [modo, setModo] = useState<Modo>("total");
+  const [modo, setModo] = useState<Modo>("abono");
   const cortaMes = (n: string) => n.slice(0, 3);
 
-  const totalPorMes: Record<string, { abono: number; intereses: number; total: number }> = {};
-  for (const m of matriz.meses) totalPorMes[m.nombre] = { abono: 0, intereses: 0, total: 0 };
+  const totalPorMes: Record<string, { abono: number; intereses: number }> = {};
+  for (const m of matriz.meses) totalPorMes[m.nombre] = { abono: 0, intereses: 0 };
   for (const s of matriz.socios) {
     for (const [mes, c] of Object.entries(s.celdas)) {
       totalPorMes[mes].abono += c.abono;
       totalPorMes[mes].intereses += c.intereses;
-      totalPorMes[mes].total += c.total;
     }
   }
   const grandTotal = matriz.socios.reduce(
     (a, s) => ({
       abono: a.abono + s.totalAbono,
       intereses: a.intereses + s.totalIntereses,
-      total: a.total + s.total,
     }),
-    { abono: 0, intereses: 0, total: 0 },
+    { abono: 0, intereses: 0 },
   );
 
-  function valorCelda(c: { abono: number; intereses: number; total: number } | undefined) {
+  function valorCelda(c: { abono: number; intereses: number } | undefined) {
     if (!c) return 0;
-    if (modo === "abono") return c.abono;
-    if (modo === "intereses") return c.intereses;
-    return c.total;
+    return modo === "abono" ? c.abono : c.intereses;
   }
 
   function totalSocio(s: (typeof matriz.socios)[number]) {
-    if (modo === "abono") return s.totalAbono;
-    if (modo === "intereses") return s.totalIntereses;
-    return s.total;
+    return modo === "abono" ? s.totalAbono : s.totalIntereses;
   }
 
   function totalMes(mes: string) {
-    if (modo === "abono") return totalPorMes[mes]?.abono ?? 0;
-    if (modo === "intereses") return totalPorMes[mes]?.intereses ?? 0;
-    return totalPorMes[mes]?.total ?? 0;
+    return modo === "abono" ? totalPorMes[mes]?.abono ?? 0 : totalPorMes[mes]?.intereses ?? 0;
   }
 
-  const grandTotalActual =
-    modo === "abono" ? grandTotal.abono : modo === "intereses" ? grandTotal.intereses : grandTotal.total;
+  const grandTotalActual = modo === "abono" ? grandTotal.abono : grandTotal.intereses;
 
   return (
     <Card className="rounded-[var(--radius-card)] border-[var(--color-border)]">
@@ -67,7 +58,7 @@ export function MatrizPrestamosView({ matriz }: { matriz: MatrizPrestamos }) {
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex gap-1 text-xs">
-          {(["total", "abono", "intereses"] as Modo[]).map((m) => (
+          {(["abono", "intereses"] as Modo[]).map((m) => (
             <button
               key={m}
               onClick={() => setModo(m)}
@@ -77,7 +68,7 @@ export function MatrizPrestamosView({ matriz }: { matriz: MatrizPrestamos }) {
                   : "border-[var(--color-border)] text-[var(--color-muted)] hover:border-[var(--color-primary)]/50"
               }`}
             >
-              {m === "total" ? "Abono + Intereses" : m === "abono" ? "Solo capital" : "Solo intereses"}
+              {m === "abono" ? "Solo capital" : "Solo intereses"}
             </button>
           ))}
         </div>
