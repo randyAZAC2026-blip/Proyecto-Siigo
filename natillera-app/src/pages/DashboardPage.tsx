@@ -1,17 +1,6 @@
-import {
-  RefreshCw,
-  AlertCircle,
-  Users,
-  BarChart3,
-  Wallet,
-  AlertTriangle,
-  Landmark,
-  FileText,
-  CheckCircle2,
-} from "lucide-react";
+import { RefreshCw, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/ui/card";
 import { useApi } from "@/lib/dashboard/useApi";
 import { api } from "@/lib/dashboard/api";
 import { KpiTiles } from "@/components/dashboard/KpiTiles";
@@ -23,100 +12,7 @@ interface Props {
   onIr: (vista: string) => void;
 }
 
-const ACCESOS: {
-  key: string;
-  label: string;
-  desc: string;
-  Icon: typeof Users;
-  color: string;
-}[] = [
-  {
-    key: "socios",
-    label: "Socios y aportes",
-    desc: "Tabla con buscador y ordenamiento",
-    Icon: Users,
-    color: "var(--color-primary)",
-  },
-  {
-    key: "matriz",
-    label: "Matriz de ahorros",
-    desc: "Socios × meses (solo lectura)",
-    Icon: BarChart3,
-    color: "var(--color-primary)",
-  },
-  {
-    key: "control",
-    label: "Control pagos",
-    desc: "Matriz clicable — registrar / editar",
-    Icon: CheckCircle2,
-    color: "var(--color-success)",
-  },
-  {
-    key: "mora-ahorros",
-    label: "Mora ahorros",
-    desc: "Cálculo automático $500/día",
-    Icon: AlertTriangle,
-    color: "var(--color-destructive)",
-  },
-  {
-    key: "liquidacion",
-    label: "Liquidación",
-    desc: "Cuánto le tocaría a cada socio hoy",
-    Icon: Wallet,
-    color: "var(--color-success)",
-  },
-  {
-    key: "simulador",
-    label: "Simulador cierre",
-    desc: "What-if — sin tocar la BD",
-    Icon: Wallet,
-    color: "var(--color-primary)",
-  },
-  {
-    key: "prestamos",
-    label: "Préstamos activos",
-    desc: "Deudores y saldos pendientes",
-    Icon: AlertTriangle,
-    color: "var(--color-warning)",
-  },
-  {
-    key: "matriz-prestamos",
-    label: "Matriz de préstamos",
-    desc: "Abonos + intereses mes × socio",
-    Icon: BarChart3,
-    color: "var(--color-warning)",
-  },
-  {
-    key: "mora-intereses",
-    label: "Mora intereses",
-    desc: "Cálculo automático $500/día",
-    Icon: AlertTriangle,
-    color: "var(--color-destructive)",
-  },
-  {
-    key: "conciliacion",
-    label: "Conciliación banco",
-    desc: "Resumen Bancolombia + Nequi",
-    Icon: Landmark,
-    color: "var(--color-primary)",
-  },
-  {
-    key: "extracto",
-    label: "Extracto detallado",
-    desc: "Movs con filtros + vincular",
-    Icon: Landmark,
-    color: "var(--color-primary)",
-  },
-  {
-    key: "estado",
-    label: "Estado de cuenta",
-    desc: "Detallado por socio (PDF/WhatsApp)",
-    Icon: FileText,
-    color: "var(--color-primary)",
-  },
-];
-
-export function DashboardPage({ onVolver: _onVolver, onIr }: Props) {
+export function DashboardPage({ onVolver: _onVolver, onIr: _onIr }: Props) {
   const resumen = useApi(() => api.resumen());
 
   return (
@@ -164,36 +60,6 @@ export function DashboardPage({ onVolver: _onVolver, onIr }: Props) {
       )}
 
       {resumen.data && <KpiTiles resumen={resumen.data} />}
-
-      <div>
-        <h2 className="text-sm font-semibold text-[var(--color-muted)] uppercase tracking-wide mb-3">
-          Módulos
-        </h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {ACCESOS.map((a) => (
-            <Card
-              key={a.key}
-              className="rounded-[var(--radius-card)] border-[var(--color-border)] cursor-pointer hover:border-[var(--color-primary)]/50 transition-colors"
-              onClick={() => onIr(a.key)}
-            >
-              <CardContent className="pt-5 pb-5 flex items-start gap-3">
-                <div
-                  className="rounded-md p-2"
-                  style={{ background: `${a.color}15`, color: a.color }}
-                >
-                  <a.Icon className="size-5" />
-                </div>
-                <div>
-                  <div className="font-semibold text-[var(--color-text)] text-sm">
-                    {a.label}
-                  </div>
-                  <div className="text-xs text-[var(--color-muted)]">{a.desc}</div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }
