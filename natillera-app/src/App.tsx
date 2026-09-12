@@ -54,7 +54,10 @@ interface Grupo {
 const GRUPOS: Grupo[] = [
   {
     titulo: "Inicio",
-    items: [{ key: "dashboard", label: "Panel", Icon: Home }],
+    items: [
+      { key: "dashboard", label: "Panel", Icon: Home },
+      { key: "banco", label: "Banco", Icon: Landmark },
+    ],
   },
   {
     titulo: "Socios",
@@ -79,10 +82,6 @@ const GRUPOS: Grupo[] = [
       { key: "liquidacion", label: "Liquidación", Icon: Wallet },
       { key: "simulador", label: "Simulador cierre", Icon: Wallet },
     ],
-  },
-  {
-    titulo: "Banco",
-    items: [{ key: "banco", label: "Banco", Icon: Landmark }],
   },
   {
     titulo: "Otros",
