@@ -1,4 +1,15 @@
-# Asesor Tributario IA
+# Proyecto-Siigo
+
+Este repositorio contiene **dos productos** superpuestos sobre el mismo stack Supabase:
+
+1. **Asesor Tributario IA** (base histórica, `src/`) — descrito abajo.
+2. **Gravimentes** (módulo contable Contai-compatible, en construcción) — spec y migración en `docs/`.
+
+**Antes de trabajar, lee `docs/PROYECTO_ESTADO.md`** — es la ancla canónica que resume el estado de ambos productos, qué archivos corresponden a qué, y decisiones clave. Reemplaza la reconstrucción por historial de conversación.
+
+---
+
+## Asesor Tributario IA
 
 App web que clasifica actividad económica descrita en lenguaje natural y calcula IVA, Retención en la Fuente e ICA (Medellín) usando Claude como motor de clasificación.
 
