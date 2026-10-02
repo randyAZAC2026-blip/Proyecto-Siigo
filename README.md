@@ -1,4 +1,10 @@
-# React + TypeScript + Vite
+# Proyecto-Siigo + Gravimentes
+
+El conversor local está incorporado en `gravimentes-local/`. La aplicación web incluye un acceso en **Gravimentes**. Consulta [Integración y ejecución](docs/INTEGRACION_LOCAL.md) para iniciar cada módulo y conocer los límites de sincronización.
+
+Verificación de esta integración: 58 pruebas Python aprobadas y compilación `pnpm build` correcta. Los datos locales originales no se incluyeron.
+
+## Documentación original de React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 

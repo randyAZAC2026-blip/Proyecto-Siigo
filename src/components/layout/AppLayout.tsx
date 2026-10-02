@@ -16,6 +16,7 @@ export function AppLayout() {
             Asesor Tributario IA
           </Link>
           <nav className="flex items-center gap-2">
+            <Link to="/gravimentes" className="text-sm font-medium">Gravimentes</Link>
             {profile?.role === "superuser" && (
               <Link to="/admin/tablas">
                 <Button variant="ghost" size="sm">

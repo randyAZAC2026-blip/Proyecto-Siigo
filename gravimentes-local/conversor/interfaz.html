@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gravimentes · Facturas</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23243576'/%3E%3Ctext x='8' y='24' font-size='26' fill='white'%3Eg%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/facturas.css">
+  <style>
+    .workspace-switch{display:flex;justify-content:center;gap:4px;padding:8px;background:#fff;border-bottom:1px solid var(--line)}
+    .workspace-switch [aria-pressed="true"]{background:#edf3ff;color:var(--blue);font-weight:700}
+    .layout{grid-template-columns:52px 180px minmax(0,1fr)}
+    .rail{display:flex;flex-direction:column;gap:16px;align-items:center;padding:24px 4px;background:#fff;border-right:1px solid var(--line)}
+    .rail .icon-button{width:38px}
+    .layout.modules-collapsed{grid-template-columns:52px minmax(0,1fr)}
+    .modules-collapsed #moduleNav{display:none}
+    main{min-width:0;padding:28px 24px}
+    .toolbar{flex-wrap:wrap}
+    .revision-summary{padding:12px;border:1px solid var(--line);border-radius:8px;margin-bottom:16px}
+    .dialog-actions>div{display:flex;gap:8px;flex-wrap:wrap}
+    button:focus-visible{outline:2px solid var(--blue);outline-offset:3px}
+    @media(max-width:760px){
+      .layout,.layout.modules-collapsed{display:grid;grid-template-columns:44px minmax(0,1fr)}
+      .rail{padding:12px 2px}.rail .icon-button{width:34px}
+      #moduleNav{display:none}
+      .layout.modules-open #moduleNav{display:flex;flex-direction:column;position:fixed;left:44px;top:145px;bottom:0;width:210px;z-index:20;box-shadow:4px 0 12px #0002}
+      main{padding:20px 10px}.toolbar .search{min-width:0;width:100%}.toolbar input{max-width:100%}
+      .topbar{gap:8px}.company-switch{min-width:0}.company-switch select{min-width:0}
+    }
+  </style>
+  <script src="/facturas.js" defer></script>
+  <script src="/flujo.js" defer></script>
+  <script src="/oficina.js" defer></script>
+  <style>
+    .layout{grid-template-columns:52px 160px minmax(0,1fr) 290px}
+    .layout.modules-collapsed{grid-template-columns:52px minmax(0,1fr) 290px}
+    .layout.preview-hidden{grid-template-columns:52px 180px minmax(0,1fr)}
+    .layout.preview-hidden.modules-collapsed{grid-template-columns:52px minmax(0,1fr)}
+    .live-preview{padding:20px 14px;border-left:1px solid var(--line);background:var(--bg);min-width:0;overflow:auto}
+    .live-preview h2{font-size:17px}.live-preview table{font-size:11px}.live-preview th,.live-preview td{padding:8px 4px;white-space:normal;overflow-wrap:anywhere}
+    .live-preview .preview-totals{padding:12px 0;font-weight:600}.live-preview p{overflow-wrap:anywhere}
+    #invoiceDialog{max-width:1500px;width:calc(100vw - 32px)}
+    .detail-body{display:grid;grid-template-columns:minmax(0,1fr) 310px}
+    #invoiceDetail{min-width:0}.detail-body .live-preview{position:sticky;top:0;align-self:start;max-height:70vh}
+    .supplier-account{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+    .supplier-account label{display:block;margin:8px 0}.supplier-account input[type=text]{width:140px}
+    .supplier-account .button{margin:4px 4px 4px 0}.supplier-account small{display:block}
+    .suggestion{display:block;font-size:11px;margin-top:6px}.suggestion button{font-size:11px;padding:4px}
+    .advanced{padding:16px 0}.advanced summary{cursor:pointer;margin-bottom:12px}
+    .adjustments{margin:16px 0;border:1px solid var(--line);padding:12px;border-radius:8px}
+    .adjustments label{display:block}.adjustments input{max-width:140px}
+    .change-entry{padding:8px 0;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    #tabularDialog{max-width:1500px;width:calc(100vw - 32px)}
+    #globalQuery{width:100%}#globalResults button{display:block;width:100%;text-align:left;margin:8px 0}
+    html[data-theme=dark]{--ink:#e2e8f0;--muted:#a9b7cb;--bg:#26313f;--line:#465466;--blue:#9ac3ff;--navy:#e2e8f0}
+    html[data-theme=dark] body,html[data-theme=dark] .topbar,html[data-theme=dark] nav,html[data-theme=dark] .rail,html[data-theme=dark] .workspace-switch,html[data-theme=dark] .panel,html[data-theme=dark] .stat,html[data-theme=dark] article,html[data-theme=dark] dialog{background:#26313f;color:var(--ink)}
+    html[data-theme=dark] input,html[data-theme=dark] select,html[data-theme=dark] .button{background:#354456;color:var(--ink);border-color:var(--line)}
+    @media(max-width:1250px){.layout,.layout.modules-collapsed,.layout.preview-hidden,.layout.preview-hidden.modules-collapsed{grid-template-columns:52px minmax(0,1fr)}#moduleNav{display:none}.layout.modules-open #moduleNav{display:flex;position:fixed;left:52px;top:122px;bottom:0;width:210px;z-index:20}#currentPreview{grid-column:2;border-top:1px solid var(--line)}.detail-body{display:block}.detail-body .live-preview{position:static;max-height:none}}
+    @media(max-width:760px){.layout,.layout.modules-collapsed,.layout.preview-hidden,.layout.preview-hidden.modules-collapsed{grid-template-columns:44px minmax(0,1fr)}.layout.modules-open #moduleNav{left:44px}.workspace-switch{flex-wrap:wrap}.live-preview{padding:12px}#invoiceDialog{width:calc(100vw - 12px)}.supplier-account input[type=text]{max-width:100%}}
+  </style>
+  <style>
+    .office-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin:20px 0}
+    .office-fields label{display:flex;flex-direction:column;gap:6px}.office-fields input{max-width:100%}
+    #tokenPaste{width:100%;max-width:100%}#officeView details{margin:20px 0}#officeView summary{cursor:pointer}
+    #payrollDialog{width:calc(100vw - 24px);max-width:1150px}#payrollDetail input{width:130px;max-width:100%}
+    #officeView,#payrollView{min-width:0}.office-fields small{font-size:11px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="/" aria-label="Gravimentes inicio"><span>g</span> gravimentes</a><div class="company-switch"><label for="company">Empresa</label><select id="company" aria-label="Empresa activa"></select><button id="editCompany" class="icon-button" title="Editar empresa" aria-label="Editar empresa">✎</button></div><span class="local"><i></i> Local · Sin conexión externa</span></header>
+  <div class="workspace-switch" role="group" aria-label="Espacio de trabajo"><button id="spaceAccounting" class="button" aria-pressed="true">Contable</button><button id="spaceDashboard" class="button" aria-pressed="false">Dashboard</button><button id="commandSearch" class="button" title="Ctrl+K">Buscar</button><button id="toggleTheme" class="button" aria-label="Cambiar tema">◐</button><small id="runtimeVersion" role="status" style="align-self:center">Verificando servidor local…</small></div>
+  <div class="layout">
+    <div class="rail" role="navigation" aria-label="Accesos rápidos"><button id="toggleModules" class="icon-button" aria-label="Mostrar módulos" aria-controls="moduleNav" aria-expanded="true">☰</button><button class="icon-button" data-view="invoices" aria-label="Facturas">▤</button><button class="icon-button" data-view="history" aria-label="Historial">◷</button></div>
+    <nav id="moduleNav" aria-label="Navegación principal"><div class="nav-label">CONTABILIDAD</div><button class="nav active" data-view="invoices">▤ <span>Facturas</span></button><button class="nav" data-view="payroll">▦ <span>Nómina</span></button><button class="nav" data-view="office">⚙ <span>Parametrización</span></button><button class="nav" data-view="history">◷ <span>Historial</span></button><div class="nav-foot">Importación y planos Contai<br>Cuentas por tercero o ítem<br><small>Guardado en este equipo</small></div></nav>
+    <main>
+      <div id="notice" class="notice hidden" role="status" aria-live="polite"></div>
+      <section id="dashboardView" class="hidden"><div class="page-heading"><div><h1>Dashboard</h1><p id="dashboardCompany"></p></div></div><div class="stats" id="dashboardStats"></div><p>Resumen de todas las facturas guardadas para la empresa activa.</p><button class="button" data-view="invoices">Ver facturas</button></section>
+      <section id="invoicesView">
+        <div class="page-heading"><div><div class="eyebrow">COMPRAS / DOCUMENTOS</div><h1>Facturas</h1><p>Carga tus documentos, revisa cada factura y asigna sus cuentas.</p></div><button id="upload" class="button primary">＋ Subir documentos</button></div>
+         <input id="files" type="file" accept=".xml,.zip,.json,.xlsx,.csv,.tsv,.txt" multiple hidden>
+        <div class="stats" id="stats"></div>
+        <div id="drop" class="drop" role="button" tabindex="0" aria-label="Cargar documentos XML o ZIP"><span class="upload-symbol">↥</span><div><b>Arrastra tus XML o ZIP aquí</b><span>También puedes hacer clic para seleccionarlos. Solo aparecerán las facturas, sin archivos repetidos.</span></div><span class="file-types">XML / ZIP · 30 MB</span></div>
+        <div class="panel">
+          <div class="toolbar"><label>Mes <input id="month" type="month"></label><button id="clearMonth" class="button">Todos los meses</button><label><span class="sr-only">Revisión</span><select id="reviewStatus"><option value="">Toda la revisión</option><option value="lista">Listas</option><option value="revisar">Por revisar</option><option value="error">Con errores</option></select></label><button id="reviewIssues" class="button">Revisar incidencias</button><button id="approveFiltered" class="button hidden">Aprobar avisos</button></div>
+          <div class="toolbar"><label class="search"><span class="sr-only">Buscar factura</span><input id="search" type="search" placeholder="Buscar por factura, proveedor o NIT…"></label><label><span class="sr-only">Filtrar estado</span><select id="status"><option value="">Todos los estados</option><option value="pendiente">Por asignar cuentas</option><option value="lista">Listas para generar</option><option value="generada">Plano generado</option><option value="error">Con incidencias</option></select></label><button id="generateSelected" class="button" disabled>Generar plano</button></div>
+          <div class="tablewrap"><table><thead><tr><th><input id="selectAll" type="checkbox" aria-label="Seleccionar facturas listas de esta página"></th><th>Factura</th><th>Proveedor / nombre</th><th>Fecha</th><th class="number">Valor</th><th>Estado</th><th class="center">Detalle</th></tr></thead><tbody id="invoiceRows"></tbody></table></div>
+          <div class="pagination"><span id="pageInfo"></span><div><label>Por página <select id="pageSize"><option>10</option><option>25</option><option>50</option></select></label><button id="prev" class="icon-button" aria-label="Página anterior">‹</button><button id="next" class="icon-button" aria-label="Página siguiente">›</button></div></div>
+        </div>
+        <details class="advanced"><summary>Más herramientas</summary><button id="openTabular" class="button">Revisión tabular</button><button id="openLearning" class="button">Aprendizaje de cuentas</button><button id="reclassifyInvoices" class="button" title="Reconstruye tipo, tratamiento y contraparte desde los XML del listado filtrado">Reclasificar documentos</button><button id="undoLast" class="button" title="Ctrl+Z fuera de un campo">Deshacer cambio</button><details><summary>Últimos cambios</summary><div id="changeTimeline"></div></details></details>
+        <div id="downloads"></div>
+      </section>
+      <section id="historyView" class="hidden"><div class="page-heading"><div><div class="eyebrow">EXPORTACIONES</div><h1>Historial de planos</h1><p>Descarga los lotes generados con las cuentas asignadas.</p></div><button id="clearHistory" class="button">Borrar historial</button></div><div class="panel tablewrap"><table><thead><tr><th>Fecha</th><th>Empresa</th><th>Facturas</th><th>Incidencias</th><th>Descargar</th></tr></thead><tbody id="historyRows"></tbody></table></div></section>
+      <footer>Gravimentes · Facturas y cuentas guardadas localmente · Los XML originales se conservan para la exportación.</footer>
+      <section id="officeView" class="hidden"><div class="page-heading"><div><h1>Parametrización</h1><p>Configuración de la empresa, aprendizaje desde históricos y conciliación del reporte DIAN.</p></div><button class="button" id="officeImport">Importar archivos</button></div><p id="officeStatus" role="status"></p><form id="officeForm"><div id="officeFields" class="office-fields"></div><button class="button primary" type="submit">Guardar configuración</button></form><details><summary>Maestro de cuentas</summary><div id="masterTable" class="tablewrap"></div></details><details><summary>Pegar token JSON</summary><textarea id="tokenPaste" rows="6" aria-label="Contenido del token JSON"></textarea><button class="button" id="importTokenPaste">Importar token</button><p>Los resúmenes se concilian con el XML por identificador. Un resumen sin desglose no inventa cuentas ni impuestos.</p></details><h2>Reporte DIAN y XML</h2><div id="tokenTable" class="tablewrap"></div></section>
+      <section id="payrollView" class="hidden"><div class="page-heading"><div><h1>Nómina</h1><p>Documentos del empleador activo. Revisa los conceptos y asigna sus cuentas.</p></div><button class="button" id="payrollImport">Importar nómina</button></div><label>Mes <input id="payrollMonth" type="month"></label><button id="generatePayroll" class="button">Generar plano</button><p id="payrollStatus" role="status"></p><div id="payrollTable" class="tablewrap"></div></section>
+    </main>
+    <aside id="currentPreview" class="live-preview" aria-label="Asiento actual"><h2>Asiento actual</h2><p>Abre una factura para ver su asiento.</p></aside>
+  </div>
+  <dialog id="invoiceDialog" aria-labelledby="invoiceTitle"><div class="dialog-top"><button id="backToInvoices" class="button">← Volver a facturas</button><span id="saveStatus" role="status"></span></div><div class="detail-body"><article id="invoiceDetail"></article><aside id="detailPreview" class="live-preview" aria-label="Vista previa del asiento"></aside></div><div class="dialog-actions"><span id="reviewPosition" role="status" aria-live="polite"></span><div><button id="previousInvoice" class="button">Anterior</button><button id="nextInvoice" class="button">Siguiente</button><button id="saveAccounts" class="button primary">Guardar cuentas</button><button id="closeInvoice" class="button">Cerrar</button></div></div></dialog>
+  <dialog id="tabularDialog" aria-labelledby="tabularTitle"><div class="dialog-top"><h2 id="tabularTitle">Revisión tabular</h2><button id="closeTabular" class="button">Cerrar</button></div><p>Facturas del listado filtrado al abrir esta vista. Importes originales y neto del asiento se muestran por separado.</p><div class="toolbar"><label>Régimen <input id="tabularRegime" type="search" placeholder="Responsabilidad fiscal…"></label><label>Retenciones <select id="tabularHolds"><option value="">Todas</option><option value="yes">Con retención</option><option value="no">Sin retención</option></select></label><label>IVA 5% y 19% <select id="tabularMixed"><option value="">Todas las tarifas</option><option value="yes">Tarifas mixtas</option><option value="no">Sin mezcla</option></select></label><span id="tabularCount" role="status"></span><button id="exportTabular" class="button">Bajar Excel</button></div><div id="tabularContent" class="tablewrap"></div></dialog>
+  <dialog id="learningDialog" aria-labelledby="learningTitle"><div class="dialog-top"><h2 id="learningTitle">Aprendizaje de cuentas</h2><button id="closeLearning" class="button">Cerrar</button></div><p>Las sugerencias usan asignaciones guardadas de esta empresa. Excluir un ejemplo evita que se use para sugerir cuentas; no modifica su factura ni el plano.</p><p id="learningMessage" role="status" aria-live="polite"></p><details><summary>20 palabras más frecuentes</summary><div id="learningTokens" class="tablewrap"></div></details><label>Buscar ejemplos <input id="learningSearch" type="search" placeholder="Factura, descripción, cuenta o palabra…"></label><div id="learningExamples" class="tablewrap"></div><div class="pagination"><span id="learningPageInfo"></span><button id="learningPrevious" class="button">Anterior</button><button id="learningNext" class="button">Siguiente</button></div></dialog>
+  <dialog id="searchDialog" aria-labelledby="searchTitle"><h2 id="searchTitle">Buscar en Gravimentes</h2><input id="globalQuery" type="search" aria-label="Buscar factura o acción" placeholder="Factura, proveedor, empresa o acción…"><div id="globalResults"></div><button id="closeSearch" class="button">Cerrar</button></dialog>
+  <dialog id="payrollDialog" aria-labelledby="payrollTitle"><div class="dialog-top"><h2 id="payrollTitle">Nómina</h2><button class="button" id="closePayroll">Cerrar</button></div><div id="payrollDetail"></div><label><input id="rememberPayroll" type="checkbox"> Recordar estas cuentas por concepto para nuevas nóminas</label><button class="button primary" id="savePayroll">Guardar cuentas</button><div id="payrollPreview" role="status"></div></dialog>
+  <dialog id="companyDialog" aria-labelledby="companyTitle"><form id="companyForm"><h2 id="companyTitle">Tu empresa</h2><p>El NIT se verifica contra el comprador de cada factura.</p><label>NIT sin dígito de verificación<input id="companyNit" required pattern="[0-9]{5,15}" inputmode="numeric" autocomplete="off"></label><label>Nombre de la empresa<input id="companyName" required maxlength="160"></label><p id="companyError" class="error-text" role="alert"></p><div class="dialog-actions"><button id="cancelCompany" type="button" class="button">Cancelar</button><button type="submit" class="button primary">Guardar empresa</button></div></form></dialog>
+</body>
+</html>
