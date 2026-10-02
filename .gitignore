@@ -1,4 +1,13 @@
 # Logs
+# Datos privados del conversor local y paquetes de traslado
+**/datos/
+**/__pycache__/
+*.pyc
+*.db
+*.db-*
+*.sqlite*
+*.zip
+
 logs
 *.log
 npm-debug.log*

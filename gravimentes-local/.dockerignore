@@ -1,0 +1,18 @@
+# Enviar al constructor únicamente la aplicación, nunca facturas ni SQLite.
+**
+!Dockerfile
+!conversor/
+conversor/**
+!conversor/motor.py
+!conversor/servidor.py
+!conversor/revision.py
+!conversor/facturas.py
+!conversor/interfaz.html
+!conversor/facturas.js
+!conversor/facturas.css
+!conversor/revision.js
+!conversor/flujo.js
+!conversor/oficina.js
+!conversor/importador.py
+!conversor/nomina.py
+!conversor/clasificacion.py
