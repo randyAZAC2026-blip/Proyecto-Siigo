@@ -1,11 +1,6 @@
 # Proyecto-Siigo
 
-Este repositorio contiene **dos productos** superpuestos sobre el mismo stack Supabase:
-
-1. **Asesor Tributario IA** (base histórica, `src/`) — descrito abajo.
-2. **Gravimentes** (módulo contable Contai-compatible, en construcción) — spec y migración en `docs/`.
-
-**Antes de trabajar, lee `docs/PROYECTO_ESTADO.md`** — es la ancla canónica que resume el estado de ambos productos, qué archivos corresponden a qué, y decisiones clave. Reemplaza la reconstrucción por historial de conversación.
+Gravimentes (módulo contable Contai-compatible) se movió al repositorio `siempre_pendientes`, carpeta `legado/gravimentes/`. Aquí solo vive el Asesor Tributario IA.
 
 ---
 
