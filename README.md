@@ -1,8 +1,6 @@
-# Proyecto-Siigo + Gravimentes
+# Proyecto-Siigo
 
-El conversor local está incorporado en `gravimentes-local/`. La aplicación web incluye un acceso en **Gravimentes**. Consulta [Integración y ejecución](docs/INTEGRACION_LOCAL.md) para iniciar cada módulo y conocer los límites de sincronización.
-
-Verificación de esta integración: 58 pruebas Python aprobadas y compilación `pnpm build` correcta. Los datos locales originales no se incluyeron.
+Asesor Tributario IA. Gravimentes se movió al repositorio `siempre_pendientes` (`legado/gravimentes/`).
 
 ## Documentación original de React + TypeScript + Vite
 
