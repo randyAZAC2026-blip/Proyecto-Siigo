@@ -48,7 +48,9 @@ interface FilaSocio {
   estado: "al_dia" | "en_mora" | "cancelado";
 }
 
-export function PrestamosPage({ onVolver }: { onVolver: () => void }) {
+// modoSocio: "Mis préstamos" del socio que entró. RLS ya le devuelve solo sus filas;
+// aquí se ocultan los controles pensados para revisar a todo el grupo.
+export function PrestamosPage({ onVolver, modoSocio = false }: { onVolver?: () => void; modoSocio?: boolean }) {
   const deudoresQ = useApi(() => api.deudores(), []);
   const matrizQ = useApi(() => api.matrizPrestamos(), []);
   const moraQ = useApi(() => api.moraIntereses(true), []);
@@ -168,9 +170,11 @@ export function PrestamosPage({ onVolver }: { onVolver: () => void }) {
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-[var(--color-text)]">Préstamos</h1>
+          <h1 className="text-2xl font-semibold text-[var(--color-text)]">{modoSocio ? "Mis préstamos" : "Préstamos"}</h1>
           <p className="text-sm text-[var(--color-muted)] mt-1">
-            Un socio por fila con todos sus préstamos acumulados. Clic para ver el detalle.
+            {modoSocio
+              ? "Lo que te han prestado, lo que has abonado y lo que te falta."
+              : "Un socio por fila con todos sus préstamos acumulados. Clic para ver el detalle."}
           </p>
         </div>
         <div className="flex gap-2">
@@ -178,9 +182,11 @@ export function PrestamosPage({ onVolver }: { onVolver: () => void }) {
             <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
             Actualizar
           </Button>
-          <Button variant="ghost" size="sm" onClick={onVolver}>
-            ← Volver
-          </Button>
+          {onVolver && (
+            <Button variant="ghost" size="sm" onClick={onVolver}>
+              ← Volver
+            </Button>
+          )}
         </div>
       </div>
 
@@ -191,7 +197,7 @@ export function PrestamosPage({ onVolver }: { onVolver: () => void }) {
         </div>
       )}
 
-      <div className="grid gap-3 grid-cols-2 sm:grid-cols-5">
+      <div className={`grid gap-3 grid-cols-2 ${modoSocio ? "sm:grid-cols-4" : "sm:grid-cols-5"}`}>
         <MiniTile label="Total prestado" value={formatCOP(tot.total_prestado)} color="var(--color-muted)" />
         <MiniTile
           label="Saldo capital pendiente"
@@ -208,11 +214,13 @@ export function PrestamosPage({ onVolver }: { onVolver: () => void }) {
           value={formatCOP(tot.mora_pendiente)}
           color="var(--color-destructive)"
         />
-        <MiniTile
-          label="Socios con préstamo"
-          value={String(tot.activos)}
-          color="var(--color-primary)"
-        />
+        {!modoSocio && (
+          <MiniTile
+            label="Socios con préstamo"
+            value={String(tot.activos)}
+            color="var(--color-primary)"
+          />
+        )}
       </div>
 
       {loading && !deudoresQ.data && (
@@ -223,15 +231,23 @@ export function PrestamosPage({ onVolver }: { onVolver: () => void }) {
         <Card className="rounded-[var(--radius-card)] border-[var(--color-border)]">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">
-              Socios con préstamo ({filtradas.length}
-              {filtradas.length !== filas.length ? ` de ${filas.length}` : ""})
+              {modoSocio ? (
+                "Detalle"
+              ) : (
+                <>
+                  Socios con préstamo ({filtradas.length}
+                  {filtradas.length !== filas.length ? ` de ${filas.length}` : ""})
+                </>
+              )}
             </CardTitle>
             <CardDescription>
-              Clic en cualquier fila para ver los préstamos individuales, la matriz mensual y los vencimientos de mora.
+              {modoSocio
+                ? "Tus préstamos, abonos mes a mes y vencimientos de intereses."
+                : "Clic en cualquier fila para ver los préstamos individuales, la matriz mensual y los vencimientos de mora."}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 max-sm:px-3">
-            <div className="flex flex-wrap gap-2 items-center">
+            <div className={`flex flex-wrap gap-2 items-center ${modoSocio ? "hidden" : ""}`}>
               <div className="relative flex-1 min-w-[200px]">
                 <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-4 text-[var(--color-muted)]" />
                 <Input
@@ -270,7 +286,7 @@ export function PrestamosPage({ onVolver }: { onVolver: () => void }) {
                   fila={f}
                   matriz={matrizQ.data}
                   mora={moraQ.data}
-                  abierto={abiertos.has(f.socio_id)}
+                  abierto={modoSocio || abiertos.has(f.socio_id)}
                   onToggle={() => toggle(f.socio_id)}
                 />
               ))}
@@ -278,7 +294,9 @@ export function PrestamosPage({ onVolver }: { onVolver: () => void }) {
                 <li className="py-6 text-center text-sm text-[var(--color-muted)]">
                   {busqueda
                     ? "No hay socios con préstamo que coincidan con la búsqueda."
-                    : "No hay socios con préstamos registrados."}
+                    : modoSocio
+                      ? "No tienes préstamos registrados."
+                      : "No hay socios con préstamos registrados."}
                 </li>
               )}
             </ul>
@@ -304,7 +322,7 @@ export function PrestamosPage({ onVolver }: { onVolver: () => void }) {
                     fila={f}
                     matriz={matrizQ.data}
                     mora={moraQ.data}
-                    abierto={abiertos.has(f.socio_id)}
+                    abierto={modoSocio || abiertos.has(f.socio_id)}
                     onToggle={() => toggle(f.socio_id)}
                   />
                 ))}
@@ -313,7 +331,9 @@ export function PrestamosPage({ onVolver }: { onVolver: () => void }) {
                     <TableCell colSpan={9} className="text-center text-sm text-[var(--color-muted)]">
                       {busqueda
                         ? "No hay socios con préstamo que coincidan con la búsqueda."
-                        : "No hay socios con préstamos registrados."}
+                        : modoSocio
+                      ? "No tienes préstamos registrados."
+                      : "No hay socios con préstamos registrados."}
                     </TableCell>
                   </TableRow>
                 )}

@@ -32,6 +32,7 @@ import type {
   DesglosePago,
   SimuladorParams,
   SimuladorResultado,
+  TotalesGenerales,
 } from "./api";
 
 async function q<T>(builder: PromiseLike<{ data: T | null; error: { message: string } | null }>): Promise<T> {
@@ -590,6 +591,12 @@ async function simularLiquidacion(_params: SimuladorParams): Promise<SimuladorRe
   return noImpl("simularLiquidacion");
 }
 
+// -------------------- totales sin nombres (RPC de supabase-acceso.sql) --------------------
+
+async function totalesGenerales(): Promise<TotalesGenerales> {
+  return q<TotalesGenerales>(supabase.rpc("nat_totales_generales"));
+}
+
 // -------------------- health --------------------
 
 async function health() {
@@ -603,6 +610,7 @@ async function health() {
 
 export const apiSupabase = {
   resumen,
+  totalesGenerales,
   socios,
   socioById,
   matrizAhorro,

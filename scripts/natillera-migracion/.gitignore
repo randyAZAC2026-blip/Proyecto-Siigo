@@ -5,3 +5,4 @@ natillera.db-wal
 *.db
 *.db-journal
 backups/
+accesos_natillera*.csv

@@ -50,6 +50,17 @@ export interface Resumen {
   total_aportado: number;
 }
 
+/** Totales de toda la natillera, sin nombres: lo que un socio puede ver del fondo común. */
+export interface TotalesGenerales {
+  socios_activos: number;
+  total_ahorrado: number;
+  total_actividades: number;
+  intereses_cobrados: number;
+  capital_prestado: number;
+  fondo_disponible: number;
+  ultimo_movimiento: string | null;
+}
+
 export interface Socio {
   id: number;
   nombre: string;
@@ -367,6 +378,19 @@ export interface DesglosePago {
 
 const apiHttp = {
   resumen: () => get<Resumen>("/api/resumen"),
+  // El backend local no tiene este endpoint: se arma desde /api/resumen.
+  totalesGenerales: async (): Promise<TotalesGenerales> => {
+    const r = await get<Resumen>("/api/resumen");
+    return {
+      socios_activos: r.socios_activos,
+      total_ahorrado: r.ahorros,
+      total_actividades: r.actividades + r.rifa,
+      intereses_cobrados: r.intereses,
+      capital_prestado: r.deuda_pendiente,
+      fondo_disponible: r.total_aportado - r.prestamos_desembolsados,
+      ultimo_movimiento: null,
+    };
+  },
   socios: () => get<Socio[]>("/api/socios"),
   socioById: (id: number) => get<HistorialSocio>(`/api/socios/${id}`),
   matrizAhorro: () => get<Matriz>("/api/matriz-ahorro"),
@@ -442,6 +466,8 @@ const apiHttp = {
 // Selector de origen de datos según VITE_NAT_DATA_SOURCE.
 // Import dinámico para no cargar el cliente Supabase cuando no se usa.
 const source = (import.meta.env.VITE_NAT_DATA_SOURCE as string | undefined) ?? "express";
+/** true cuando la app lee de Supabase: entonces hay login por cédula + PIN y permisos por socio. */
+export const USA_SUPABASE = source === "supabase";
 
 async function loadSupabaseApi() {
   const mod = await import("./apiSupabase");

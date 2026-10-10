@@ -21,14 +21,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatCOP } from "@/lib/natillera/format";
+import { formatCOP, nombreConcepto } from "@/lib/natillera/format";
 import { api, type Socio } from "@/lib/dashboard/api";
 import { useApi } from "@/lib/dashboard/useApi";
 
-export function EstadoCuentaPage({ onVolver }: { onVolver: () => void }) {
-  const socios = useApi(() => api.socios(), []);
+// Con socioFijo es "Mis ahorros" del socio que entró: sin lista de socios ni selector.
+export function EstadoCuentaPage({ onVolver, socioFijo }: { onVolver?: () => void; socioFijo?: number }) {
+  const socios = useApi(() => (socioFijo ? Promise.resolve([]) : api.socios()), [socioFijo]);
   const [busqueda, setBusqueda] = useState("");
-  const [socioId, setSocioId] = useState<number | null>(null);
+  const [socioElegido, setSocioId] = useState<number | null>(null);
+  const socioId = socioFijo ?? socioElegido;
   const [filtroConcepto, setFiltroConcepto] = useState<string>("");
 
   const detalle = useApi(
@@ -51,22 +53,27 @@ export function EstadoCuentaPage({ onVolver }: { onVolver: () => void }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start justify-between gap-3" data-print="hide">
+      <div className="flex flex-wrap items-start justify-between gap-3" data-print="hide">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold text-[var(--color-text)]">
             <FileText className="size-6 text-[var(--color-primary)]" />
-            Estado de cuenta
+            {socioFijo ? "Mis ahorros" : "Estado de cuenta"}
           </h1>
           <p className="text-sm text-[var(--color-muted)] mt-1">
-            Detallado por socio — todos los movimientos, saldos, deuda.
+            {socioFijo
+              ? "Todos tus aportes y movimientos en la natillera."
+              : "Detallado por socio — todos los movimientos, saldos, deuda."}
           </p>
         </div>
-        <Button variant="ghost" size="sm" onClick={onVolver}>
-          ← Volver
-        </Button>
+        {onVolver && (
+          <Button variant="ghost" size="sm" onClick={onVolver}>
+            ← Volver
+          </Button>
+        )}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-[280px_1fr]" data-print="single-col">
+      <div className={socioFijo ? "space-y-4" : "grid gap-4 md:grid-cols-[280px_1fr]"} data-print="single-col">
+        {!socioFijo && (
         <Card className="rounded-[var(--radius-card)] border-[var(--color-border)] h-fit" data-print="hide">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Socios</CardTitle>
@@ -106,6 +113,7 @@ export function EstadoCuentaPage({ onVolver }: { onVolver: () => void }) {
             </div>
           </CardContent>
         </Card>
+        )}
 
         <div className="space-y-4">
           {!socioId && (
@@ -325,10 +333,10 @@ function ConceptoFiltros({
               : "border-[var(--color-border)] text-[var(--color-muted)] hover:border-[var(--color-primary)]/50"
           }`}
         >
-          {c}
+          {nombreConcepto(c)}
         </button>
       ))}
-      <div className="ml-auto flex items-center gap-1">
+      <div className="ml-auto flex flex-wrap items-center gap-1">
         <span className="text-xs text-[var(--color-muted)]">{filtrado} movimientos</span>
         <Button
           variant="outline"
@@ -386,7 +394,32 @@ function HistorialTabla({
         <CardTitle className="text-base">Movimientos</CardTitle>
       </CardHeader>
       <CardContent>
-        <Table>
+        {/* En celular cada movimiento es una línea; la tabla aparece desde sm. */}
+        <ul className="sm:hidden divide-y divide-[var(--color-border)]">
+          {filas.map((t) => (
+            <li key={t.id} className="flex items-center justify-between gap-3 py-2">
+              <div className="min-w-0">
+                <div className="text-sm font-medium">{nombreConcepto(t.concepto)}</div>
+                <div className="text-xs text-[var(--color-muted)]">
+                  {t.fecha_pago ?? "sin fecha"}
+                  {t.periodo ? ` · ${t.periodo}` : ""}
+                </div>
+              </div>
+              <span
+                className={`shrink-0 text-sm font-semibold tabular-nums ${
+                  t.tipo === "egreso" ? "text-[var(--color-destructive)]" : "text-[var(--color-success)]"
+                }`}
+              >
+                {t.tipo === "egreso" ? "-" : "+"}
+                {formatCOP(t.valor)}
+              </span>
+            </li>
+          ))}
+          {filas.length === 0 && (
+            <li className="py-6 text-center text-sm text-[var(--color-muted)]">Sin movimientos con este filtro</li>
+          )}
+        </ul>
+        <Table className="hidden sm:table">
           <TableHeader>
             <TableRow>
               <TableHead>Fecha</TableHead>

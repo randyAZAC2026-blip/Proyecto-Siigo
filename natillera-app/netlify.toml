@@ -1,0 +1,25 @@
+# Sitio de la natillera en Netlify.
+# Al crear el sitio: Base directory = natillera-app (este archivo se lee desde ahí).
+# Variables de entorno del sitio (Site settings → Environment variables):
+#   VITE_NAT_DATA_SOURCE = supabase
+#   VITE_SUPABASE_URL    = https://<proyecto>.supabase.co
+#   VITE_SUPABASE_ANON_KEY = <anon / publishable key>   (NUNCA la service_role)
+[build]
+  command = "corepack enable && pnpm install --frozen-lockfile && pnpm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# App de una sola página: cualquier ruta carga index.html.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"

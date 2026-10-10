@@ -5,10 +5,14 @@
 -- Espejo de las vistas que crea scripts/natillera-migracion/database.js
 -- para la BD local SQLite. Necesarias para que natillera-app funcione
 -- con VITE_NAT_DATA_SOURCE=supabase.
+--
+-- Las vistas usan security_invoker: respetan el RLS de quien consulta,
+-- así un socio solo ve sus propias filas. Después de este archivo corre
+-- supabase-acceso.sql (perfiles, permisos y totales).
 -- ============================================================
 
 DROP VIEW IF EXISTS vw_saldo_por_socio;
-CREATE VIEW vw_saldo_por_socio AS
+CREATE VIEW vw_saldo_por_socio WITH (security_invoker = true) AS
 SELECT
   s.id,
   s.nombre,
@@ -34,7 +38,7 @@ LEFT JOIN transacciones t ON t.socio_id = s.id
 GROUP BY s.id;
 
 DROP VIEW IF EXISTS vw_matriz_ahorro;
-CREATE VIEW vw_matriz_ahorro AS
+CREATE VIEW vw_matriz_ahorro WITH (security_invoker = true) AS
 SELECT
   s.id AS socio_id,
   s.nombre,
@@ -51,7 +55,7 @@ WHERE s.tipo = 'persona'
 GROUP BY s.id, p.id;
 
 DROP VIEW IF EXISTS vw_matriz_actividades;
-CREATE VIEW vw_matriz_actividades AS
+CREATE VIEW vw_matriz_actividades WITH (security_invoker = true) AS
 SELECT
   s.id AS socio_id,
   s.nombre,
@@ -68,7 +72,7 @@ WHERE s.tipo = 'persona'
 GROUP BY s.id, p.id;
 
 DROP VIEW IF EXISTS vw_totales_globales;
-CREATE VIEW vw_totales_globales AS
+CREATE VIEW vw_totales_globales WITH (security_invoker = true) AS
 SELECT
   concepto,
   tipo,
@@ -80,7 +84,7 @@ FROM transacciones
 GROUP BY concepto, tipo;
 
 DROP VIEW IF EXISTS vw_liquidacion_anual;
-CREATE VIEW vw_liquidacion_anual AS
+CREATE VIEW vw_liquidacion_anual WITH (security_invoker = true) AS
 SELECT
   s.id,
   s.nombre,
@@ -121,7 +125,7 @@ WHERE s.tipo = 'persona'
 GROUP BY s.id;
 
 DROP VIEW IF EXISTS vw_matriz_prestamos;
-CREATE VIEW vw_matriz_prestamos AS
+CREATE VIEW vw_matriz_prestamos WITH (security_invoker = true) AS
 SELECT
   s.id AS socio_id,
   s.nombre,
@@ -141,7 +145,7 @@ WHERE s.tipo = 'persona'
 GROUP BY s.id, p.id;
 
 DROP VIEW IF EXISTS vw_conciliacion_bancaria;
-CREATE VIEW vw_conciliacion_bancaria AS
+CREATE VIEW vw_conciliacion_bancaria WITH (security_invoker = true) AS
 SELECT
   banco,
   COUNT(*) AS n_movs,
@@ -154,8 +158,11 @@ FROM movimientos_banco
 GROUP BY banco;
 
 -- ============================================================
--- RLS: permisos anónimos para lectura desde el navegador
--- (todas las tablas + escritura mínima para registrar pagos)
+-- RLS: tablas cerradas por defecto
+--
+-- Antes aquí había políticas públicas (cualquiera con la anon key podía
+-- leer, insertar y borrar). Los permisos ahora viven en
+-- supabase-acceso.sql (admin / socio / anónimo): córrelo después de este.
 -- ============================================================
 
 ALTER TABLE socios ENABLE ROW LEVEL SECURITY;
@@ -167,34 +174,13 @@ ALTER TABLE multas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE movimientos_banco ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "lectura publica socios" ON socios;
-CREATE POLICY "lectura publica socios" ON socios FOR SELECT USING (true);
-
 DROP POLICY IF EXISTS "lectura publica periodos" ON periodos;
-CREATE POLICY "lectura publica periodos" ON periodos FOR SELECT USING (true);
-
 DROP POLICY IF EXISTS "lectura publica transacciones" ON transacciones;
-CREATE POLICY "lectura publica transacciones" ON transacciones FOR SELECT USING (true);
-
 DROP POLICY IF EXISTS "lectura publica prestamos" ON prestamos;
-CREATE POLICY "lectura publica prestamos" ON prestamos FOR SELECT USING (true);
-
 DROP POLICY IF EXISTS "lectura publica abonos" ON abonos_prestamos;
-CREATE POLICY "lectura publica abonos" ON abonos_prestamos FOR SELECT USING (true);
-
 DROP POLICY IF EXISTS "lectura publica multas" ON multas;
-CREATE POLICY "lectura publica multas" ON multas FOR SELECT USING (true);
-
 DROP POLICY IF EXISTS "lectura publica banco" ON movimientos_banco;
-CREATE POLICY "lectura publica banco" ON movimientos_banco FOR SELECT USING (true);
-
 DROP POLICY IF EXISTS "escritura publica transacciones" ON transacciones;
-CREATE POLICY "escritura publica transacciones" ON transacciones FOR INSERT WITH CHECK (true);
-
 DROP POLICY IF EXISTS "borrado publico transacciones" ON transacciones;
-CREATE POLICY "borrado publico transacciones" ON transacciones FOR DELETE USING (true);
-
 DROP POLICY IF EXISTS "escritura publica banco" ON movimientos_banco;
-CREATE POLICY "escritura publica banco" ON movimientos_banco FOR INSERT WITH CHECK (true);
-
 DROP POLICY IF EXISTS "update publica banco" ON movimientos_banco;
-CREATE POLICY "update publica banco" ON movimientos_banco FOR UPDATE USING (true);

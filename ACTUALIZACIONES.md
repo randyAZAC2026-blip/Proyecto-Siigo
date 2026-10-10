@@ -171,6 +171,81 @@ vincular/desvincular).
 
 ---
 
+## 7. Natillera en el celular: acceso por socio (cédula + PIN)
+
+Cada socio entra desde su celular con **cédula + PIN** y ve **solo lo
+suyo**: Inicio, Mis ahorros, Mis préstamos y Mi liquidación, más una
+tarjeta "La natillera hoy" con los totales del grupo (sin nombres). El
+administrador ve todo, como antes.
+
+En el celular la navegación es una **barra de pestañas abajo**
+(admin: Inicio · Ahorros · Préstamos · Banco · Más). En el computador
+sigue el menú lateral.
+
+> ⚠️ **Seguridad:** antes, `supabase-vistas.sql` dejaba que cualquiera
+> con la anon key leyera y **borrara** pagos. Ahora las tablas quedan
+> cerradas y los permisos los pone `supabase-acceso.sql`. No compartas
+> el enlace de Netlify sin haber hecho los pasos 1 y 2.
+
+### Paso 1 · SQL en Supabase (una vez)
+
+Supabase → SQL Editor → New query, en este orden:
+
+1. `scripts/natillera-migracion/supabase-vistas.sql` (vuelve a crear
+   las vistas, ahora respetando permisos).
+2. `scripts/natillera-migracion/supabase-acceso.sql` (perfiles,
+   permisos admin/socio y totales generales).
+
+Ambos se pueden volver a correr sin problema.
+
+### Paso 2 · Crear los accesos (en tu PC)
+
+Cada socio necesita su **cédula** en la tabla `socios`, columna
+`identificacion`. Luego, con la **service_role key** (Supabase →
+Settings → API; nunca la pongas en Netlify ni en el navegador):
+
+```powershell
+cd C:\Users\ronz8\Proyecto-Siigo\scripts\natillera-migracion
+$env:SUPABASE_URL="https://xxxx.supabase.co"
+$env:SUPABASE_SERVICE_ROLE_KEY="eyJ..."
+
+node crear-accesos.js --dry-run        # muestra qué haría
+node crear-accesos.js                  # crea un acceso por socio activo con cédula
+node crear-accesos.js --admin <cedula> # te da rol de administrador
+node crear-accesos.js --reset <cedula> # PIN nuevo para quien lo olvidó
+```
+
+Los PIN quedan en `accesos_natillera_<fecha>.csv` (ignorado por git).
+Repártelos a cada socio y **borra el archivo**. El script lista los
+socios sin cédula para que la completes.
+
+### Paso 3 · Publicar en Netlify
+
+1. Netlify → **Add new site → Import an existing project** → este repo.
+2. Rama: `claude/natillera-monthly-payments-f1kdo8` · **Base
+   directory:** `natillera-app` (el resto lo toma de
+   `natillera-app/netlify.toml`).
+3. **Environment variables:**
+   - `VITE_NAT_DATA_SOURCE` = `supabase`
+   - `VITE_SUPABASE_URL` = `https://xxxx.supabase.co`
+   - `VITE_SUPABASE_ANON_KEY` = la anon / publishable key
+4. Deploy. El enlace `https://<nombre>.netlify.app` es el que abren los
+   socios en el celular.
+
+### Archivos
+
+- `scripts/natillera-migracion/supabase-acceso.sql` — perfiles, RLS por rol, `nat_totales_generales()`.
+- `scripts/natillera-migracion/crear-accesos.js` — crea/resetea accesos (cédula + PIN).
+- `natillera-app/src/lib/auth/useSesion.tsx`, `src/components/auth/IngresoSocio.tsx` — ingreso.
+- `natillera-app/src/pages/socio/` — Inicio y liquidación del socio.
+- `natillera-app/src/components/layout/BarraPestanas.tsx`, `src/lib/navegacion.ts` — pestañas.
+- `natillera-app/netlify.toml` — build de Netlify.
+
+Con `VITE_NAT_DATA_SOURCE=express` (backend local) la app funciona
+igual que antes, sin login.
+
+---
+
 ## Archivos que se eliminaron
 
 Quedaron obsoletos al unificar módulos:
