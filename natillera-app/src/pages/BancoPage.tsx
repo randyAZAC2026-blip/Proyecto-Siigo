@@ -213,7 +213,23 @@ export function BancoPage({ onVolver }: { onVolver: () => void }) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
+          {/* En celular cada movimiento es una tarjeta; la tabla aparece desde sm. */}
+          <ul className="sm:hidden divide-y divide-[var(--color-border)]">
+            {data?.filas.map((fila) => (
+              <ExtractoRow
+                key={fila.id}
+                fila={fila}
+                variante="tarjeta"
+                onRegistrarPago={(preset) => setModalPreset(preset)}
+              />
+            ))}
+            {!loading && data?.filas.length === 0 && (
+              <li className="py-6 text-center text-sm text-[var(--color-muted)]">
+                Sin movimientos con esos filtros
+              </li>
+            )}
+          </ul>
+          <Table className="hidden sm:table">
             <TableHeader>
               <TableRow>
                 <TableHead>Fecha</TableHead>
@@ -310,9 +326,11 @@ function MiniTile({ label, value, color }: { label: string; value: string; color
 
 function ExtractoRow({
   fila,
+  variante = "fila",
   onRegistrarPago,
 }: {
   fila: Extracto;
+  variante?: "fila" | "tarjeta";
   onRegistrarPago: (preset: PagoPreset) => void;
 }) {
   const [saving, setSaving] = useState(false);
@@ -326,6 +344,67 @@ function ExtractoRow({
     }
   }
 
+  const monto = (
+    <button
+      type="button"
+      disabled={saving}
+      onClick={() =>
+        onRegistrarPago({
+          socio_id: fila.socio_id,
+          valor: Math.abs(fila.monto),
+          fecha_pago: fila.fecha ?? undefined,
+          concepto: fila.monto < 0 ? "PRESTAMO" : "AHORRO",
+          extracto_id: fila.id,
+          notas: fila.descripcion ?? undefined,
+          origen_contexto: `Extracto ${fila.banco} · ${fila.fecha ?? "sin fecha"} · ${fila.descripcion ?? ""}`,
+        })
+      }
+      title="Registrar este movimiento como pago"
+      className={`${variante === "fila" ? "w-full h-full px-2 py-1.5" : "shrink-0 rounded-md px-2 py-1 font-semibold"} text-right tabular-nums text-xs cursor-pointer hover:bg-[var(--color-primary)]/10 transition-colors ${
+        fila.monto < 0 ? "text-[var(--color-destructive)]" : "text-[var(--color-success)]"
+      }`}
+    >
+      {fila.monto < 0 ? "-" : "+"}
+      {formatCOP(Math.abs(fila.monto))}
+      <Plus className="inline size-3 ml-1 opacity-40" />
+    </button>
+  );
+
+  const origen = (
+    <select
+      disabled={saving}
+      aria-label="Origen del movimiento"
+      className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-1.5 py-0.5 text-[11px]"
+      value={fila.detalle_origen ?? ""}
+      onChange={(e) => marcarOrigen(e.target.value)}
+    >
+      <option value="">(sin marcar)</option>
+      <option value="NATILLERA">NATILLERA</option>
+      <option value="PERSONAL">PERSONAL</option>
+      <option value="N/A">N/A</option>
+    </select>
+  );
+
+  if (variante === "tarjeta") {
+    return (
+      <li className="py-3 space-y-1.5">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-xs text-[var(--color-muted)] tabular-nums">{fila.fecha ?? "—"}</span>
+          {monto}
+        </div>
+        <p className="text-xs text-[var(--color-text)] break-words line-clamp-2" title={fila.descripcion ?? ""}>
+          {fila.descripcion ?? "—"}
+        </p>
+        <div className="flex items-center justify-between gap-2">
+          <span className="min-w-0 truncate text-xs text-[var(--color-muted)]">
+            {fila.socio_nombre ?? "Sin socio"}
+          </span>
+          {origen}
+        </div>
+      </li>
+    );
+  }
+
   return (
     <TableRow>
       <TableCell className="text-xs">{fila.fecha ?? "—"}</TableCell>
@@ -333,44 +412,8 @@ function ExtractoRow({
         {fila.descripcion ?? "—"}
       </TableCell>
       <TableCell className="text-xs">{fila.socio_nombre ?? "—"}</TableCell>
-      <TableCell className="text-right p-0">
-        <button
-          type="button"
-          disabled={saving}
-          onClick={() =>
-            onRegistrarPago({
-              socio_id: fila.socio_id,
-              valor: Math.abs(fila.monto),
-              fecha_pago: fila.fecha ?? undefined,
-              concepto: fila.monto < 0 ? "PRESTAMO" : "AHORRO",
-              extracto_id: fila.id,
-              notas: fila.descripcion ?? undefined,
-              origen_contexto: `Extracto ${fila.banco} · ${fila.fecha ?? "sin fecha"} · ${fila.descripcion ?? ""}`,
-            })
-          }
-          title="Registrar este movimiento como pago"
-          className={`w-full h-full px-2 py-1.5 text-right tabular-nums text-xs cursor-pointer hover:bg-[var(--color-primary)]/10 transition-colors ${
-            fila.monto < 0 ? "text-[var(--color-destructive)]" : "text-[var(--color-success)]"
-          }`}
-        >
-          {fila.monto < 0 ? "-" : "+"}
-          {formatCOP(Math.abs(fila.monto))}
-          <Plus className="inline size-3 ml-1 opacity-40" />
-        </button>
-      </TableCell>
-      <TableCell className="text-center">
-        <select
-          disabled={saving}
-          className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-1.5 py-0.5 text-[11px]"
-          value={fila.detalle_origen ?? ""}
-          onChange={(e) => marcarOrigen(e.target.value)}
-        >
-          <option value="">(sin marcar)</option>
-          <option value="NATILLERA">NATILLERA</option>
-          <option value="PERSONAL">PERSONAL</option>
-          <option value="N/A">N/A</option>
-        </select>
-      </TableCell>
+      <TableCell className="text-right p-0">{monto}</TableCell>
+      <TableCell className="text-center">{origen}</TableCell>
     </TableRow>
   );
 }

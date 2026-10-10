@@ -166,7 +166,7 @@ export function PrestamosPage({ onVolver }: { onVolver: () => void }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-[var(--color-text)]">Préstamos</h1>
           <p className="text-sm text-[var(--color-muted)] mt-1">
@@ -230,7 +230,7 @@ export function PrestamosPage({ onVolver }: { onVolver: () => void }) {
               Clic en cualquier fila para ver los préstamos individuales, la matriz mensual y los vencimientos de mora.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-3 max-sm:px-3">
             <div className="flex flex-wrap gap-2 items-center">
               <div className="relative flex-1 min-w-[200px]">
                 <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-4 text-[var(--color-muted)]" />
@@ -241,7 +241,7 @@ export function PrestamosPage({ onVolver }: { onVolver: () => void }) {
                   className="pl-8 h-9"
                 />
               </div>
-              <div className="flex gap-1 text-xs">
+              <div className="flex flex-wrap gap-1 text-xs">
                 {(["saldo_desc", "mora_desc", "nombre"] as Orden[]).map((o) => (
                   <button
                     key={o}
@@ -262,7 +262,28 @@ export function PrestamosPage({ onVolver }: { onVolver: () => void }) {
               </div>
             </div>
 
-            <Table>
+            {/* En celular cada socio es una tarjeta; la tabla aparece desde sm. */}
+            <ul className="sm:hidden space-y-2">
+              {filtradas.map((f) => (
+                <TarjetaSocio
+                  key={f.socio_id}
+                  fila={f}
+                  matriz={matrizQ.data}
+                  mora={moraQ.data}
+                  abierto={abiertos.has(f.socio_id)}
+                  onToggle={() => toggle(f.socio_id)}
+                />
+              ))}
+              {filtradas.length === 0 && (
+                <li className="py-6 text-center text-sm text-[var(--color-muted)]">
+                  {busqueda
+                    ? "No hay socios con préstamo que coincidan con la búsqueda."
+                    : "No hay socios con préstamos registrados."}
+                </li>
+              )}
+            </ul>
+
+            <Table className="hidden sm:table">
               <TableHeader>
                 <TableRow>
                   <TableHead />
@@ -320,6 +341,82 @@ function MiniTile({ label, value, color }: { label: string; value: string; color
   );
 }
 
+function badgeEstado(estado: FilaSocio["estado"]) {
+  return estado === "al_dia"
+    ? { label: "Al día", clase: "bg-[var(--color-success)]/15 text-[var(--color-success)]" }
+    : estado === "en_mora"
+      ? { label: "En mora", clase: "bg-[var(--color-destructive)]/15 text-[var(--color-destructive)]" }
+      : { label: "Cancelado", clase: "bg-[var(--color-muted)]/20 text-[var(--color-muted)]" };
+}
+
+function Dato({ label, valor, clase = "" }: { label: string; valor: string; clase?: string }) {
+  return (
+    <div className="min-w-0">
+      <div className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">{label}</div>
+      <div className={`text-xs tabular-nums ${clase}`}>{valor}</div>
+    </div>
+  );
+}
+
+// Versión móvil de FilaExpansible: los montos clave a la vista y el detalle debajo al tocar.
+function TarjetaSocio({
+  fila,
+  matriz,
+  mora,
+  abierto,
+  onToggle,
+}: {
+  fila: FilaSocio;
+  matriz: MatrizPrestamos | null;
+  mora: MoraReporte | null;
+  abierto: boolean;
+  onToggle: () => void;
+}) {
+  const estadoBadge = badgeEstado(fila.estado);
+  return (
+    <li className="rounded-lg border border-[var(--color-border)]">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={abierto}
+        className="w-full space-y-2 p-3 text-left hover:bg-[var(--color-primary)]/5"
+      >
+        <div className="flex items-start justify-between gap-2">
+          <span className="flex min-w-0 items-start gap-1 text-sm font-medium break-words">
+            {abierto ? (
+              <ChevronDown className="mt-0.5 size-4 shrink-0 text-[var(--color-muted)]" />
+            ) : (
+              <ChevronRight className="mt-0.5 size-4 shrink-0 text-[var(--color-muted)]" />
+            )}
+            {fila.socio}
+          </span>
+          <Badge variant="secondary" className={`shrink-0 ${estadoBadge.clase}`}>
+            {estadoBadge.label}
+          </Badge>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          <Dato label="Saldo capital" valor={formatCOP(fila.saldo)} clase="font-semibold text-[var(--color-warning)]" />
+          <Dato
+            label="Mora pend."
+            valor={formatCOP(fila.mora_pendiente)}
+            clase={fila.mora_pendiente > 0 ? "font-semibold text-[var(--color-destructive)]" : "text-[var(--color-muted)]"}
+          />
+          <Dato label="Deuda total" valor={formatCOP(fila.deuda_total)} clase="font-semibold" />
+        </div>
+        <div className="text-[11px] text-[var(--color-muted)]">
+          {fila.prestamos.length} {fila.prestamos.length === 1 ? "préstamo" : "préstamos"} · capital inicial{" "}
+          {formatCOP(fila.monto_prestado)} · int. pagados {formatCOP(fila.intereses_pagados)}
+        </div>
+      </button>
+      {abierto && (
+        <div className="border-t border-[var(--color-border)] bg-[var(--color-primary)]/5 p-3">
+          <Detalle fila={fila} matriz={matriz} mora={mora} />
+        </div>
+      )}
+    </li>
+  );
+}
+
 function FilaExpansible({
   fila,
   matriz,
@@ -333,12 +430,7 @@ function FilaExpansible({
   abierto: boolean;
   onToggle: () => void;
 }) {
-  const estadoBadge =
-    fila.estado === "al_dia"
-      ? { label: "Al día", clase: "bg-[var(--color-success)]/15 text-[var(--color-success)]" }
-      : fila.estado === "en_mora"
-        ? { label: "En mora", clase: "bg-[var(--color-destructive)]/15 text-[var(--color-destructive)]" }
-        : { label: "Cancelado", clase: "bg-[var(--color-muted)]/20 text-[var(--color-muted)]" };
+  const estadoBadge = badgeEstado(fila.estado);
 
   return (
     <>
@@ -390,6 +482,10 @@ function FilaExpansible({
   );
 }
 
+// En celular los encabezados del detalle pueden partirse en dos líneas y las celdas van más juntas.
+const TABLA_COMPACTA =
+  "[&_th]:h-auto [&_th]:py-1.5 [&_th]:text-xs [&_th]:whitespace-normal max-sm:[&_th]:px-1 max-sm:[&_td]:px-1";
+
 function Detalle({
   fila,
   matriz,
@@ -410,14 +506,14 @@ function Detalle({
           <div className="text-xs font-semibold text-[var(--color-muted)] uppercase tracking-wide mb-2">
             Préstamos individuales ({fila.prestamos.length})
           </div>
-          <Table>
+          <Table className={TABLA_COMPACTA}>
             <TableHeader>
               <TableRow>
-                <TableHead>Préstamo #</TableHead>
-                <TableHead>Desembolso</TableHead>
+                <TableHead><span className="max-sm:hidden">Préstamo </span>#</TableHead>
+                <TableHead className="hidden sm:table-cell">Desembolso</TableHead>
                 <TableHead className="text-right">Capital inicial</TableHead>
                 <TableHead className="text-right">Saldo</TableHead>
-                <TableHead className="text-right">Intereses pagados</TableHead>
+                <TableHead className="hidden sm:table-cell text-right">Intereses pagados</TableHead>
                 <TableHead className="text-right">Mora pendiente</TableHead>
               </TableRow>
             </TableHeader>
@@ -425,14 +521,14 @@ function Detalle({
               {fila.prestamos.map((p) => (
                 <TableRow key={p.prestamo_id}>
                   <TableCell className="text-xs">#{p.prestamo_id}</TableCell>
-                  <TableCell className="text-xs">{p.fecha_desembolso ?? "—"}</TableCell>
+                  <TableCell className="hidden sm:table-cell text-xs">{p.fecha_desembolso ?? "—"}</TableCell>
                   <TableCell className="text-right tabular-nums text-xs">
                     {formatCOP(p.monto_prestado)}
                   </TableCell>
                   <TableCell className="text-right tabular-nums text-xs">
                     {formatCOP(p.saldo)}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums text-xs">
+                  <TableCell className="hidden sm:table-cell text-right tabular-nums text-xs">
                     {formatCOP(p.intereses_pagados)}
                   </TableCell>
                   <TableCell className="text-right tabular-nums text-xs">
@@ -450,13 +546,13 @@ function Detalle({
           Matriz mensual — {fila.socio}
         </div>
         {socioMatriz ? (
-          <Table>
+          <Table className={TABLA_COMPACTA}>
             <TableHeader>
               <TableRow>
                 <TableHead>Mes</TableHead>
                 <TableHead className="text-right">Abono capital</TableHead>
                 <TableHead className="text-right">Intereses pagados</TableHead>
-                <TableHead className="text-right">Total</TableHead>
+                <TableHead className="hidden sm:table-cell text-right">Total</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -476,7 +572,7 @@ function Detalle({
                     <TableCell className="text-right tabular-nums text-xs">
                       {c.intereses > 0 ? formatCOP(c.intereses) : "—"}
                     </TableCell>
-                    <TableCell className="text-right tabular-nums text-xs font-semibold">
+                    <TableCell className="hidden sm:table-cell text-right tabular-nums text-xs font-semibold">
                       {formatCOP(c.total)}
                     </TableCell>
                   </TableRow>
@@ -490,7 +586,7 @@ function Detalle({
                 <TableCell className="text-right tabular-nums text-xs font-semibold">
                   {formatCOP(socioMatriz.totalIntereses)}
                 </TableCell>
-                <TableCell className="text-right tabular-nums text-xs font-semibold">
+                <TableCell className="hidden sm:table-cell text-right tabular-nums text-xs font-semibold">
                   {formatCOP(socioMatriz.total)}
                 </TableCell>
               </TableRow>
@@ -510,13 +606,13 @@ function Detalle({
               Vencimientos de intereses — Préstamo #{pm.prestamo_id}
               {pm.fecha_desembolso ? ` (desembolso ${pm.fecha_desembolso})` : ""}
             </div>
-            <Table>
+            <Table className={TABLA_COMPACTA}>
               <TableHeader>
                 <TableRow>
-                  <TableHead>#</TableHead>
+                  <TableHead className="hidden sm:table-cell">#</TableHead>
                   <TableHead>Vencimiento</TableHead>
-                  <TableHead>Fecha de pago</TableHead>
-                  <TableHead className="text-center">Días atraso</TableHead>
+                  <TableHead className="hidden sm:table-cell">Fecha de pago</TableHead>
+                  <TableHead className="hidden sm:table-cell text-center">Días atraso</TableHead>
                   <TableHead className="text-center">Estado</TableHead>
                   <TableHead className="text-right">Mora</TableHead>
                 </TableRow>
@@ -524,10 +620,10 @@ function Detalle({
               <TableBody>
                 {pm.detalle.map((d, i) => (
                   <TableRow key={i}>
-                    <TableCell className="text-xs">{i + 1}</TableCell>
+                    <TableCell className="hidden sm:table-cell text-xs">{i + 1}</TableCell>
                     <TableCell className="text-xs">{d.vencimiento}</TableCell>
-                    <TableCell className="text-xs">{d.fecha_pago ?? "—"}</TableCell>
-                    <TableCell className="text-center text-xs tabular-nums">
+                    <TableCell className="hidden sm:table-cell text-xs">{d.fecha_pago ?? "—"}</TableCell>
+                    <TableCell className="hidden sm:table-cell text-center text-xs tabular-nums">
                       {d.dias_atraso}
                     </TableCell>
                     <TableCell className="text-center">

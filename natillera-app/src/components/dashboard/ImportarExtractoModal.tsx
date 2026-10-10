@@ -270,14 +270,14 @@ export function ImportarExtractoModal({ open, onClose, onImportado }: Props) {
                       <TableHead>Fecha</TableHead>
                       <TableHead>Descripción</TableHead>
                       <TableHead className="text-right">Monto</TableHead>
-                      <TableHead className="text-right">Saldo</TableHead>
+                      <TableHead className="hidden sm:table-cell text-right">Saldo</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filas.slice(0, 100).map((f, i) => (
                       <TableRow key={i}>
                         <TableCell className="text-xs">{f.fecha}</TableCell>
-                        <TableCell className="text-xs truncate max-w-[280px]">
+                        <TableCell className="text-xs truncate max-w-[120px] sm:max-w-[280px]" title={f.descripcion ?? ""}>
                           {f.descripcion ?? "—"}
                         </TableCell>
                         <TableCell
@@ -290,7 +290,7 @@ export function ImportarExtractoModal({ open, onClose, onImportado }: Props) {
                           {f.monto < 0 ? "-" : "+"}
                           {formatCOP(Math.abs(f.monto))}
                         </TableCell>
-                        <TableCell className="text-right tabular-nums text-xs">
+                        <TableCell className="hidden sm:table-cell text-right tabular-nums text-xs">
                           {f.saldo != null ? formatCOP(f.saldo) : "—"}
                         </TableCell>
                       </TableRow>
