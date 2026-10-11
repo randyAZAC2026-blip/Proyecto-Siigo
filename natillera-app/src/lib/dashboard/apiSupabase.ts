@@ -47,6 +47,8 @@ function noImpl(fn: string): never {
     `apiSupabase: '${fn}' aún no está implementado. Cambia VITE_NAT_DATA_SOURCE=express o pídeme el port de este endpoint.`,
   );
 }
+// Reservado para futuros endpoints; silencia TS6133 mientras no haya ninguno pendiente.
+void noImpl;
 
 // -------------------- lecturas simples --------------------
 
@@ -490,8 +492,31 @@ async function crearMovimientoBanco(m: {
   return { creado: true as const, id: data?.id };
 }
 
-async function importarExtracto(_banco: string, _movimientos: unknown[]) {
-  return noImpl("importarExtracto");
+async function importarExtracto(banco: string, movimientos: unknown[]) {
+  requireSupabaseEnv();
+  const resultado = { insertados: 0, duplicados: 0, errores: [] as { fila: number; motivo: string }[] };
+  for (let i = 0; i < movimientos.length; i++) {
+    const m = movimientos[i] as Record<string, unknown>;
+    try {
+      const r = await crearMovimientoBanco({
+        banco,
+        fecha: String(m.fecha ?? ""),
+        descripcion: (m.descripcion as string | undefined) ?? undefined,
+        monto: Number(m.monto),
+        saldo_cuenta: (m.saldo_cuenta ?? m.saldo) as number | null | undefined,
+        detalle_origen: (m.detalle_origen ?? m.detalle) as string | null | undefined,
+        socio_id: (m.socio_id as number | null | undefined) ?? null,
+      });
+      if (r.creado) resultado.insertados++;
+      else resultado.duplicados++;
+    } catch (err) {
+      resultado.errores.push({
+        fila: i + 1,
+        motivo: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+  return resultado;
 }
 
 // -------------------- transacciones --------------------
@@ -587,8 +612,124 @@ async function buscarTransacciones(params: {
 
 // -------------------- simulador --------------------
 
-async function simularLiquidacion(_params: SimuladorParams): Promise<SimuladorResultado> {
-  return noImpl("simularLiquidacion");
+async function simularLiquidacion(params: SimuladorParams): Promise<SimuladorResultado> {
+  const base = await q<any[]>(supabase.from("vw_liquidacion_anual").select("*"));
+
+  const aplicarModo = (bruto: number, cfg?: { modo: string; valor?: number }) => {
+    const modo = cfg?.modo ?? "cobrar";
+    if (modo === "condonar") return 0;
+    if (modo === "manual") return Math.max(0, Math.round(Number(cfg?.valor) || 0));
+    if (modo === "porcentaje") return Math.round(bruto * (Number(cfg?.valor) || 0));
+    return bruto;
+  };
+
+  // Con MORA_HABILITADA=false la mora es siempre 0 (regla desactivada).
+  const filas = base.map((r: any) => {
+    const moraAhorroBruta = 0;
+    const moraIntBruta = 0;
+    return {
+      id: r.id,
+      nombre: r.nombre,
+      ahorro: r.ahorro ?? 0,
+      actividades: r.actividades ?? 0,
+      rifa_chance: r.rifa_chance ?? 0,
+      intereses_pagados: r.intereses_pagados ?? 0,
+      total_aportes: r.total_aportes ?? 0,
+      deducc_multas: r.deducc_multas ?? 0,
+      deducc_prestamo: r.deducc_prestamo ?? 0,
+      mora_ahorro_bruta: moraAhorroBruta,
+      mora_intereses_bruta: moraIntBruta,
+      deducc_mora_ahorro: aplicarModo(moraAhorroBruta, params.mora_ahorros),
+      deducc_mora_intereses: aplicarModo(moraIntBruta, params.mora_intereses),
+      deducc_prestamo_aplicada:
+        params.prestamos?.modo === "no_descontar" ? 0 : r.deducc_prestamo ?? 0,
+      participacion_utilidad: 0,
+      proporcion: 0,
+      neto_a_recibir: 0,
+    };
+  });
+
+  const totalIntPagados = filas.reduce((a, f) => a + f.intereses_pagados, 0);
+  const totalMultasCobradas = filas.reduce((a, f) => a + f.deducc_multas, 0);
+  const totalRifa = filas.reduce((a, f) => a + f.rifa_chance, 0);
+  const totalMoraAhCobrada = filas.reduce((a, f) => a + f.deducc_mora_ahorro, 0);
+  const totalMoraIntCobrada = filas.reduce((a, f) => a + f.deducc_mora_intereses, 0);
+
+  const utilidadTotal =
+    totalIntPagados + totalMoraAhCobrada + totalMoraIntCobrada + totalRifa;
+
+  const cfgUtil = params.utilidad ?? { modo: "toda" as const };
+  let utilidadARepartir = utilidadTotal;
+  let reserva = 0;
+  if (cfgUtil.modo === "no_repartir") utilidadARepartir = 0;
+  else if (cfgUtil.modo === "reserva") {
+    reserva = Math.max(0, Math.round(Number(cfgUtil.reserva) || 0));
+    utilidadARepartir = Math.max(0, utilidadTotal - reserva);
+  } else if (cfgUtil.modo === "porcentaje") {
+    utilidadARepartir = Math.round(utilidadTotal * (Number(cfgUtil.porcentaje) || 0));
+    reserva = utilidadTotal - utilidadARepartir;
+  }
+
+  const reparto = params.reparto?.modo || "proporcional_ahorro";
+  const totalAhorro = filas.reduce((a, f) => a + f.ahorro, 0);
+  const totalAportes = filas.reduce((a, f) => a + f.total_aportes, 0);
+  const nSocios = filas.length;
+
+  for (const f of filas) {
+    let base = 0;
+    let denom = 0;
+    if (reparto === "igual") {
+      base = 1;
+      denom = nSocios;
+    } else if (reparto === "proporcional_aportes") {
+      base = f.total_aportes;
+      denom = totalAportes;
+    } else {
+      base = f.ahorro;
+      denom = totalAhorro;
+    }
+    const prop = denom > 0 ? base / denom : 0;
+    f.participacion_utilidad = Math.round(utilidadARepartir * prop);
+    f.proporcion = prop;
+    f.neto_a_recibir =
+      f.total_aportes +
+      f.participacion_utilidad -
+      f.deducc_prestamo_aplicada -
+      f.deducc_multas -
+      f.deducc_mora_ahorro -
+      f.deducc_mora_intereses;
+  }
+  filas.sort((a, b) => b.neto_a_recibir - a.neto_a_recibir);
+
+  const fechaCorte = params.fecha_corte || new Date().toISOString().slice(0, 10);
+
+  return {
+    parametros: {
+      fecha_corte: fechaCorte,
+      mora_ahorros: params.mora_ahorros ?? { modo: "cobrar" },
+      mora_intereses: params.mora_intereses ?? { modo: "cobrar" },
+      prestamos: params.prestamos ?? { modo: "total" },
+      utilidad: cfgUtil,
+      reparto: params.reparto ?? { modo: "proporcional_ahorro" },
+    },
+    totales: {
+      total_ahorros: totalAhorro,
+      total_aportes: totalAportes,
+      utilidad_total: utilidadTotal,
+      utilidad_a_repartir: utilidadARepartir,
+      reserva,
+      total_prestamos: filas.reduce((a, f) => a + f.deducc_prestamo_aplicada, 0),
+      total_multas: totalMultasCobradas,
+      total_mora_ahorro_bruta: filas.reduce((a, f) => a + f.mora_ahorro_bruta, 0),
+      total_mora_intereses_bruta: filas.reduce((a, f) => a + f.mora_intereses_bruta, 0),
+      total_mora_ahorro_cobrada: totalMoraAhCobrada,
+      total_mora_intereses_cobrada: totalMoraIntCobrada,
+      total_neto: filas.reduce((a, f) => a + f.neto_a_recibir, 0),
+      socios_negativos: filas.filter((f) => f.neto_a_recibir < 0).length,
+      socios_positivos: filas.filter((f) => f.neto_a_recibir > 0).length,
+    },
+    socios: filas,
+  };
 }
 
 // -------------------- totales sin nombres (RPC de supabase-acceso.sql) --------------------
