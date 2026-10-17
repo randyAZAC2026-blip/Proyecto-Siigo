@@ -2,10 +2,11 @@ import { RefreshCw, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useApi } from "@/lib/dashboard/useApi";
-import { api } from "@/lib/dashboard/api";
+import { api, USA_SUPABASE } from "@/lib/dashboard/api";
 import { KpiTiles } from "@/components/dashboard/KpiTiles";
 
 const API_URL = import.meta.env.VITE_NAT_API || "http://localhost:4000";
+const SB_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 
 interface Props {
   onVolver: () => void;
@@ -37,15 +38,24 @@ export function DashboardPage({ onVolver: _onVolver, onIr: _onIr }: Props) {
           <AlertCircle className="size-5 text-[var(--color-destructive)] shrink-0 mt-0.5" />
           <div className="text-sm">
             <p className="font-semibold text-[var(--color-destructive)]">
-              No se pudo conectar al backend
+              {USA_SUPABASE ? "No se pudo conectar a Supabase" : "No se pudo conectar al backend"}
             </p>
             <p className="text-[var(--color-muted)] mt-1">
-              Verifica que el servidor esté corriendo en <code>{API_URL}</code>. En otra
-              terminal:
+              {USA_SUPABASE ? (
+                <>
+                  Verifica tu conexión a internet y que <code>{SB_URL ?? "VITE_SUPABASE_URL"}</code> esté bien configurada.
+                </>
+              ) : (
+                <>
+                  Verifica que el servidor esté corriendo en <code>{API_URL}</code>. En otra terminal:
+                </>
+              )}
             </p>
-            <pre className="mt-2 rounded bg-[var(--color-muted)]/20 p-2 text-xs">
-              cd natillera-backend{"\n"}pnpm dev
-            </pre>
+            {!USA_SUPABASE && (
+              <pre className="mt-2 rounded bg-[var(--color-muted)]/20 p-2 text-xs">
+                cd natillera-backend{"\n"}pnpm dev
+              </pre>
+            )}
             <p className="text-xs mt-2 text-[var(--color-destructive)]">{resumen.error}</p>
           </div>
         </div>
