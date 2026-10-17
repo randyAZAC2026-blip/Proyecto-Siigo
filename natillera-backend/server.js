@@ -911,6 +911,54 @@ app.post("/api/extractos/:id/origen", (req, res) => {
   res.json({ ok: true });
 });
 
+// ---------------- Asignar socio a un movimiento bancario ----------------
+app.post("/api/extractos/:id/socio", (req, res) => {
+  const id = Number(req.params.id);
+  const { socio_id } = req.body ?? {};
+  if (socio_id !== null && !(Number.isInteger(socio_id) && socio_id >= 0)) {
+    return res.status(400).json({ error: "socio_id debe ser entero o null" });
+  }
+  if (socio_id !== null) {
+    const existe = queryOne(`SELECT id FROM socios WHERE id = ?`, [socio_id]);
+    if (!existe) return res.status(400).json({ error: "El socio no existe" });
+  }
+  const info = db
+    .prepare(`UPDATE movimientos_banco SET socio_id = ?, asociado_manual = 1, asociado_manual_fecha = datetime('now') WHERE id = ?`)
+    .run(socio_id, id);
+  if (info.changes === 0) return res.status(404).json({ error: "Movimiento no encontrado" });
+  res.json({ ok: true });
+});
+
+// ---------------- Sugerencias de socio por número de cuenta (aprendizaje) ----------------
+// Devuelve mapa { dependencia -> { socio_id, socio_nombre, frecuencia } }
+// basado en movimientos históricos donde esa misma cuenta ya se asignó.
+app.get("/api/extractos/sugerencias/dependencia", (_req, res) => {
+  const filas = query(
+    `WITH ranked AS (
+       SELECT mb.dependencia,
+              mb.socio_id,
+              COUNT(*) AS frecuencia,
+              ROW_NUMBER() OVER (
+                PARTITION BY mb.dependencia
+                ORDER BY COUNT(*) DESC, MAX(mb.id) DESC
+              ) AS rn
+         FROM movimientos_banco mb
+        WHERE mb.dependencia IS NOT NULL
+          AND mb.dependencia <> ''
+          AND mb.socio_id IS NOT NULL
+        GROUP BY mb.dependencia, mb.socio_id
+     )
+     SELECT r.dependencia,
+            r.socio_id,
+            s.nombre AS socio_nombre,
+            r.frecuencia
+       FROM ranked r
+       JOIN socios s ON s.id = r.socio_id
+      WHERE r.rn = 1`,
+  );
+  res.json({ sugerencias: filas });
+});
+
 // ---------------- Registrar pago manual ----------------
 // Crea una fila en `transacciones` + entrada en `movimientos` (log auditoría).
 // Opcionalmente, vincula un movimiento bancario existente (extracto_id).

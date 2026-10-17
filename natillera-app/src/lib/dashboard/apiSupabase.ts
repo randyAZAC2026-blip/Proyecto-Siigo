@@ -467,6 +467,30 @@ async function marcarOrigenExtracto(id: number, detalle_origen: string | null) {
   return { ok: true as const };
 }
 
+async function asignarSocioExtracto(id: number, socio_id: number | null) {
+  requireSupabaseEnv();
+  const payload: Record<string, unknown> = { socio_id };
+  if (socio_id !== null) {
+    payload.asociado_manual = true;
+    payload.asociado_manual_fecha = new Date().toISOString();
+  }
+  const { error } = await supabase
+    .from("movimientos_banco")
+    .update(payload)
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  return { ok: true as const };
+}
+
+async function sugerenciasDependencia() {
+  requireSupabaseEnv();
+  const { data, error } = await supabase
+    .from("vw_dependencia_socio")
+    .select("dependencia, socio_id, socio_nombre, frecuencia");
+  if (error) throw new Error(error.message);
+  return { sugerencias: (data ?? []) as any[] };
+}
+
 async function crearMovimientoBanco(m: {
   banco: string;
   fecha: string;
@@ -875,6 +899,8 @@ export const apiSupabase = {
   extractos,
   vincularExtracto,
   marcarOrigenExtracto,
+  asignarSocioExtracto,
+  sugerenciasDependencia,
   crearTransaccion,
   crearDesglose,
   crearMovimientoBanco,

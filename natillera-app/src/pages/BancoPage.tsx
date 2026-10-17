@@ -21,7 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatCOP } from "@/lib/natillera/format";
-import { api, type Extracto } from "@/lib/dashboard/api";
+import { api, type Extracto, type SugerenciaDependencia } from "@/lib/dashboard/api";
 import { useApi } from "@/lib/dashboard/useApi";
 import {
   RegistrarPagoModal,
@@ -61,10 +61,18 @@ export function BancoPage({ onVolver }: { onVolver: () => void }) {
 
   const { data, loading, error, reload } = useApi(() => api.extractos(filtros), [filtros]);
   const bancosQ = useApi(() => api.bancos(), []);
+  const sugerenciasQ = useApi(() => api.sugerenciasDependencia(), []);
 
   useEffect(() => setOffset(0), [origen, conciliado, desde, hasta, q]);
 
   const resumen = bancosQ.data?.find((b) => b.banco === BANCO_FIJO);
+
+  // Aprendizaje: lookup rápido dependencia → socio más visto antes.
+  const sugerenciasMap = useMemo(() => {
+    const map = new Map<string, SugerenciaDependencia>();
+    for (const s of sugerenciasQ.data?.sugerencias ?? []) map.set(s.dependencia, s);
+    return map;
+  }, [sugerenciasQ.data]);
 
   return (
     <div className="space-y-4">
@@ -220,6 +228,8 @@ export function BancoPage({ onVolver }: { onVolver: () => void }) {
                 key={fila.id}
                 fila={fila}
                 variante="tarjeta"
+                sugerencia={!fila.socio_id && fila.dependencia ? sugerenciasMap.get(fila.dependencia) : undefined}
+                onCambio={reload}
                 onRegistrarPago={(preset) => setModalPreset(preset)}
               />
             ))}
@@ -245,12 +255,14 @@ export function BancoPage({ onVolver }: { onVolver: () => void }) {
                 <ExtractoRow
                   key={fila.id}
                   fila={fila}
+                  sugerencia={!fila.socio_id && fila.dependencia ? sugerenciasMap.get(fila.dependencia) : undefined}
+                  onCambio={reload}
                   onRegistrarPago={(preset) => setModalPreset(preset)}
                 />
               ))}
               {!loading && data?.filas.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-sm text-[var(--color-muted)]">
+                  <TableCell colSpan={6} className="text-center text-sm text-[var(--color-muted)]">
                     Sin movimientos con esos filtros
                   </TableCell>
                 </TableRow>
@@ -328,10 +340,14 @@ function MiniTile({ label, value, color }: { label: string; value: string; color
 function ExtractoRow({
   fila,
   variante = "fila",
+  sugerencia,
+  onCambio,
   onRegistrarPago,
 }: {
   fila: Extracto;
   variante?: "fila" | "tarjeta";
+  sugerencia?: SugerenciaDependencia;
+  onCambio: () => void;
   onRegistrarPago: (preset: PagoPreset) => void;
 }) {
   const [saving, setSaving] = useState(false);
@@ -344,6 +360,34 @@ function ExtractoRow({
       setSaving(false);
     }
   }
+
+  async function aplicarSugerencia() {
+    if (!sugerencia) return;
+    setSaving(true);
+    try {
+      await api.asignarSocioExtracto(fila.id, sugerencia.socio_id);
+      onCambio();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const socioCell = fila.socio_nombre ? (
+    <span>{fila.socio_nombre}</span>
+  ) : sugerencia ? (
+    <button
+      type="button"
+      disabled={saving}
+      onClick={aplicarSugerencia}
+      title={`${sugerencia.socio_nombre} apareció ${sugerencia.frecuencia} veces para esta cuenta. Clic para asignar.`}
+      className="inline-flex items-center gap-1 rounded border border-dashed border-[var(--color-primary)]/40 bg-[var(--color-primary)]/5 px-1.5 py-0.5 text-[11px] text-[var(--color-primary)] hover:bg-[var(--color-primary)]/15 disabled:opacity-50"
+    >
+      <span>💡 {sugerencia.socio_nombre}</span>
+      <span className="text-[9px] opacity-60">×{sugerencia.frecuencia}</span>
+    </button>
+  ) : (
+    <span className="text-[var(--color-muted)]">—</span>
+  );
 
   const monto = (
     <button
@@ -403,7 +447,7 @@ function ExtractoRow({
         )}
         <div className="flex items-center justify-between gap-2">
           <span className="min-w-0 truncate text-xs text-[var(--color-muted)]">
-            {fila.socio_nombre ?? "Sin socio"}
+            {socioCell}
           </span>
           {origen}
         </div>
@@ -420,7 +464,7 @@ function ExtractoRow({
       <TableCell className="text-xs tabular-nums" title={fila.dependencia ?? ""}>
         {fila.dependencia ?? "—"}
       </TableCell>
-      <TableCell className="text-xs">{fila.socio_nombre ?? "—"}</TableCell>
+      <TableCell className="text-xs">{socioCell}</TableCell>
       <TableCell className="text-right p-0">{monto}</TableCell>
       <TableCell className="text-center">{origen}</TableCell>
     </TableRow>

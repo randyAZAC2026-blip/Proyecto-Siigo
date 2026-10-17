@@ -328,6 +328,14 @@ export interface ExtractosPage {
   filas: Extracto[];
 }
 
+/** Aprendizaje: por cada número de cuenta visto antes, el socio al que se asignó más veces. */
+export interface SugerenciaDependencia {
+  dependencia: string;
+  socio_id: number;
+  socio_nombre: string;
+  frecuencia: number;
+}
+
 export interface FiltrosExtracto {
   banco?: string;
   origen?: string;
@@ -462,6 +470,10 @@ const apiHttp = {
     post<{ ok: true }>(`/api/extractos/${id}/vincular`, { transaccion_id }),
   marcarOrigenExtracto: (id: number, detalle_origen: string | null) =>
     post<{ ok: true }>(`/api/extractos/${id}/origen`, { detalle_origen }),
+  asignarSocioExtracto: (id: number, socio_id: number | null) =>
+    post<{ ok: true }>(`/api/extractos/${id}/socio`, { socio_id }),
+  sugerenciasDependencia: () =>
+    get<{ sugerencias: SugerenciaDependencia[] }>("/api/extractos/sugerencias/dependencia"),
   crearTransaccion: (t: NuevaTransaccion) =>
     post<{ id: number; socio_id: number; concepto: string; tipo: string; valor: number }>(
       "/api/transacciones",
