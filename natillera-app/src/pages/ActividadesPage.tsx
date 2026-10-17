@@ -26,33 +26,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatCOP } from "@/lib/natillera/format";
-import { api, USA_SUPABASE, type ActividadResumen, type ActividadBoleta } from "@/lib/dashboard/api";
+import { api, type ActividadResumen, type ActividadBoleta } from "@/lib/dashboard/api";
 import { useApi } from "@/lib/dashboard/useApi";
 
 export function ActividadesPage({ onVolver }: { onVolver: () => void }) {
   const [actividadId, setActividadId] = useState<number | null>(null);
   const lista = useApi(() => api.listarActividades(), []);
-
-  if (!USA_SUPABASE) {
-    return (
-      <div className="space-y-4">
-        <PageHeader onVolver={onVolver} titulo="Actividades" />
-        <Card className="rounded-[var(--radius-card)] border-[var(--color-warning)]/40 bg-[var(--color-warning)]/5">
-          <CardContent className="py-4 flex items-start gap-2">
-            <AlertCircle className="size-4 text-[var(--color-warning)] shrink-0 mt-0.5" />
-            <div className="text-sm">
-              <p className="text-[var(--color-text)]">
-                <strong>Módulo disponible solo con Supabase.</strong>
-              </p>
-              <p className="text-xs text-[var(--color-muted)] mt-1">
-                Cambia <code>VITE_NAT_DATA_SOURCE=supabase</code> en el <code>.env.local</code> y reinicia <code>pnpm dev</code>.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   if (actividadId !== null) {
     return (

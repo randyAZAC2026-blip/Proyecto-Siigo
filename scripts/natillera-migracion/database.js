@@ -337,6 +337,7 @@ export function inicializarDB(dbPath) {
 
     -- Conciliación bancaria: ingresos NATILLERA en el banco vs transacciones.
     DROP VIEW IF EXISTS vw_conciliacion_bancaria;
+    DROP VIEW IF EXISTS vw_conciliacion_bancaria;
     CREATE VIEW vw_conciliacion_bancaria AS
     SELECT
       banco,
@@ -348,6 +349,60 @@ export function inicializarDB(dbPath) {
       SUM(CASE WHEN transaccion_id IS NOT NULL THEN monto ELSE 0 END) AS monto_conciliado
     FROM movimientos_banco
     GROUP BY banco;
+
+    -- ============================================================
+    -- ACTIVIDADES (rifas, bazares, eventos recaudadores)
+    -- ============================================================
+
+    CREATE TABLE IF NOT EXISTS actividades (
+      id             INTEGER PRIMARY KEY AUTOINCREMENT,
+      nombre         TEXT NOT NULL,
+      tipo           TEXT NOT NULL DEFAULT 'rifa'
+                       CHECK (tipo IN ('rifa','bazar','otra')),
+      descripcion    TEXT,
+      fecha_evento   TEXT,
+      valor_boleta   INTEGER NOT NULL DEFAULT 0 CHECK (valor_boleta >= 0),
+      total_boletas  INTEGER,
+      premios        TEXT NOT NULL DEFAULT '{}',    -- JSON serializado
+      estado         TEXT NOT NULL DEFAULT 'activa'
+                       CHECK (estado IN ('activa','cerrada','cancelada')),
+      notas          TEXT,
+      creado_en      TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS actividad_boletas (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      actividad_id    INTEGER NOT NULL REFERENCES actividades(id) ON DELETE CASCADE,
+      numero          TEXT NOT NULL,
+      socio_id        INTEGER REFERENCES socios(id) ON DELETE SET NULL,
+      nombre_externo  TEXT,
+      pagada          INTEGER NOT NULL DEFAULT 0 CHECK (pagada IN (0,1)),
+      fecha_pago      TEXT,
+      transaccion_id  INTEGER REFERENCES transacciones(id) ON DELETE SET NULL,
+      es_ganadora     INTEGER NOT NULL DEFAULT 0 CHECK (es_ganadora IN (0,1)),
+      premio_tipo     TEXT CHECK (premio_tipo IN ('mayor','segundo')),
+      notas           TEXT,
+      creado_en       TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE (actividad_id, numero)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_act_bol_actividad ON actividad_boletas(actividad_id);
+    CREATE INDEX IF NOT EXISTS idx_act_bol_socio     ON actividad_boletas(socio_id);
+
+    DROP VIEW IF EXISTS vw_actividades_resumen;
+    CREATE VIEW vw_actividades_resumen AS
+    SELECT
+      a.id, a.nombre, a.tipo, a.fecha_evento, a.valor_boleta, a.premios,
+      a.estado, a.total_boletas, a.descripcion, a.notas, a.creado_en,
+      COUNT(b.id)                                           AS boletas_asignadas,
+      SUM(CASE WHEN b.pagada = 1 THEN 1 ELSE 0 END)         AS boletas_pagadas,
+      SUM(CASE WHEN b.pagada = 0 THEN 1 ELSE 0 END)         AS boletas_pendientes,
+      COUNT(DISTINCT COALESCE(CAST(b.socio_id AS TEXT), b.nombre_externo)) AS participantes,
+      COALESCE(SUM(CASE WHEN b.pagada = 1 THEN a.valor_boleta ELSE 0 END), 0) AS recaudado,
+      COALESCE(SUM(CASE WHEN b.pagada = 0 THEN a.valor_boleta ELSE 0 END), 0) AS por_cobrar
+    FROM actividades a
+    LEFT JOIN actividad_boletas b ON b.actividad_id = a.id
+    GROUP BY a.id;
   `);
 
   return db;

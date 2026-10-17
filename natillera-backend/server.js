@@ -1300,6 +1300,99 @@ app.post("/api/extractos/importar", (req, res) => {
   }
 });
 
+// ---------------- Actividades (rifas, bazares) ----------------
+
+function parsePremios(raw) {
+  if (!raw) return {};
+  try { return JSON.parse(raw); } catch { return {}; }
+}
+
+function mapActividadResumen(r) {
+  return {
+    id: r.id,
+    nombre: r.nombre,
+    tipo: r.tipo,
+    descripcion: r.descripcion ?? null,
+    fecha_evento: r.fecha_evento ?? null,
+    valor_boleta: r.valor_boleta ?? 0,
+    total_boletas: r.total_boletas ?? null,
+    premios: parsePremios(r.premios),
+    estado: r.estado,
+    notas: r.notas ?? null,
+    boletas_asignadas: Number(r.boletas_asignadas ?? 0),
+    boletas_pagadas: Number(r.boletas_pagadas ?? 0),
+    boletas_pendientes: Number(r.boletas_pendientes ?? 0),
+    participantes: Number(r.participantes ?? 0),
+    recaudado: Number(r.recaudado ?? 0),
+    por_cobrar: Number(r.por_cobrar ?? 0),
+  };
+}
+
+app.get("/api/actividades", (_req, res) => {
+  const filas = query(`
+    SELECT * FROM vw_actividades_resumen
+    ORDER BY fecha_evento DESC NULLS LAST, id DESC
+  `);
+  res.json(filas.map(mapActividadResumen));
+});
+
+app.get("/api/actividades/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const act = queryOne(`SELECT * FROM vw_actividades_resumen WHERE id = ?`, [id]);
+  if (!act) return res.status(404).json({ error: "actividad no encontrada" });
+  const boletas = query(
+    `SELECT b.*, s.nombre AS socio_nombre
+       FROM actividad_boletas b
+  LEFT JOIN socios s ON s.id = b.socio_id
+      WHERE b.actividad_id = ?
+   ORDER BY b.numero ASC`,
+    [id],
+  );
+  res.json({
+    actividad: mapActividadResumen(act),
+    boletas: boletas.map((b) => ({
+      id: b.id,
+      actividad_id: b.actividad_id,
+      numero: b.numero,
+      socio_id: b.socio_id,
+      socio_nombre: b.socio_nombre ?? null,
+      nombre_externo: b.nombre_externo ?? null,
+      pagada: !!b.pagada,
+      fecha_pago: b.fecha_pago ?? null,
+      transaccion_id: b.transaccion_id,
+      es_ganadora: !!b.es_ganadora,
+      premio_tipo: b.premio_tipo ?? null,
+      notas: b.notas ?? null,
+    })),
+  });
+});
+
+app.post("/api/actividades/boletas/:id/pagada", (req, res) => {
+  const id = Number(req.params.id);
+  const pagada = !!req.body?.pagada;
+  const fecha = pagada ? new Date().toISOString().slice(0, 10) : null;
+  const r = db
+    .prepare(`UPDATE actividad_boletas SET pagada = ?, fecha_pago = ? WHERE id = ?`)
+    .run(pagada ? 1 : 0, fecha, id);
+  if (r.changes === 0) return res.status(404).json({ error: "boleta no encontrada" });
+  res.json({ ok: true });
+});
+
+app.post("/api/actividades/boletas/:id/ganadora", (req, res) => {
+  const id = Number(req.params.id);
+  const premio = req.body?.premio ?? null; // "mayor" | "segundo" | null
+  if (premio !== null && premio !== "mayor" && premio !== "segundo") {
+    return res.status(400).json({ error: "premio inválido" });
+  }
+  const r = db
+    .prepare(
+      `UPDATE actividad_boletas SET es_ganadora = ?, premio_tipo = ? WHERE id = ?`,
+    )
+    .run(premio ? 1 : 0, premio, id);
+  if (r.changes === 0) return res.status(404).json({ error: "boleta no encontrada" });
+  res.json({ ok: true });
+});
+
 app.get("/", (_req, res) => {
   res.type("text/plain").send(
     "Natillera API\n\n" +

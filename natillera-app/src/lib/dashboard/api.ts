@@ -503,13 +503,13 @@ const apiHttp = {
     return get<Transaccion[]>(`/api/transacciones${query ? "?" + query : ""}`);
   },
 
-  // Módulo Actividades (solo implementado en Supabase; en Express retorna [] / lanza)
-  listarActividades: async (): Promise<ActividadResumen[]> => [],
-  actividadDetalle: async (_id: number): Promise<ActividadDetalle> => {
-    throw new Error("Actividades solo disponibles en modo supabase");
-  },
-  marcarBoletaPagada: async (_id: number, _pagada: boolean) => ({ ok: true as const }),
-  marcarBoletaGanadora: async (_id: number, _premio: "mayor" | "segundo" | null) => ({ ok: true as const }),
+  // Módulo Actividades
+  listarActividades: () => get<ActividadResumen[]>("/api/actividades"),
+  actividadDetalle: (id: number) => get<ActividadDetalle>(`/api/actividades/${id}`),
+  marcarBoletaPagada: (id: number, pagada: boolean) =>
+    post<{ ok: true }>(`/api/actividades/boletas/${id}/pagada`, { pagada }),
+  marcarBoletaGanadora: (id: number, premio: "mayor" | "segundo" | null) =>
+    post<{ ok: true }>(`/api/actividades/boletas/${id}/ganadora`, { premio }),
 };
 
 // Selector de origen de datos según VITE_NAT_DATA_SOURCE.
