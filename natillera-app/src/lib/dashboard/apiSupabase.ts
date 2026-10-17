@@ -439,6 +439,7 @@ async function extractos(filtros: FiltrosExtracto = {}): Promise<ExtractosPage> 
     monto: m.monto,
     saldo_cuenta: m.saldo_cuenta,
     detalle_origen: m.detalle_origen,
+    dependencia: m.dependencia ?? null,
     socio_id: m.socio_id,
     socio_nombre: m.socios?.nombre ?? null,
     transaccion_id: m.transaccion_id,

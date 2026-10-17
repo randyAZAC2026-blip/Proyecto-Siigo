@@ -315,6 +315,7 @@ export interface Extracto {
   monto: number;
   saldo_cuenta: number | null;
   detalle_origen: string | null;
+  dependencia: string | null;
   socio_id: number | null;
   socio_nombre: string | null;
   transaccion_id: number | null;

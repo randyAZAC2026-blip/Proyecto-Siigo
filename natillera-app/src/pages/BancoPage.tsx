@@ -234,6 +234,7 @@ export function BancoPage({ onVolver }: { onVolver: () => void }) {
               <TableRow>
                 <TableHead>Fecha</TableHead>
                 <TableHead>Descripción</TableHead>
+                <TableHead>Cuenta</TableHead>
                 <TableHead>Socio</TableHead>
                 <TableHead className="text-right">Monto</TableHead>
                 <TableHead className="text-center">Origen</TableHead>
@@ -395,6 +396,11 @@ function ExtractoRow({
         <p className="text-xs text-[var(--color-text)] break-words line-clamp-2" title={fila.descripcion ?? ""}>
           {fila.descripcion ?? "—"}
         </p>
+        {fila.dependencia && (
+          <p className="text-[11px] text-[var(--color-muted)] tabular-nums truncate" title={fila.dependencia}>
+            Cta: {fila.dependencia}
+          </p>
+        )}
         <div className="flex items-center justify-between gap-2">
           <span className="min-w-0 truncate text-xs text-[var(--color-muted)]">
             {fila.socio_nombre ?? "Sin socio"}
@@ -410,6 +416,9 @@ function ExtractoRow({
       <TableCell className="text-xs">{fila.fecha ?? "—"}</TableCell>
       <TableCell className="max-w-[320px] truncate text-xs" title={fila.descripcion ?? ""}>
         {fila.descripcion ?? "—"}
+      </TableCell>
+      <TableCell className="text-xs tabular-nums" title={fila.dependencia ?? ""}>
+        {fila.dependencia ?? "—"}
       </TableCell>
       <TableCell className="text-xs">{fila.socio_nombre ?? "—"}</TableCell>
       <TableCell className="text-right p-0">{monto}</TableCell>

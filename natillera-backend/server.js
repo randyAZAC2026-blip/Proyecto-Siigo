@@ -865,7 +865,7 @@ app.get("/api/extractos", (req, res) => {
 
   const filas = query(
     `SELECT mb.id, mb.banco, mb.fecha, mb.descripcion, mb.monto, mb.saldo_cuenta,
-            mb.detalle_origen, mb.socio_id, s.nombre AS socio_nombre,
+            mb.detalle_origen, mb.dependencia, mb.socio_id, s.nombre AS socio_nombre,
             mb.transaccion_id
        FROM movimientos_banco mb
        LEFT JOIN socios s ON s.id = mb.socio_id
