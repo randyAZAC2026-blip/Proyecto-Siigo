@@ -341,7 +341,6 @@ function ExtractoRow({
   fila,
   variante = "fila",
   sugerencia,
-  onCambio,
   onRegistrarPago,
 }: {
   fila: Extracto;
@@ -361,33 +360,21 @@ function ExtractoRow({
     }
   }
 
-  async function aplicarSugerencia() {
-    if (!sugerencia) return;
-    setSaving(true);
-    try {
-      await api.asignarSocioExtracto(fila.id, sugerencia.socio_id);
-      onCambio();
-    } finally {
-      setSaving(false);
-    }
-  }
-
+  // En la columna solo se muestra; la asignación pasa al abrir el modal del monto.
   const socioCell = fila.socio_nombre ? (
     <span>{fila.socio_nombre}</span>
   ) : sugerencia ? (
-    <button
-      type="button"
-      disabled={saving}
-      onClick={aplicarSugerencia}
-      title={`${sugerencia.socio_nombre} apareció ${sugerencia.frecuencia} veces para esta cuenta. Clic para asignar.`}
-      className="inline-flex items-center gap-1 rounded border border-dashed border-[var(--color-primary)]/40 bg-[var(--color-primary)]/5 px-1.5 py-0.5 text-[11px] text-[var(--color-primary)] hover:bg-[var(--color-primary)]/15 disabled:opacity-50"
+    <span
+      title={`Sugerido por ${sugerencia.frecuencia} coincidencias previas de esta cuenta. Clic en el monto para registrar con este socio.`}
+      className="text-[var(--color-primary)]/80"
     >
-      <span>💡 {sugerencia.socio_nombre}</span>
-      <span className="text-[9px] opacity-60">×{sugerencia.frecuencia}</span>
-    </button>
+      💡 {sugerencia.socio_nombre}
+    </span>
   ) : (
     <span className="text-[var(--color-muted)]">—</span>
   );
+
+  const socioIdSugerido = fila.socio_id ?? sugerencia?.socio_id ?? null;
 
   const monto = (
     <button
@@ -395,16 +382,18 @@ function ExtractoRow({
       disabled={saving}
       onClick={() =>
         onRegistrarPago({
-          socio_id: fila.socio_id,
+          socio_id: socioIdSugerido,
           valor: Math.abs(fila.monto),
           fecha_pago: fila.fecha ?? undefined,
           concepto: fila.monto < 0 ? "PRESTAMO" : "AHORRO",
           extracto_id: fila.id,
           notas: fila.descripcion ?? undefined,
-          origen_contexto: `Extracto ${fila.banco} · ${fila.fecha ?? "sin fecha"} · ${fila.descripcion ?? ""}`,
+          origen_contexto: `Extracto ${fila.banco} · ${fila.fecha ?? "sin fecha"} · ${fila.descripcion ?? ""}${sugerencia && !fila.socio_id ? ` · sugerido: ${sugerencia.socio_nombre}` : ""}`,
         })
       }
-      title="Registrar este movimiento como pago"
+      title={sugerencia && !fila.socio_id
+        ? `Registrar pago (socio sugerido: ${sugerencia.socio_nombre})`
+        : "Registrar este movimiento como pago"}
       className={`${variante === "fila" ? "w-full h-full px-2 py-1.5" : "shrink-0 rounded-md px-2 py-1 font-semibold"} text-right tabular-nums text-xs cursor-pointer hover:bg-[var(--color-primary)]/10 transition-colors ${
         fila.monto < 0 ? "text-[var(--color-destructive)]" : "text-[var(--color-success)]"
       }`}
