@@ -16,11 +16,13 @@ export function IngresoSocio() {
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
-    if (limpiarCedula(cedula).length < 3) return setError("Escribe tu número de cédula.");
+    const texto = cedula.trim();
+    const esCorreo = texto.includes("@");
+    if (!esCorreo && limpiarCedula(texto).length < 3) return setError("Escribe tu número de cédula o tu correo.");
     if (!/^\d{6}$/.test(pin.trim())) return setError("El PIN tiene 6 dígitos.");
     setEnviando(true);
     try {
-      await entrar(cedula, pin);
+      await entrar(texto, pin);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
       setEnviando(false);
@@ -39,14 +41,13 @@ export function IngresoSocio() {
           <CardContent className="pt-6">
             <form onSubmit={onSubmit} className="space-y-4" noValidate>
               <div className="space-y-1.5">
-                <Label htmlFor="cedula">Cédula</Label>
+                <Label htmlFor="cedula">Cédula o correo</Label>
                 <Input
                   id="cedula"
-                  inputMode="numeric"
                   autoComplete="username"
                   value={cedula}
                   onChange={(e) => setCedula(e.target.value)}
-                  placeholder="Sin puntos ni espacios"
+                  placeholder="Cédula sin puntos, o tu correo"
                   className="h-11 text-base"
                 />
               </div>

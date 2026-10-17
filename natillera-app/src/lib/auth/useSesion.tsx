@@ -66,11 +66,14 @@ export function SesionProvider({ children }: { children: ReactNode }) {
   }, [aplicar]);
 
   const entrar = useCallback(async (cedula: string, pin: string) => {
-    const c = limpiarCedula(cedula);
-    const { error } = await supabase.auth.signInWithPassword({ email: `${c}@${DOMINIO}`, password: pin.trim() });
+    // Si lo que escribió tiene "@", lo tratamos como correo directo (útil para
+    // admin que entra con su email). Si no, lo convertimos a cédula + dominio.
+    const texto = cedula.trim();
+    const email = texto.includes("@") ? texto : `${limpiarCedula(texto)}@${DOMINIO}`;
+    const { error } = await supabase.auth.signInWithPassword({ email, password: pin.trim() });
     if (error) {
       const credenciales = /invalid login credentials|invalid_credentials|invalid_grant/i.test(`${error.code ?? ""} ${error.message}`);
-      throw new Error(credenciales ? "Cédula o PIN incorrectos." : `No se pudo entrar: ${error.message}`);
+      throw new Error(credenciales ? "Cédula/correo o PIN incorrectos." : `No se pudo entrar: ${error.message}`);
     }
   }, []);
 
