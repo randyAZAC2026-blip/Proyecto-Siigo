@@ -33,6 +33,9 @@ import type {
   SimuladorParams,
   SimuladorResultado,
   TotalesGenerales,
+  ActividadResumen,
+  ActividadBoleta,
+  ActividadDetalle,
 } from "./api";
 
 async function q<T>(builder: PromiseLike<{ data: T | null; error: { message: string } | null }>): Promise<T> {
@@ -747,6 +750,108 @@ async function health() {
   return { ok: true as const, db: "supabase" };
 }
 
+// -------------------- actividades --------------------
+
+async function listarActividades(): Promise<ActividadResumen[]> {
+  const filas = await q<any[]>(
+    supabase
+      .from("vw_actividades_resumen")
+      .select("*")
+      .order("fecha_evento", { ascending: false, nullsFirst: false }),
+  );
+  return filas.map((r) => ({
+    id: r.id,
+    nombre: r.nombre,
+    tipo: r.tipo,
+    descripcion: r.descripcion ?? null,
+    fecha_evento: r.fecha_evento ?? null,
+    valor_boleta: r.valor_boleta ?? 0,
+    total_boletas: r.total_boletas ?? null,
+    premios: r.premios ?? {},
+    estado: r.estado,
+    notas: r.notas ?? null,
+    boletas_asignadas: Number(r.boletas_asignadas ?? 0),
+    boletas_pagadas: Number(r.boletas_pagadas ?? 0),
+    boletas_pendientes: Number(r.boletas_pendientes ?? 0),
+    participantes: Number(r.participantes ?? 0),
+    recaudado: Number(r.recaudado ?? 0),
+    por_cobrar: Number(r.por_cobrar ?? 0),
+  }));
+}
+
+async function actividadDetalle(id: number): Promise<ActividadDetalle> {
+  const resumen = await q<any>(
+    supabase.from("vw_actividades_resumen").select("*").eq("id", id).limit(1).single(),
+  );
+  const boletas = await q<any[]>(
+    supabase
+      .from("actividad_boletas")
+      .select("*, socios(nombre)")
+      .eq("actividad_id", id)
+      .order("numero", { ascending: true }),
+  );
+  return {
+    actividad: {
+      id: resumen.id,
+      nombre: resumen.nombre,
+      tipo: resumen.tipo,
+      descripcion: resumen.descripcion ?? null,
+      fecha_evento: resumen.fecha_evento ?? null,
+      valor_boleta: resumen.valor_boleta ?? 0,
+      total_boletas: resumen.total_boletas ?? null,
+      premios: resumen.premios ?? {},
+      estado: resumen.estado,
+      notas: resumen.notas ?? null,
+      boletas_asignadas: Number(resumen.boletas_asignadas ?? 0),
+      boletas_pagadas: Number(resumen.boletas_pagadas ?? 0),
+      boletas_pendientes: Number(resumen.boletas_pendientes ?? 0),
+      participantes: Number(resumen.participantes ?? 0),
+      recaudado: Number(resumen.recaudado ?? 0),
+      por_cobrar: Number(resumen.por_cobrar ?? 0),
+    },
+    boletas: boletas.map((b: any) => ({
+      id: b.id,
+      actividad_id: b.actividad_id,
+      numero: b.numero,
+      socio_id: b.socio_id,
+      socio_nombre: b.socios?.nombre ?? null,
+      nombre_externo: b.nombre_externo ?? null,
+      pagada: !!b.pagada,
+      fecha_pago: b.fecha_pago ?? null,
+      transaccion_id: b.transaccion_id,
+      es_ganadora: !!b.es_ganadora,
+      premio_tipo: b.premio_tipo ?? null,
+      notas: b.notas ?? null,
+    })) as ActividadBoleta[],
+  };
+}
+
+async function marcarBoletaPagada(id: number, pagada: boolean) {
+  requireSupabaseEnv();
+  const { error } = await supabase
+    .from("actividad_boletas")
+    .update({
+      pagada,
+      fecha_pago: pagada ? new Date().toISOString().slice(0, 10) : null,
+    })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  return { ok: true as const };
+}
+
+async function marcarBoletaGanadora(id: number, premio: "mayor" | "segundo" | null) {
+  requireSupabaseEnv();
+  const { error } = await supabase
+    .from("actividad_boletas")
+    .update({
+      es_ganadora: premio !== null,
+      premio_tipo: premio,
+    })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  return { ok: true as const };
+}
+
 // -------------------- exports --------------------
 
 export const apiSupabase = {
@@ -776,4 +881,8 @@ export const apiSupabase = {
   simularLiquidacion,
   eliminarTransaccion,
   buscarTransacciones,
+  listarActividades,
+  actividadDetalle,
+  marcarBoletaPagada,
+  marcarBoletaGanadora,
 };

@@ -376,6 +376,47 @@ export interface DesglosePago {
   lineas: LineaDesglose[];
 }
 
+// ---------------- Actividades (rifas, bazares) ----------------
+
+export interface ActividadResumen {
+  id: number;
+  nombre: string;
+  tipo: "rifa" | "bazar" | "otra";
+  descripcion: string | null;
+  fecha_evento: string | null;
+  valor_boleta: number;
+  total_boletas: number | null;
+  premios: Record<string, unknown>;
+  estado: "activa" | "cerrada" | "cancelada";
+  notas: string | null;
+  boletas_asignadas: number;
+  boletas_pagadas: number;
+  boletas_pendientes: number;
+  participantes: number;
+  recaudado: number;
+  por_cobrar: number;
+}
+
+export interface ActividadBoleta {
+  id: number;
+  actividad_id: number;
+  numero: string;
+  socio_id: number | null;
+  socio_nombre: string | null;
+  nombre_externo: string | null;
+  pagada: boolean;
+  fecha_pago: string | null;
+  transaccion_id: number | null;
+  es_ganadora: boolean;
+  premio_tipo: "mayor" | "segundo" | null;
+  notas: string | null;
+}
+
+export interface ActividadDetalle {
+  actividad: ActividadResumen;
+  boletas: ActividadBoleta[];
+}
+
 const apiHttp = {
   resumen: () => get<Resumen>("/api/resumen"),
   // El backend local no tiene este endpoint: se arma desde /api/resumen.
@@ -461,6 +502,14 @@ const apiHttp = {
     const query = qs.toString();
     return get<Transaccion[]>(`/api/transacciones${query ? "?" + query : ""}`);
   },
+
+  // Módulo Actividades (solo implementado en Supabase; en Express retorna [] / lanza)
+  listarActividades: async (): Promise<ActividadResumen[]> => [],
+  actividadDetalle: async (_id: number): Promise<ActividadDetalle> => {
+    throw new Error("Actividades solo disponibles en modo supabase");
+  },
+  marcarBoletaPagada: async (_id: number, _pagada: boolean) => ({ ok: true as const }),
+  marcarBoletaGanadora: async (_id: number, _premio: "mayor" | "segundo" | null) => ({ ok: true as const }),
 };
 
 // Selector de origen de datos según VITE_NAT_DATA_SOURCE.

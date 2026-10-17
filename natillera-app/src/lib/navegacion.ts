@@ -9,6 +9,7 @@ import {
   Landmark,
   PiggyBank,
   Receipt,
+  Sparkles,
   Users,
   Wallet,
 } from "lucide-react";
@@ -25,6 +26,7 @@ export type Vista =
   | "liquidacion"
   | "simulador"
   | "banco"
+  | "actividades"
   | "local"
   // Vistas del socio (solo lo suyo)
   | "mi-inicio"
@@ -75,6 +77,12 @@ export const GRUPOS_ADMIN: Grupo[] = [
       { key: "mora-intereses", label: "Mora intereses", Icon: AlertTriangle },
       { key: "liquidacion", label: "Liquidación", Icon: Wallet },
       { key: "simulador", label: "Simulador cierre", Icon: Wallet },
+    ],
+  },
+  {
+    titulo: "Eventos",
+    items: [
+      { key: "actividades", label: "Actividades", corto: "Rifas", Icon: Sparkles },
     ],
   },
   {

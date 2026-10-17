@@ -15,6 +15,7 @@ import { MoraInteresesPage } from "@/pages/MoraInteresesPage";
 import { MoraAhorrosPage } from "@/pages/MoraAhorrosPage";
 import { SimuladorLiquidacionPage } from "@/pages/SimuladorLiquidacionPage";
 import { BancoPage } from "@/pages/BancoPage";
+import { ActividadesPage } from "@/pages/ActividadesPage";
 import { EstadoCuentaPage } from "@/pages/EstadoCuentaPage";
 import { MiInicioPage } from "@/pages/socio/MiInicioPage";
 import { MiLiquidacionPage } from "@/pages/socio/MiLiquidacionPage";
@@ -162,6 +163,7 @@ function Estructura({ perfil, onSalir }: { perfil: Perfil | null; onSalir?: () =
                 {vista === "liquidacion" && <LiquidacionPage onVolver={volverPanel} />}
                 {vista === "simulador" && <SimuladorLiquidacionPage onVolver={volverPanel} />}
                 {vista === "banco" && <BancoPage onVolver={volverPanel} />}
+                {vista === "actividades" && <ActividadesPage onVolver={volverPanel} />}
                 {vista === "local" && <NatilleraPage />}
               </>
             )}
