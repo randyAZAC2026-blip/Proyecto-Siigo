@@ -1441,6 +1441,35 @@ app.post("/api/actividades/boletas/:id/ganadora", (req, res) => {
   res.json({ ok: true });
 });
 
+// Editar los metadatos de una actividad (nombre, descripción, premios, etc.).
+app.post("/api/actividades/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const permitidos = ["nombre","tipo","descripcion","fecha_evento","valor_boleta","estado","notas","premios"];
+  const sets = [];
+  const vals = [];
+  for (const k of permitidos) {
+    if (req.body?.[k] === undefined) continue;
+    let v = req.body[k];
+    if (k === "tipo" && !["rifa","bazar","otra"].includes(v)) {
+      return res.status(400).json({ error: "tipo inválido" });
+    }
+    if (k === "estado" && !["activa","cerrada","cancelada"].includes(v)) {
+      return res.status(400).json({ error: "estado inválido" });
+    }
+    if (k === "valor_boleta") {
+      v = Number(v);
+      if (!Number.isFinite(v) || v < 0) return res.status(400).json({ error: "valor_boleta inválido" });
+    }
+    if (k === "premios") v = JSON.stringify(v ?? {});
+    sets.push(`${k} = ?`);
+    vals.push(v);
+  }
+  if (sets.length === 0) return res.json({ ok: true });
+  const r = db.prepare(`UPDATE actividades SET ${sets.join(", ")} WHERE id = ?`).run(...vals, id);
+  if (r.changes === 0) return res.status(404).json({ error: "actividad no encontrada" });
+  res.json({ ok: true });
+});
+
 app.get("/", (_req, res) => {
   res.type("text/plain").send(
     "Natillera API\n\n" +

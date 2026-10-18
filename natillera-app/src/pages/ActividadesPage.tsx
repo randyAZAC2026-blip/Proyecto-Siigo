@@ -28,6 +28,7 @@ import {
 import { formatCOP } from "@/lib/natillera/format";
 import { api, type ActividadResumen, type ActividadBoleta } from "@/lib/dashboard/api";
 import { useApi } from "@/lib/dashboard/useApi";
+import { EditarActividadModal } from "@/components/actividades/EditarActividadModal";
 
 export function ActividadesPage({ onVolver }: { onVolver: () => void }) {
   const [actividadId, setActividadId] = useState<number | null>(null);
@@ -258,10 +259,18 @@ function ActividadDetalleView({
             </p>
           )}
         </div>
-        <Button variant="outline" size="sm" onClick={detalle.reload} disabled={detalle.loading}>
-          <RefreshCw className={`size-4 ${detalle.loading ? "animate-spin" : ""}`} />
-          Actualizar
-        </Button>
+        <div className="flex gap-2">
+          {detalle.data && (
+            <EditarActividadModal
+              actividad={detalle.data.actividad}
+              onGuardado={detalle.reload}
+            />
+          )}
+          <Button variant="outline" size="sm" onClick={detalle.reload} disabled={detalle.loading}>
+            <RefreshCw className={`size-4 ${detalle.loading ? "animate-spin" : ""}`} />
+            Actualizar
+          </Button>
+        </div>
       </div>
 
       {detalle.error && (

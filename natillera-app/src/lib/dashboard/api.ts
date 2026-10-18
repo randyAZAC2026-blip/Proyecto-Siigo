@@ -426,6 +426,17 @@ export interface ActividadDetalle {
   boletas: ActividadBoleta[];
 }
 
+export interface ActividadPatch {
+  nombre?: string;
+  tipo?: "rifa" | "bazar" | "otra";
+  descripcion?: string | null;
+  fecha_evento?: string | null;
+  valor_boleta?: number;
+  estado?: "activa" | "cerrada" | "cancelada";
+  notas?: string | null;
+  premios?: Record<string, unknown>;
+}
+
 const apiHttp = {
   resumen: () => get<Resumen>("/api/resumen"),
   // El backend local no tiene este endpoint: se arma desde /api/resumen.
@@ -519,6 +530,8 @@ const apiHttp = {
   // Módulo Actividades
   listarActividades: () => get<ActividadResumen[]>("/api/actividades"),
   actividadDetalle: (id: number) => get<ActividadDetalle>(`/api/actividades/${id}`),
+  actualizarActividad: (id: number, patch: ActividadPatch) =>
+    post<{ ok: true }>(`/api/actividades/${id}`, patch),
   marcarBoletaPagada: (id: number, pagada: boolean) =>
     post<{ ok: true }>(`/api/actividades/boletas/${id}/pagada`, { pagada }),
   marcarBoletaGanadora: (id: number, premio: "mayor" | "segundo" | null) =>

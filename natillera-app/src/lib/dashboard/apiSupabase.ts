@@ -34,6 +34,7 @@ import type {
   SimuladorResultado,
   TotalesGenerales,
   ActividadResumen,
+  ActividadPatch,
   ActividadBoleta,
   ActividadDetalle,
 } from "./api";
@@ -877,6 +878,19 @@ async function marcarBoletaGanadora(id: number, premio: "mayor" | "segundo" | nu
   return { ok: true as const };
 }
 
+async function actualizarActividad(id: number, patch: ActividadPatch) {
+  requireSupabaseEnv();
+  // Solo mandar los campos que vienen definidos para no sobrescribir con null por accidente.
+  const payload: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(patch)) {
+    if (v !== undefined) payload[k] = v;
+  }
+  if (Object.keys(payload).length === 0) return { ok: true as const };
+  const { error } = await supabase.from("actividades").update(payload).eq("id", id);
+  if (error) throw new Error(error.message);
+  return { ok: true as const };
+}
+
 // -------------------- exports --------------------
 
 export const apiSupabase = {
@@ -912,4 +926,5 @@ export const apiSupabase = {
   actividadDetalle,
   marcarBoletaPagada,
   marcarBoletaGanadora,
+  actualizarActividad,
 };
