@@ -247,7 +247,7 @@ export function BancoPage({ onVolver }: { onVolver: () => void }) {
                 <TableHead>Cuenta</TableHead>
                 <TableHead>Socio</TableHead>
                 <TableHead className="text-right">Monto</TableHead>
-                <TableHead className="text-center">Origen</TableHead>
+                <TableHead className="text-center">Estado</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -349,17 +349,6 @@ function ExtractoRow({
   onCambio: () => void;
   onRegistrarPago: (preset: PagoPreset) => void;
 }) {
-  const [saving, setSaving] = useState(false);
-
-  async function marcarOrigen(v: string) {
-    setSaving(true);
-    try {
-      await api.marcarOrigenExtracto(fila.id, v || null);
-    } finally {
-      setSaving(false);
-    }
-  }
-
   // En la columna solo se muestra; la asignación pasa al abrir el modal del monto.
   const socioCell = fila.socio_nombre ? (
     <span>{fila.socio_nombre}</span>
@@ -379,7 +368,6 @@ function ExtractoRow({
   const monto = (
     <button
       type="button"
-      disabled={saving}
       onClick={() =>
         onRegistrarPago({
           socio_id: socioIdSugerido,
@@ -404,19 +392,17 @@ function ExtractoRow({
     </button>
   );
 
+  // Punto verde si ya se desglosó este movimiento (hay transacción ligada),
+  // rojo mientras siga pendiente de que el usuario registre el pago desde el modal.
+  const desglosado = fila.transaccion_id != null;
   const origen = (
-    <select
-      disabled={saving}
-      aria-label="Origen del movimiento"
-      className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-1.5 py-0.5 text-[11px]"
-      value={fila.detalle_origen ?? ""}
-      onChange={(e) => marcarOrigen(e.target.value)}
-    >
-      <option value="">(sin marcar)</option>
-      <option value="NATILLERA">NATILLERA</option>
-      <option value="PERSONAL">PERSONAL</option>
-      <option value="N/A">N/A</option>
-    </select>
+    <span
+      aria-label={desglosado ? "Desglosado" : "Pendiente de desglosar"}
+      title={desglosado ? "Pago desglosado" : "Pendiente — clic en el monto para desglosar"}
+      className={`inline-block size-3 rounded-full ${
+        desglosado ? "bg-[var(--color-success)]" : "bg-[var(--color-destructive)]"
+      }`}
+    />
   );
 
   if (variante === "tarjeta") {
