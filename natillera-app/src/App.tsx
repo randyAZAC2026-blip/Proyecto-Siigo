@@ -5,7 +5,6 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { IngresoSocio } from "@/components/auth/IngresoSocio";
 import { BarraPestanas } from "@/components/layout/BarraPestanas";
 import { NatilleraPage } from "@/pages/NatilleraPage";
-import { DashboardPage } from "@/pages/DashboardPage";
 import { SociosAportesPage } from "@/pages/SociosAportesPage";
 import { MatrizAhorrosPage } from "@/pages/MatrizAhorrosPage";
 import { ControlPagosPage } from "@/pages/ControlPagosPage";
@@ -17,6 +16,7 @@ import { SimuladorLiquidacionPage } from "@/pages/SimuladorLiquidacionPage";
 import { BancoPage } from "@/pages/BancoPage";
 import { ActividadesPage } from "@/pages/ActividadesPage";
 import { EstadoCuentaPage } from "@/pages/EstadoCuentaPage";
+// DashboardPage retirado del menú — queda archivado en src/pages/DashboardPage.tsx.
 import { MiInicioPage } from "@/pages/socio/MiInicioPage";
 import { MiLiquidacionPage } from "@/pages/socio/MiLiquidacionPage";
 import { USA_SUPABASE } from "@/lib/dashboard/api";
@@ -71,7 +71,7 @@ function ConSesion() {
 function Estructura({ perfil, onSalir }: { perfil: Perfil | null; onSalir?: () => void }) {
   const esSocio = perfil?.rol === "socio";
   const grupos = esSocio ? GRUPOS_SOCIO : GRUPOS_ADMIN;
-  const inicio: Vista = esSocio ? "mi-inicio" : "dashboard";
+  const inicio: Vista = esSocio ? "mi-inicio" : "banco";
   const [vista, setVista] = useState<Vista>(inicio);
   const ir = (v: Vista) => {
     setVista(v);
@@ -152,7 +152,6 @@ function Estructura({ perfil, onSalir }: { perfil: Perfil | null; onSalir?: () =
             {/* Vistas de administración */}
             {!esSocio && (
               <>
-                {vista === "dashboard" && <DashboardPage onVolver={volverPanel} onIr={(k) => ir(k as Vista)} />}
                 {vista === "socios" && <SociosAportesPage onVolver={volverPanel} />}
                 {vista === "estado" && <EstadoCuentaPage onVolver={volverPanel} />}
                 {vista === "matriz" && <MatrizAhorrosPage onVolver={volverPanel} />}
