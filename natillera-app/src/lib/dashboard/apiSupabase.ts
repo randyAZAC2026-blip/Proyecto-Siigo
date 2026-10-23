@@ -170,11 +170,14 @@ async function bancos(): Promise<Banco[]> {
 }
 
 async function resumen(): Promise<Resumen> {
-  const [ss, ts, bs] = await Promise.all([
+  const [ss, ts, bs, pendientesResp] = await Promise.all([
     q<any[]>(supabase.from("socios").select("id, tipo, estado")),
     q<any[]>(supabase.from("transacciones").select("concepto, tipo, valor")),
     q<any[]>(supabase.from("movimientos_banco").select("banco")),
+    supabase.from("movimientos_banco").select("id", { count: "exact", head: true }).is("transaccion_id", null),
   ]);
+  if (pendientesResp.error) throw new Error(pendientesResp.error.message);
+  const pendientes_conciliar = pendientesResp.count ?? 0;
   const totalPorConcepto = (concepto: string) =>
     ts.filter((t) => t.concepto === concepto).reduce((s, t) => s + t.valor, 0);
   const ahorros = totalPorConcepto("AHORRO");
@@ -193,6 +196,7 @@ async function resumen(): Promise<Resumen> {
     cuentas_admin: ss.filter((s) => s.tipo === "cuenta_admin").length,
     n_transacciones: ts.length,
     n_bancos: new Set(bs.map((b) => b.banco)).size,
+    pendientes_conciliar,
     ahorros,
     actividades,
     rifa,

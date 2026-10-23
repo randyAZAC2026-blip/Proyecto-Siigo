@@ -13,7 +13,7 @@ interface Props {
   onIr: (vista: string) => void;
 }
 
-export function DashboardPage({ onVolver: _onVolver, onIr: _onIr }: Props) {
+export function DashboardPage({ onVolver: _onVolver, onIr }: Props) {
   const resumen = useApi(() => api.resumen());
 
   return (
@@ -69,7 +69,7 @@ export function DashboardPage({ onVolver: _onVolver, onIr: _onIr }: Props) {
         </div>
       )}
 
-      {resumen.data && <KpiTiles resumen={resumen.data} />}
+      {resumen.data && <KpiTiles resumen={resumen.data} onIr={onIr} />}
     </div>
   );
 }

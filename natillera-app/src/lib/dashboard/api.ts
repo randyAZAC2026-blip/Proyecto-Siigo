@@ -38,6 +38,7 @@ export interface Resumen {
   cuentas_admin: number;
   n_transacciones: number;
   n_bancos: number;
+  pendientes_conciliar: number;
   ahorros: number;
   actividades: number;
   rifa: number;

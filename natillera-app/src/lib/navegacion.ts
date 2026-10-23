@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 export type Vista =
+  | "dashboard"
   | "socios"
   | "estado"
   | "matriz"
@@ -50,7 +51,8 @@ export const GRUPOS_ADMIN: Grupo[] = [
   {
     titulo: "Inicio",
     items: [
-      { key: "banco", label: "Banco", corto: "Banco", Icon: Landmark },
+      { key: "dashboard", label: "Panel", corto: "Inicio", Icon: Home },
+      { key: "banco", label: "Banco", Icon: Landmark },
     ],
   },
   {
@@ -106,6 +108,6 @@ const buscar = (grupos: Grupo[], keys: Vista[]) =>
   keys.map((k) => todos(grupos).find((m) => m.key === k)!);
 
 /** Pestañas fijas de la barra inferior; el resto del admin va en "Más". */
-export const PESTANAS_ADMIN = buscar(GRUPOS_ADMIN, ["banco", "matriz", "prestamos", "actividades"]);
+export const PESTANAS_ADMIN = buscar(GRUPOS_ADMIN, ["dashboard", "matriz", "prestamos", "banco"]);
 export const MAS_ADMIN = todos(GRUPOS_ADMIN).filter((m) => !PESTANAS_ADMIN.includes(m));
 export const PESTANAS_SOCIO = todos(GRUPOS_SOCIO);
