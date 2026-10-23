@@ -23,9 +23,9 @@ export function KpiTiles({
   const pendientes = resumen.pendientes_conciliar;
   const items: Item[] = [
     {
-      label: "Pendiente por conciliar",
+      label: "Sin clasificar",
       value: `${pendientes}`,
-      sub: pendientes > 0 ? "clic para abrir Banco" : "¡al día!",
+      sub: pendientes > 0 ? "sin socio ni origen" : "¡al día!",
       color: pendientes > 0 ? "var(--color-destructive)" : "var(--color-success)",
       Icon: Inbox,
       destino: "banco",

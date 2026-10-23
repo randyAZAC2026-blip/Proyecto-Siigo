@@ -174,7 +174,12 @@ async function resumen(): Promise<Resumen> {
     q<any[]>(supabase.from("socios").select("id, tipo, estado")),
     q<any[]>(supabase.from("transacciones").select("concepto, tipo, valor")),
     q<any[]>(supabase.from("movimientos_banco").select("banco")),
-    supabase.from("movimientos_banco").select("id", { count: "exact", head: true }).is("transaccion_id", null),
+    supabase
+      .from("movimientos_banco")
+      .select("id", { count: "exact", head: true })
+      .is("socio_id", null)
+      .is("detalle_origen", null)
+      .is("transaccion_id", null),
   ]);
   if (pendientesResp.error) throw new Error(pendientesResp.error.message);
   const pendientes_conciliar = pendientesResp.count ?? 0;

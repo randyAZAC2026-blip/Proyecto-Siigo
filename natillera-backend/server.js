@@ -86,7 +86,8 @@ app.get("/api/resumen", (_req, res) => {
       (SELECT COUNT(*) FROM socios WHERE tipo='cuenta_admin') AS cuentas_admin,
       (SELECT COUNT(*) FROM transacciones) AS n_transacciones,
       (SELECT COUNT(*) FROM movimientos_banco) AS n_bancos,
-      (SELECT COUNT(*) FROM movimientos_banco WHERE transaccion_id IS NULL) AS pendientes_conciliar,
+      (SELECT COUNT(*) FROM movimientos_banco
+         WHERE socio_id IS NULL AND detalle_origen IS NULL AND transaccion_id IS NULL) AS pendientes_conciliar,
       COALESCE((SELECT SUM(valor) FROM transacciones WHERE concepto='AHORRO'), 0) AS ahorros,
       COALESCE((SELECT SUM(valor) FROM transacciones WHERE concepto='ACTIVIDADES'), 0) AS actividades,
       COALESCE((SELECT SUM(valor) FROM transacciones WHERE concepto='RIFA_CHANCE'), 0) AS rifa,
