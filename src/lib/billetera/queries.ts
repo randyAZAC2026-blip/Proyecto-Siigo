@@ -12,12 +12,13 @@ import type {
 } from "@/lib/supabase/database.types";
 import { CATEGORIAS_POR_DEFECTO } from "@/lib/billetera/defaults";
 
-// Cast acotado para operaciones de escritura. Mismo patrón que DataTableEditor:
-// el `Database` manual no extiende el `GenericSchema` estricto de supabase-js
-// (los `Partial<T>` del schema original no extienden `Record<string, unknown>`),
-// así que `.insert()/.update()` tipados caen a `never`. Para selects usamos el
-// cliente tipado; para mutaciones, este cast. Si en el futuro se regeneran los
-// types con `supabase gen types typescript --linked`, este cast se puede quitar.
+// Cast acotado para operaciones de escritura. El schema manual del Asesor
+// Tributario usa `Partial<T>` en Insert/Update, lo cual no extiende el
+// GenericSchema estricto de supabase-js — eso tira `.insert()/.update()`
+// tipados a `never`. Para selects usamos el cliente tipado; para mutaciones,
+// este cast local acotado (mismo patrón que DataTableEditor). Al regenerar los
+// tipos del schema completo con `supabase gen types typescript --linked`, el
+// cast se podrá quitar.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as unknown as any;
 
