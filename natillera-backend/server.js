@@ -1350,6 +1350,49 @@ app.post("/api/extractos", (req, res) => {
   }
 });
 
+// Contar movimientos por rango de fecha (vista previa antes de borrar).
+app.get("/api/extractos/contar", (req, res) => {
+  const desde = String(req.query.desde || "").trim();
+  const hasta = String(req.query.hasta || "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(desde) || !/^\d{4}-\d{2}-\d{2}$/.test(hasta)) {
+    return res.status(400).json({ error: "desde y hasta deben ser YYYY-MM-DD" });
+  }
+  const banco = req.query.banco ? String(req.query.banco) : null;
+  const where = ["fecha BETWEEN ? AND ?"];
+  const params = [desde, hasta];
+  if (banco && BANCOS_VALIDOS.has(banco)) {
+    where.push("banco = ?");
+    params.push(banco);
+  }
+  const whereSql = `WHERE ${where.join(" AND ")}`;
+  const total = queryOne(`SELECT COUNT(*) AS n FROM movimientos_banco ${whereSql}`, params).n;
+  const con_tx = queryOne(
+    `SELECT COUNT(*) AS n FROM movimientos_banco ${whereSql} AND transaccion_id IS NOT NULL`,
+    params,
+  ).n;
+  res.json({ total, con_transaccion: con_tx });
+});
+
+// Borrar movimientos por rango de fecha. Idempotente, retorna cuántos borró.
+app.delete("/api/extractos", (req, res) => {
+  const desde = String(req.query.desde || "").trim();
+  const hasta = String(req.query.hasta || "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(desde) || !/^\d{4}-\d{2}-\d{2}$/.test(hasta)) {
+    return res.status(400).json({ error: "desde y hasta deben ser YYYY-MM-DD" });
+  }
+  const banco = req.query.banco ? String(req.query.banco) : null;
+  const where = ["fecha BETWEEN ? AND ?"];
+  const params = [desde, hasta];
+  if (banco && BANCOS_VALIDOS.has(banco)) {
+    where.push("banco = ?");
+    params.push(banco);
+  }
+  const info = db
+    .prepare(`DELETE FROM movimientos_banco WHERE ${where.join(" AND ")}`)
+    .run(...params);
+  res.json({ borrados: Number(info.changes) });
+});
+
 // ---------------- Importar movimientos bancarios en batch ----------------
 // Body: { banco, movimientos: [{fecha, descripcion, monto, saldo?, detalle?}] }
 // Reporta cuántos entraron nuevos y cuántos se omitieron por duplicado.

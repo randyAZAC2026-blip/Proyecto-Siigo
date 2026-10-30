@@ -636,6 +636,43 @@ async function importarExtracto(banco: string, movimientos: unknown[]) {
   return resultado;
 }
 
+async function contarExtractosRango(desde: string, hasta: string, banco?: string | null) {
+  requireSupabaseEnv();
+  let qTotal = supabase
+    .from("movimientos_banco")
+    .select("id", { count: "exact", head: true })
+    .gte("fecha", desde)
+    .lte("fecha", hasta);
+  let qConTx = supabase
+    .from("movimientos_banco")
+    .select("id", { count: "exact", head: true })
+    .gte("fecha", desde)
+    .lte("fecha", hasta)
+    .not("transaccion_id", "is", null);
+  if (banco) {
+    qTotal = qTotal.eq("banco", banco);
+    qConTx = qConTx.eq("banco", banco);
+  }
+  const [tot, ct] = await Promise.all([qTotal, qConTx]);
+  if (tot.error) throw new Error(tot.error.message);
+  if (ct.error) throw new Error(ct.error.message);
+  return { total: tot.count ?? 0, con_transaccion: ct.count ?? 0 };
+}
+
+async function borrarExtractosRango(desde: string, hasta: string, banco?: string | null) {
+  requireSupabaseEnv();
+  // Supabase .delete() necesita un filtro; usamos gte/lte + eq opcional.
+  let qDelete = supabase
+    .from("movimientos_banco")
+    .delete({ count: "exact" })
+    .gte("fecha", desde)
+    .lte("fecha", hasta);
+  if (banco) qDelete = qDelete.eq("banco", banco);
+  const { error, count } = await qDelete;
+  if (error) throw new Error(error.message);
+  return { borrados: count ?? 0 };
+}
+
 // -------------------- transacciones --------------------
 
 function tipoDeConcepto(c: string): "ingreso" | "egreso" {
@@ -1007,6 +1044,8 @@ export const apiSupabase = {
   crearDesglose,
   crearMovimientoBanco,
   importarExtracto,
+  contarExtractosRango,
+  borrarExtractosRango,
   simularLiquidacion,
   eliminarTransaccion,
   buscarTransacciones,

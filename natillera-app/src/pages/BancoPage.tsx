@@ -7,6 +7,7 @@ import {
   Upload,
   PlusCircle,
   RefreshCw,
+  Trash2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,7 @@ import {
 } from "@/components/dashboard/RegistrarPagoModal";
 import { AgregarMovimientoModal } from "@/components/dashboard/AgregarMovimientoModal";
 import { ImportarExtractoModal } from "@/components/dashboard/ImportarExtractoModal";
+import { BorrarRangoModal } from "@/components/dashboard/BorrarRangoModal";
 
 const BANCO_FIJO = "Bancolombia";
 
@@ -44,6 +46,7 @@ export function BancoPage({ onVolver }: { onVolver: () => void }) {
   const [modalPreset, setModalPreset] = useState<PagoPreset | null>(null);
   const [modalAgregar, setModalAgregar] = useState(false);
   const [modalImportar, setModalImportar] = useState(false);
+  const [modalBorrar, setModalBorrar] = useState(false);
 
   const filtros = useMemo(
     () => ({
@@ -116,6 +119,15 @@ export function BancoPage({ onVolver }: { onVolver: () => void }) {
           >
             <Upload className="size-4" />
             Importar extracto
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setModalBorrar(true)}
+            className="gap-1 text-[var(--color-destructive)] border-[var(--color-destructive)]/40 hover:bg-[var(--color-destructive)]/5"
+          >
+            <Trash2 className="size-4" />
+            Borrar por fecha
           </Button>
           <Button variant="ghost" size="sm" onClick={onVolver}>
             ← Volver
@@ -317,6 +329,16 @@ export function BancoPage({ onVolver }: { onVolver: () => void }) {
         open={modalImportar}
         onClose={() => setModalImportar(false)}
         onImportado={reload}
+      />
+
+      <BorrarRangoModal
+        open={modalBorrar}
+        banco={BANCO_FIJO}
+        onClose={() => setModalBorrar(false)}
+        onBorrado={() => {
+          reload();
+          bancosQ.reload();
+        }}
       />
     </div>
   );

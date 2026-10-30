@@ -522,6 +522,16 @@ const apiHttp = {
       "/api/extractos/importar",
       { banco, movimientos },
     ),
+  contarExtractosRango: (desde: string, hasta: string, banco?: string | null) => {
+    const qs = new URLSearchParams({ desde, hasta });
+    if (banco) qs.set("banco", banco);
+    return get<{ total: number; con_transaccion: number }>(`/api/extractos/contar?${qs}`);
+  },
+  borrarExtractosRango: (desde: string, hasta: string, banco?: string | null) => {
+    const qs = new URLSearchParams({ desde, hasta });
+    if (banco) qs.set("banco", banco);
+    return del<{ borrados: number }>(`/api/extractos?${qs}`);
+  },
   simularLiquidacion: (params: SimuladorParams) =>
     post<SimuladorResultado>("/api/liquidacion/simular", params),
   eliminarTransaccion: (id: number) => del<{ ok: true }>(`/api/transacciones/${id}`),
