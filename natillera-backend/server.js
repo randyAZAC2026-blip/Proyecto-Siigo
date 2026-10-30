@@ -94,13 +94,48 @@ app.get("/api/resumen", (_req, res) => {
       COALESCE((SELECT SUM(valor) FROM transacciones WHERE concepto='INTERESES_PRESTAMO'), 0) AS intereses,
       COALESCE((SELECT SUM(valor) FROM transacciones WHERE concepto='PRESTAMO'), 0) AS prestamos_desembolsados,
       COALESCE((SELECT SUM(valor) FROM transacciones WHERE concepto='ABONO_PRESTAMO'), 0) AS abonos_prestamos,
-      COALESCE((SELECT SUM(valor) FROM multas), 0) AS multas
+      COALESCE((SELECT SUM(valor) FROM multas), 0) AS multas,
+      (SELECT COUNT(DISTINCT socio_id) FROM transacciones
+         WHERE concepto='AHORRO'
+           AND strftime('%Y-%m', fecha_pago) = strftime('%Y-%m','now')) AS al_dia_mes_count,
+      (SELECT COUNT(*) FROM prestamos p
+         WHERE p.estado='activo' AND p.monto_prestado > 0
+           AND COALESCE(
+             (SELECT MAX(fecha_abono) FROM abonos_prestamos WHERE prestamo_id = p.id),
+             p.fecha_desembolso
+           ) < date('now','-30 days')) AS prestamos_sin_abono_reciente
+  `);
+  // Actividad activa más reciente (null si no hay).
+  const activa = queryOne(`
+    SELECT a.id, a.nombre,
+           (SELECT COUNT(*) FROM actividad_boletas WHERE actividad_id=a.id AND pagada=1) AS pagadas,
+           (SELECT COUNT(*) FROM actividad_boletas WHERE actividad_id=a.id) AS total
+      FROM actividades a
+     WHERE a.estado = 'activa'
+     ORDER BY a.creado_en DESC
+     LIMIT 1
   `);
   res.json({
-    ...r,
+    socios_activos: r.socios_activos,
+    cuentas_admin: r.cuentas_admin,
+    n_transacciones: r.n_transacciones,
+    n_bancos: r.n_bancos,
+    pendientes_conciliar: r.pendientes_conciliar,
+    ahorros: r.ahorros,
+    actividades: r.actividades,
+    rifa: r.rifa,
+    intereses: r.intereses,
+    prestamos_desembolsados: r.prestamos_desembolsados,
+    abonos_prestamos: r.abonos_prestamos,
+    multas: r.multas,
     deuda_pendiente: r.prestamos_desembolsados - r.abonos_prestamos,
     utilidad_ciclo: r.intereses + r.multas + r.rifa,
     total_aportado: r.ahorros + r.actividades + r.rifa + r.intereses + r.abonos_prestamos,
+    al_dia_mes: { al_dia: r.al_dia_mes_count, total: r.socios_activos },
+    actividad_activa: activa
+      ? { id: activa.id, nombre: activa.nombre, pagadas: activa.pagadas, total: activa.total }
+      : null,
+    prestamos_sin_abono_reciente: r.prestamos_sin_abono_reciente,
   });
 });
 

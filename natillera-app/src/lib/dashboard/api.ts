@@ -49,6 +49,17 @@ export interface Resumen {
   deuda_pendiente: number;
   utilidad_ciclo: number;
   total_aportado: number;
+  // Leading: socios que ya pagaron AHORRO en el mes actual.
+  al_dia_mes: { al_dia: number; total: number };
+  // Leading: actividad en estado "activa" más reciente, con progreso de boletas.
+  actividad_activa: {
+    id: number;
+    nombre: string;
+    pagadas: number;
+    total: number;
+  } | null;
+  // Leading: préstamos activos sin abono registrado en los últimos 30 días.
+  prestamos_sin_abono_reciente: number;
 }
 
 /** Totales de toda la natillera, sin nombres: lo que un socio puede ver del fondo común. */

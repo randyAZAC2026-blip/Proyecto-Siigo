@@ -169,8 +169,19 @@ async function bancos(): Promise<Banco[]> {
   return Array.from(agg.values());
 }
 
+// Helpers de mes y 30 días: formateo YYYY-MM-DD para los filtros de Supabase.
+function inicioMesISO(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
+}
+function hace30DiasISO(): string {
+  const d = new Date();
+  d.setDate(d.getDate() - 30);
+  return d.toISOString().slice(0, 10);
+}
+
 async function resumen(): Promise<Resumen> {
-  const [ss, ts, bs, pendientesResp] = await Promise.all([
+  const [ss, ts, bs, pendientesResp, alDiaMesRaw, activaResp, prestamosActivos] = await Promise.all([
     q<any[]>(supabase.from("socios").select("id, tipo, estado")),
     q<any[]>(supabase.from("transacciones").select("concepto, tipo, valor")),
     q<any[]>(supabase.from("movimientos_banco").select("banco")),
@@ -180,9 +191,55 @@ async function resumen(): Promise<Resumen> {
       .is("socio_id", null)
       .is("detalle_origen", null)
       .is("transaccion_id", null),
+    q<any[]>(
+      supabase
+        .from("transacciones")
+        .select("socio_id")
+        .eq("concepto", "AHORRO")
+        .gte("fecha_pago", inicioMesISO()),
+    ),
+    q<any[]>(
+      supabase
+        .from("vw_actividades_resumen")
+        .select("id, nombre, boletas_pagadas, boletas_asignadas, estado, fecha_evento")
+        .eq("estado", "activa")
+        .order("fecha_evento", { ascending: false })
+        .limit(1),
+    ),
+    q<any[]>(
+      supabase
+        .from("prestamos")
+        .select("id, fecha_desembolso")
+        .eq("estado", "activo")
+        .gt("monto_prestado", 0),
+    ),
   ]);
   if (pendientesResp.error) throw new Error(pendientesResp.error.message);
   const pendientes_conciliar = pendientesResp.count ?? 0;
+
+  // Préstamos sin abono reciente: para cada activo, traer MAX(fecha_abono) y filtrar en JS.
+  // Un solo query a abonos_prestamos agrupado por prestamo_id es la forma más barata.
+  let prestamos_sin_abono_reciente = 0;
+  if (prestamosActivos.length > 0) {
+    const ids = prestamosActivos.map((p) => p.id);
+    const abonos = await q<any[]>(
+      supabase
+        .from("abonos_prestamos")
+        .select("prestamo_id, fecha_abono")
+        .in("prestamo_id", ids),
+    );
+    const ultimoAbono = new Map<number, string>();
+    for (const a of abonos) {
+      const prev = ultimoAbono.get(a.prestamo_id);
+      if (!prev || a.fecha_abono > prev) ultimoAbono.set(a.prestamo_id, a.fecha_abono);
+    }
+    const limite = hace30DiasISO();
+    prestamos_sin_abono_reciente = prestamosActivos.filter((p) => {
+      const ultimo = ultimoAbono.get(p.id) ?? p.fecha_desembolso;
+      return ultimo < limite;
+    }).length;
+  }
+
   const totalPorConcepto = (concepto: string) =>
     ts.filter((t) => t.concepto === concepto).reduce((s, t) => s + t.valor, 0);
   const ahorros = totalPorConcepto("AHORRO");
@@ -196,8 +253,22 @@ async function resumen(): Promise<Resumen> {
   const total_aportado = ts
     .filter((t) => t.tipo === "ingreso")
     .reduce((s, t) => s + t.valor, 0);
+  const socios_activos = ss.filter((s) => s.tipo === "persona" && s.estado === "activo").length;
+  const al_dia_mes = {
+    al_dia: new Set(alDiaMesRaw.map((t) => t.socio_id).filter(Boolean)).size,
+    total: socios_activos,
+  };
+  const activa = activaResp[0];
+  const actividad_activa = activa
+    ? {
+        id: activa.id as number,
+        nombre: activa.nombre as string,
+        pagadas: (activa.boletas_pagadas ?? 0) as number,
+        total: (activa.boletas_asignadas ?? 0) as number,
+      }
+    : null;
   return {
-    socios_activos: ss.filter((s) => s.tipo === "persona" && s.estado === "activo").length,
+    socios_activos,
     cuentas_admin: ss.filter((s) => s.tipo === "cuenta_admin").length,
     n_transacciones: ts.length,
     n_bancos: new Set(bs.map((b) => b.banco)).size,
@@ -212,6 +283,9 @@ async function resumen(): Promise<Resumen> {
     deuda_pendiente,
     utilidad_ciclo: intereses + multas_tot + rifa,
     total_aportado,
+    al_dia_mes,
+    actividad_activa,
+    prestamos_sin_abono_reciente,
   };
 }
 
