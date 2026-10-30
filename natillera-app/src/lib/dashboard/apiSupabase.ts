@@ -583,9 +583,12 @@ async function crearMovimientoBanco(m: {
   saldo_cuenta?: number | null;
   detalle_origen?: string | null;
   socio_id?: number | null;
+  dependencia?: string | null;
 }) {
   requireSupabaseEnv();
   const fila_origen = -Date.now();
+  const depRaw = m.dependencia != null ? String(m.dependencia).trim() : "";
+  const dependencia = depRaw && depRaw.toLowerCase() !== "null" ? depRaw : null;
   const { data, error } = await supabase
     .from("movimientos_banco")
     .insert({
@@ -596,6 +599,7 @@ async function crearMovimientoBanco(m: {
       saldo_cuenta: m.saldo_cuenta ?? null,
       detalle_origen: m.detalle_origen ?? null,
       socio_id: m.socio_id ?? null,
+      dependencia,
       fila_origen,
     })
     .select("id")
@@ -618,6 +622,7 @@ async function importarExtracto(banco: string, movimientos: unknown[]) {
         saldo_cuenta: (m.saldo_cuenta ?? m.saldo) as number | null | undefined,
         detalle_origen: (m.detalle_origen ?? m.detalle) as string | null | undefined,
         socio_id: (m.socio_id as number | null | undefined) ?? null,
+        dependencia: (m.dependencia ?? m.cuenta) as string | null | undefined,
       });
       if (r.creado) resultado.insertados++;
       else resultado.duplicados++;

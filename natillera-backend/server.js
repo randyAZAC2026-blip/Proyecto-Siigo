@@ -1303,6 +1303,10 @@ function crearMovimientoBanco(datos, opts = {}) {
   if (detalle != null && !ORIGEN_VALIDO.has(detalle))
     throw new Error(`detalle_origen inválido — usa: ${[...ORIGEN_VALIDO].join(", ")} o null`);
   const socioId = datos.socio_id != null ? Number(datos.socio_id) : null;
+  const dependenciaRaw = datos.dependencia != null ? String(datos.dependencia).trim() : "";
+  const dependencia = dependenciaRaw && dependenciaRaw.toLowerCase() !== "null"
+    ? dependenciaRaw
+    : null;
 
   if (!opts.omitirDedupe) {
     const dup = db
@@ -1320,8 +1324,8 @@ function crearMovimientoBanco(datos, opts = {}) {
     .prepare(
       `INSERT INTO movimientos_banco (
         banco, fecha, descripcion, monto, saldo_cuenta,
-        detalle_origen, socio_id, fila_origen
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        detalle_origen, socio_id, dependencia, fila_origen
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .run(
       banco,
@@ -1331,6 +1335,7 @@ function crearMovimientoBanco(datos, opts = {}) {
       saldo,
       detalle,
       socioId,
+      dependencia,
       -Date.now() - Math.floor(Math.random() * 1000),
     );
   return { creado: true, id: Number(info.lastInsertRowid) };
@@ -1370,6 +1375,7 @@ app.post("/api/extractos/importar", (req, res) => {
           saldo_cuenta: m.saldo_cuenta ?? m.saldo ?? null,
           detalle_origen: m.detalle_origen ?? m.detalle ?? null,
           socio_id: m.socio_id ?? null,
+          dependencia: m.dependencia ?? m.cuenta ?? null,
         });
         if (r.creado) resultado.insertados++;
         else resultado.duplicados++;

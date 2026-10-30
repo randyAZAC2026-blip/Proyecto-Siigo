@@ -515,6 +515,7 @@ const apiHttp = {
     saldo_cuenta?: number | null;
     detalle_origen?: string | null;
     socio_id?: number | null;
+    dependencia?: string | null;
   }) => post<{ creado: boolean; id?: number; id_existente?: number }>("/api/extractos", m),
   importarExtracto: (banco: string, movimientos: unknown[]) =>
     post<{ insertados: number; duplicados: number; errores: { fila: number; motivo: string }[] }>(

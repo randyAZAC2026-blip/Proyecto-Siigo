@@ -25,6 +25,7 @@ import { api } from "@/lib/dashboard/api";
 interface Fila {
   fecha: string | null;
   descripcion: string | null;
+  dependencia: string | null;
   monto: number;
   saldo: number | null;
 }
@@ -37,6 +38,7 @@ interface Props {
 
 const KEYS_FECHA = ["fecha", "fecha valor", "date", "value date", "posted"];
 const KEYS_DESCRIPCION = ["descripcion", "descripción", "detalle", "concepto", "description", "transaccion", "transacción"];
+const KEYS_CUENTA = ["cuenta", "cuenta origen", "cuenta destino", "dependencia", "nro cuenta", "numero cuenta"];
 const KEYS_MONTO = ["monto", "valor", "amount", "importe", "movimiento"];
 const KEYS_SALDO = ["saldo", "balance", "saldo cuenta"];
 
@@ -129,6 +131,7 @@ export function ImportarExtractoModal({ open, onClose, onImportado }: Props) {
       const headers = Object.keys(rows[0]);
       const colFecha = encontrarColumna(headers, KEYS_FECHA);
       const colDesc = encontrarColumna(headers, KEYS_DESCRIPCION);
+      const colCuenta = encontrarColumna(headers, KEYS_CUENTA);
       const colMonto = encontrarColumna(headers, KEYS_MONTO);
       const colSaldo = encontrarColumna(headers, KEYS_SALDO);
 
@@ -144,9 +147,16 @@ export function ImportarExtractoModal({ open, onClose, onImportado }: Props) {
         const fecha = toIsoDate(row[colFecha]);
         const monto = toNumber(row[colMonto]);
         if (!fecha || monto === 0) continue;
+        let dependencia: string | null = null;
+        if (colCuenta) {
+          const raw = String(row[colCuenta] ?? "").trim();
+          // El extracto a veces trae la cadena literal "null" en vez de celda vacía.
+          dependencia = raw && raw.toLowerCase() !== "null" ? raw : null;
+        }
         nuevas.push({
           fecha,
           descripcion: colDesc ? String(row[colDesc] ?? "").trim() || null : null,
+          dependencia,
           monto,
           saldo: colSaldo ? toNumber(row[colSaldo]) : null,
         });
@@ -169,6 +179,7 @@ export function ImportarExtractoModal({ open, onClose, onImportado }: Props) {
         filas.map((f) => ({
           fecha: f.fecha,
           descripcion: f.descripcion,
+          dependencia: f.dependencia,
           monto: f.monto,
           saldo_cuenta: f.saldo,
         })),
@@ -269,6 +280,7 @@ export function ImportarExtractoModal({ open, onClose, onImportado }: Props) {
                     <TableRow>
                       <TableHead>Fecha</TableHead>
                       <TableHead>Descripción</TableHead>
+                      <TableHead>Cuenta</TableHead>
                       <TableHead className="text-right">Monto</TableHead>
                       <TableHead className="hidden sm:table-cell text-right">Saldo</TableHead>
                     </TableRow>
@@ -277,8 +289,11 @@ export function ImportarExtractoModal({ open, onClose, onImportado }: Props) {
                     {filas.slice(0, 100).map((f, i) => (
                       <TableRow key={i}>
                         <TableCell className="text-xs">{f.fecha}</TableCell>
-                        <TableCell className="text-xs truncate max-w-[120px] sm:max-w-[280px]" title={f.descripcion ?? ""}>
+                        <TableCell className="text-xs truncate max-w-[120px] sm:max-w-[220px]" title={f.descripcion ?? ""}>
                           {f.descripcion ?? "—"}
+                        </TableCell>
+                        <TableCell className="text-xs tabular-nums" title={f.dependencia ?? ""}>
+                          {f.dependencia ?? "—"}
                         </TableCell>
                         <TableCell
                           className={`text-right tabular-nums text-xs ${
@@ -297,7 +312,7 @@ export function ImportarExtractoModal({ open, onClose, onImportado }: Props) {
                     ))}
                     {filas.length > 100 && (
                       <TableRow>
-                        <TableCell colSpan={4} className="text-center text-xs text-[var(--color-muted)]">
+                        <TableCell colSpan={5} className="text-center text-xs text-[var(--color-muted)]">
                           … y {filas.length - 100} filas más
                         </TableCell>
                       </TableRow>
