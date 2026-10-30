@@ -1,6 +1,39 @@
 # Proyecto-Siigo
 
-Gravimentes (módulo contable Contai-compatible) se movió al repositorio `siempre_pendientes`, carpeta `legado/gravimentes/`. Aquí solo vive el Asesor Tributario IA.
+Gravimentes (módulo contable Contai-compatible) se movió al repositorio `siempre_pendientes`, carpeta `legado/gravimentes/`. Hoy el repo aloja dos apps que comparten auth, layout y Supabase:
+
+- **Billetera personal** (ruta `/`) — control de ingresos, egresos, cuentas por pagar y por cobrar.
+- **Asesor Tributario IA** (ruta `/asesor`) — clasificador IVA/Retefuente/ICA.
+
+El header muestra ambas; en mobile hay un tab bar inferior (`BottomNav`) que alterna entre las secciones.
+
+---
+
+## Billetera personal
+
+Módulo de billetera multi-usuario (cada usuario sólo ve lo suyo vía RLS). Tablas: `cuentas`, `categorias`, `movimientos`, `cuentas_por_pagar`, `cuentas_por_cobrar`. Vista `saldos_cuentas` calcula saldo actual = `saldo_inicial + ingresos − egresos + transferencias_in − transferencias_out` — nunca se persiste un saldo, se derivan siempre de los movimientos (fuente única de verdad).
+
+### Pantallas (`src/pages/billetera/`)
+
+- `DashboardPage` (`/`) — saldo total, cards por cuenta, totales por cobrar/pagar, últimos 5 movimientos.
+- `MovimientosPage` (`/movimientos`) — lista con filtros por cuenta y tipo.
+- `NuevoMovimientoPage` (`/movimientos/nuevo`) — formulario rápido ingreso/egreso/transferencia.
+- `CuentasPorPagarPage` (`/por-pagar`) / `CuentasPorCobrarPage` (`/por-cobrar`) — CRUD; "Registrar pago/cobro" abre el `MovimientoForm` pre-ligado por `cxp_id` / `cxc_id`, un trigger de Postgres actualiza `monto_pagado`/`monto_cobrado` automáticamente.
+- `CuentasPage` (`/cuentas`) / `CategoriasPage` (`/categorias`) — administración de cuentas (archivar/eliminar) y categorías por usuario.
+
+### Capa de datos (`src/lib/billetera/`)
+
+- `queries.ts` — funciones puras tipadas (`listCuentas`, `crearMovimiento`, etc.). Las operaciones de escritura usan un cast local `db = supabase as any` (comentado) porque los tipos manuales de `Database` no extienden el `GenericSchema` estricto de supabase-js — mismo patrón que `DataTableEditor`. Si se regeneran con `supabase gen types typescript --linked`, el cast se puede quitar.
+- `hooks.ts` — wrappers de `@tanstack/react-query`. Las mutaciones invalidan todo el namespace `["billetera"]` para evitar desincronizaciones; en una app personal el extra traffic es irrelevante.
+- `format.ts` — formato COP (`Intl.NumberFormat`) y fechas, un solo punto para cambiar en el futuro.
+- `defaults.ts` — lista de categorías iniciales que se siembran la primera vez que el usuario entra al dashboard (si no tiene ninguna).
+
+### Reglas no negociables de billetera
+
+1. **Ningún saldo se persiste**. El saldo actual sale siempre de la vista `saldos_cuentas` o de recalcular en el cliente a partir de los movimientos. No cachear sumas en tablas.
+2. **CxP y CxC se mantienen en sync vía trigger de DB**, no vía frontend. Insertar un movimiento con `cxp_id`/`cxc_id` incrementa `monto_pagado`/`monto_cobrado`; borrarlo lo revierte. Nunca actualizar `monto_pagado` directamente desde el frontend.
+3. **RLS por `user_id` en las cinco tablas**. Cada política es `for all using (auth.uid() = user_id) with check (auth.uid() = user_id)` — una sola fuente de verdad.
+4. **Transferencias no mueven categoría ni cartera**. El CHECK constraint `(tipo = 'transferencia' and cuenta_destino_id is not null ...)` lo garantiza; el frontend respeta la misma regla.
 
 ---
 

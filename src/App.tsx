@@ -8,6 +8,13 @@ import { LoginPage } from "@/pages/LoginPage";
 import { CalculatorPage } from "@/pages/CalculatorPage";
 import { TablasAdminPage } from "@/pages/admin/TablasAdminPage";
 import { TablaEditorPage } from "@/pages/admin/TablaEditorPage";
+import { DashboardPage } from "@/pages/billetera/DashboardPage";
+import { MovimientosPage } from "@/pages/billetera/MovimientosPage";
+import { NuevoMovimientoPage } from "@/pages/billetera/NuevoMovimientoPage";
+import { CuentasPorPagarPage } from "@/pages/billetera/CuentasPorPagarPage";
+import { CuentasPorCobrarPage } from "@/pages/billetera/CuentasPorCobrarPage";
+import { CuentasPage } from "@/pages/billetera/CuentasPage";
+import { CategoriasPage } from "@/pages/billetera/CategoriasPage";
 
 const queryClient = new QueryClient();
 
@@ -21,7 +28,14 @@ export default function App() {
 
             <Route element={<ProtectedRoute />}>
               <Route element={<AppLayout />}>
-                <Route path="/" element={<CalculatorPage />} />
+                <Route path="/" element={<DashboardPage />} />
+                <Route path="/movimientos" element={<MovimientosPage />} />
+                <Route path="/movimientos/nuevo" element={<NuevoMovimientoPage />} />
+                <Route path="/por-pagar" element={<CuentasPorPagarPage />} />
+                <Route path="/por-cobrar" element={<CuentasPorCobrarPage />} />
+                <Route path="/cuentas" element={<CuentasPage />} />
+                <Route path="/categorias" element={<CategoriasPage />} />
+                <Route path="/asesor" element={<CalculatorPage />} />
 
                 <Route element={<AdminRoute />}>
                   <Route path="/admin/tablas" element={<TablasAdminPage />} />
