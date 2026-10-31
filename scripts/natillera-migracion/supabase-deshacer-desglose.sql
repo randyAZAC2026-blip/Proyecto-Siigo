@@ -16,6 +16,11 @@
 --   * Si el socio del movimiento lo había puesto este desglose, se quita.
 --   * Se quita la marca conciliado_excel para que el movimiento quede pendiente.
 
+-- El historial (movimientos) guarda el id del pago como referencia histórica.
+-- Con ON DELETE SET NULL, borrar un pago intentaba modificar el historial y el
+-- trigger movs_no_update lo rechazaba ("movimientos es un log inmutable").
+alter table public.movimientos drop constraint if exists movimientos_transaccion_id_fkey;
+
 create or replace function public.natillera_deshacer_desglose(p_extracto_id bigint)
 returns jsonb
 language plpgsql
@@ -49,7 +54,8 @@ begin
   if v_txs is null then
     if v_b.conciliado_excel then
       update public.movimientos_banco set conciliado_excel = false where id = p_extracto_id;
-      return jsonb_build_object('ok', true, 'borradas', 0, 'prestamos', 0, 'uniones', 0, 'excel', true);
+      return jsonb_build_object('ok', true, 'borradas', 0, 'prestamos', 0, 'uniones', 0, 'excel', true,
+                                'socio_id', v_b.socio_id);
     end if;
     raise exception 'Este movimiento no tiene desglose para deshacer';
   end if;
@@ -100,6 +106,18 @@ begin
   get diagnostics v_uniones = row_count;
 
   -- Borra los pagos propios (abonos_prestamos se va en cascada).
+  -- movimientos es un historial inmutable: en vez de tocar sus filas se deja
+  -- constancia de la anulación con un movimiento en sentido contrario.
+  insert into public.movimientos (socio_id, transaccion_id, tipo, concepto, valor, fecha, metadata)
+  select t.socio_id, t.id,
+         case when t.tipo = 'ingreso' then 'egreso' else 'ingreso' end,
+         'ANULACION', t.valor, current_date,
+         jsonb_build_object('motivo', 'deshacer_desglose', 'extracto_id', p_extracto_id,
+                            'anula_concepto', t.concepto, 'anula_tipo', t.tipo,
+                            'fecha_pago', t.fecha_pago, 'usuario', auth.uid(), 'fecha_anulacion', now())
+    from public.transacciones t
+   where t.id = any (v_propias);
+
   delete from public.transacciones where id = any (v_propias);
   get diagnostics v_borradas = row_count;
 
