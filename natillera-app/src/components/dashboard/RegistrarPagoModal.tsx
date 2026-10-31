@@ -147,6 +147,11 @@ export function RegistrarPagoModal({ open, onClose, onGuardado, preset, titulo }
     if (preparadas.length === 0)
       return setError("Ingresa al menos un valor mayor a 0");
 
+    if (preset.extracto_id != null && totalObjetivo > 0 && totalAsignado > totalObjetivo) {
+      return setError(
+        `El total (${formatCOP(totalAsignado)}) supera lo que falta por conciliar de este movimiento (${formatCOP(totalObjetivo)}). Ajusta los valores.`,
+      );
+    }
     if (totalObjetivo > 0 && Math.abs(totalAsignado - totalObjetivo) > 0) {
       const diff = totalObjetivo - totalAsignado;
       if (!confirm(

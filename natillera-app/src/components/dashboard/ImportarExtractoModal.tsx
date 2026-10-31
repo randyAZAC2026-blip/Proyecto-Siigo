@@ -210,9 +210,10 @@ export function ImportarExtractoModal({ open, onClose, onImportado }: Props) {
             Importar extracto bancario
           </DialogTitle>
           <DialogDescription>
-            Descarga tu extracto de Bancolombia o Nequi en Excel/CSV y súbelo aquí. Se
+            Descarga tu extracto de Bancolombia en Excel/CSV y súbelo aquí. Se
             detectan las columnas Fecha, Descripción, Monto y Saldo automáticamente.
-            Duplicados (mismo banco+fecha+monto+descripción) se omiten.
+            Los movimientos que ya estaban (misma fecha, monto, saldo y descripción) se
+            omiten, así que puedes volver a subir un extracto sin duplicar nada.
           </DialogDescription>
         </DialogHeader>
 
@@ -253,19 +254,31 @@ export function ImportarExtractoModal({ open, onClose, onImportado }: Props) {
             </div>
           )}
 
-          {resultado && (
+          {resultado && resultado.errores.length > 0 && (
+            <div className="rounded-md border border-[var(--color-destructive)]/40 bg-[var(--color-destructive)]/5 p-3 space-y-1 text-sm">
+              <strong className="text-[var(--color-destructive)]">
+                No se importó nada: hay {resultado.errores.length} fila{resultado.errores.length > 1 ? "s" : ""} con problemas
+              </strong>
+              <ul className="list-disc pl-5 text-xs">
+                {resultado.errores.slice(0, 10).map((e) => (
+                  <li key={e.fila}>Fila {e.fila}: {e.motivo}</li>
+                ))}
+              </ul>
+              {resultado.errores.length > 10 && (
+                <p className="text-xs">…y {resultado.errores.length - 10} más.</p>
+              )}
+              <p className="text-xs">Corrige el archivo y vuelve a subirlo.</p>
+            </div>
+          )}
+
+          {resultado && resultado.errores.length === 0 && (
             <div className="rounded-md border border-[var(--color-success)]/40 bg-[var(--color-success)]/5 p-3 space-y-1 text-sm">
               <div className="flex items-center gap-2">
                 <CircleCheck className="size-4 text-[var(--color-success)]" />
                 <strong className="text-[var(--color-success)]">Importación completa</strong>
               </div>
               <p>• Insertados: <strong>{resultado.insertados}</strong></p>
-              <p>• Duplicados (omitidos): <strong>{resultado.duplicados}</strong></p>
-              {resultado.errores.length > 0 && (
-                <p className="text-[var(--color-warning)]">
-                  • Errores: {resultado.errores.length}
-                </p>
-              )}
+              <p>• Ya estaban (omitidos): <strong>{resultado.duplicados}</strong></p>
             </div>
           )}
 

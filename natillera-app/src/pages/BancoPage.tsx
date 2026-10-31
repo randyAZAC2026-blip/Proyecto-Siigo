@@ -22,7 +22,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatCOP } from "@/lib/natillera/format";
-import { api, type Extracto, type SugerenciaDependencia } from "@/lib/dashboard/api";
+import { api, type EstadoExtracto, type Extracto, type SugerenciaDependencia } from "@/lib/dashboard/api";
 import { useApi } from "@/lib/dashboard/useApi";
 import {
   RegistrarPagoModal,
@@ -52,7 +52,9 @@ export function BancoPage({ onVolver }: { onVolver: () => void }) {
     () => ({
       banco: BANCO_FIJO,
       origen: origen || undefined,
-      conciliado: (conciliado as "true" | "false") || undefined,
+      // "abiertos" = todo lo que requiere trabajo (pendiente, parcial, excedido).
+      conciliado: conciliado === "abiertos" ? ("false" as const) : undefined,
+      estado: conciliado && conciliado !== "abiertos" ? (conciliado as EstadoExtracto) : undefined,
       desde: desde || undefined,
       hasta: hasta || undefined,
       q: q || undefined,
@@ -180,15 +182,19 @@ export function BancoPage({ onVolver }: { onVolver: () => void }) {
               </select>
             </div>
             <div className="space-y-1.5">
-              <Label>Conciliado</Label>
+              <Label>Estado</Label>
               <select
                 className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1.5 text-sm"
                 value={conciliado}
                 onChange={(e) => setConciliado(e.target.value)}
               >
                 <option value="">Todos</option>
-                <option value="true">Sí</option>
-                <option value="false">No</option>
+                <option value="abiertos">Por conciliar (todo lo abierto)</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="parcial">Parcial</option>
+                <option value="excedido">Excedido</option>
+                <option value="conciliado">Conciliado</option>
+                <option value="personal">Personal</option>
               </select>
             </div>
             <div className="space-y-1.5">
@@ -393,7 +399,10 @@ function ExtractoRow({
       onClick={() =>
         onRegistrarPago({
           socio_id: socioIdSugerido,
-          valor: Math.abs(fila.monto),
+          // Si ya está conciliado en parte, se propone solo lo que falta.
+          valor: fila.valor_pendiente != null && fila.valor_pendiente > 0
+            ? fila.valor_pendiente
+            : Math.abs(fila.monto),
           fecha_pago: fila.fecha ?? undefined,
           concepto: fila.monto < 0 ? "PRESTAMO" : "AHORRO",
           extracto_id: fila.id,
@@ -414,16 +423,25 @@ function ExtractoRow({
     </button>
   );
 
-  // Punto verde si ya se desglosó este movimiento (hay transacción ligada),
-  // rojo mientras siga pendiente de que el usuario registre el pago desde el modal.
-  const desglosado = fila.transaccion_id != null;
+  // Estado de conciliación (vw_extracto_estado). En modo express no viene:
+  // se deduce de si hay transacción ligada.
+  const estado: EstadoExtracto =
+    fila.estado ?? (fila.transaccion_id != null ? "conciliado" : "pendiente");
+  const pendienteTxt =
+    fila.valor_pendiente != null ? formatCOP(Math.abs(fila.valor_pendiente)) : "";
+  const ESTADO_UI: Record<EstadoExtracto, { color: string; titulo: string }> = {
+    conciliado: { color: "bg-[var(--color-success)]", titulo: "Conciliado" },
+    parcial: { color: "bg-[var(--color-warning)]", titulo: `Parcial — faltan ${pendienteTxt}. Clic en el monto para completar` },
+    excedido: { color: "bg-[var(--color-destructive)] ring-2 ring-[var(--color-destructive)]/30", titulo: `Excedido — hay ${pendienteTxt} unido de más. Revisar` },
+    pendiente: { color: "bg-[var(--color-destructive)]", titulo: "Pendiente — clic en el monto para registrar el pago" },
+    personal: { color: "bg-[var(--color-muted)]/50", titulo: "Personal — no es de la natillera" },
+  };
+  const ui = ESTADO_UI[estado];
   const origen = (
     <span
-      aria-label={desglosado ? "Desglosado" : "Pendiente de desglosar"}
-      title={desglosado ? "Pago desglosado" : "Pendiente — clic en el monto para desglosar"}
-      className={`inline-block size-3 rounded-full ${
-        desglosado ? "bg-[var(--color-success)]" : "bg-[var(--color-destructive)]"
-      }`}
+      aria-label={ui.titulo}
+      title={ui.titulo}
+      className={`inline-block size-3 rounded-full ${ui.color}`}
     />
   );
 

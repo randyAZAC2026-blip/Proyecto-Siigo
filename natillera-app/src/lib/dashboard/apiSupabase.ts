@@ -26,6 +26,7 @@ import type {
   HistorialSocio,
   Periodo,
   ExtractosPage,
+  EstadoExtracto,
   FiltrosExtracto,
   Transaccion,
   NuevaTransaccion,
@@ -186,11 +187,11 @@ async function resumen(): Promise<Resumen> {
     q<any[]>(supabase.from("transacciones").select("concepto, tipo, valor")),
     q<any[]>(supabase.from("movimientos_banco").select("banco")),
     supabase
-      .from("movimientos_banco")
+      .from("vw_extracto_estado")
       .select("id", { count: "exact", head: true })
       .is("socio_id", null)
       .is("detalle_origen", null)
-      .is("transaccion_id", null),
+      .eq("n_transacciones", 0),
     q<any[]>(
       supabase
         .from("transacciones")
@@ -494,19 +495,29 @@ async function morosos(dias = 60): Promise<Moroso[]> {
 
 // -------------------- extractos bancarios --------------------
 
+// Estados que todavía requieren trabajo de tesorería.
+const ESTADOS_ABIERTOS: EstadoExtracto[] = ["pendiente", "parcial", "excedido"];
+
+/** Quita los caracteres que rompen la sintaxis de filtros de PostgREST (.or). */
+function textoBusqueda(q: string): string {
+  return q.replace(/[,()*%\\:"]/g, " ").trim();
+}
+
 async function extractos(filtros: FiltrosExtracto = {}): Promise<ExtractosPage> {
   requireSupabaseEnv();
-  let query = supabase
-    .from("movimientos_banco")
-    .select("*, socios(nombre)", { count: "exact" });
+  // vw_extracto_estado es la única fuente del estado de conciliación
+  // (tabla conciliaciones; ver scripts/natillera-migracion/supabase-conciliaciones.sql).
+  let query = supabase.from("vw_extracto_estado").select("*", { count: "exact" });
 
   if (filtros.banco) query = query.eq("banco", filtros.banco);
   if (filtros.origen) query = query.eq("detalle_origen", filtros.origen);
-  if (filtros.conciliado === "true") query = query.not("transaccion_id", "is", null);
-  if (filtros.conciliado === "false") query = query.is("transaccion_id", null);
+  if (filtros.estado) query = query.eq("estado", filtros.estado);
+  else if (filtros.conciliado === "true") query = query.eq("estado", "conciliado");
+  else if (filtros.conciliado === "false") query = query.in("estado", ESTADOS_ABIERTOS);
   if (filtros.desde) query = query.gte("fecha", filtros.desde);
   if (filtros.hasta) query = query.lte("fecha", filtros.hasta);
-  if (filtros.q) query = query.or(`descripcion.ilike.%${filtros.q}%,socios.nombre.ilike.%${filtros.q}%`);
+  const texto = filtros.q ? textoBusqueda(filtros.q) : "";
+  if (texto) query = query.or(`descripcion.ilike.*${texto}*,socio_nombre.ilike.*${texto}*`);
   if (filtros.socio_id) query = query.eq("socio_id", filtros.socio_id);
 
   const limit = filtros.limit ?? 50;
@@ -525,19 +536,56 @@ async function extractos(filtros: FiltrosExtracto = {}): Promise<ExtractosPage> 
     detalle_origen: m.detalle_origen,
     dependencia: m.dependencia ?? null,
     socio_id: m.socio_id,
-    socio_nombre: m.socios?.nombre ?? null,
-    transaccion_id: m.transaccion_id,
+    socio_nombre: m.socio_nombre ?? null,
+    transaccion_id: (m.transaccion_ids as number[] | null)?.[0] ?? null,
+    estado: m.estado as EstadoExtracto,
+    valor_conciliado: Number(m.valor_conciliado ?? 0),
+    valor_pendiente: Number(m.valor_pendiente ?? 0),
+    n_transacciones: Number(m.n_transacciones ?? 0),
   }));
   return { total: count ?? filas.length, limit, offset, filas };
 }
 
+// -------------------- conciliación (RPC, todo o nada) --------------------
+
+interface LineaConciliacion {
+  valor: number;
+  transaccion_id?: number;
+  socio_id?: number;
+  concepto?: string;
+  periodo_id?: number | null;
+  fecha_pago?: string;
+  notas?: string;
+}
+
+interface ResultadoConciliacion {
+  ok: true;
+  extracto_id: number;
+  creadas: { id: number; socio_id: number; concepto: string; tipo: "ingreso" | "egreso"; valor: number }[];
+  vinculadas: number;
+  valor_conciliado: number;
+  valor_pendiente: number;
+  estado: EstadoExtracto;
+}
+
+async function conciliarExtracto(extracto_id: number, lineas: LineaConciliacion[]) {
+  requireSupabaseEnv();
+  return q<ResultadoConciliacion>(
+    supabase.rpc("natillera_conciliar_extracto", { p_extracto_id: extracto_id, p_lineas: lineas }),
+  );
+}
+
+/** Une una transacción existente al movimiento (o quita todas las uniones con null). */
 async function vincularExtracto(id: number, transaccion_id: number | null) {
   requireSupabaseEnv();
-  const { error } = await supabase
-    .from("movimientos_banco")
-    .update({ transaccion_id })
-    .eq("id", id);
-  if (error) throw new Error(error.message);
+  if (transaccion_id === null) {
+    await q(supabase.rpc("natillera_desconciliar_extracto", { p_extracto_id: id }));
+    return { ok: true as const };
+  }
+  const tx = await q<{ valor: number }>(
+    supabase.from("transacciones").select("valor").eq("id", transaccion_id).single(),
+  );
+  await conciliarExtracto(id, [{ transaccion_id, valor: tx.valor }]);
   return { ok: true as const };
 }
 
@@ -608,32 +656,29 @@ async function crearMovimientoBanco(m: {
   return { creado: true as const, id: data?.id };
 }
 
+/**
+ * Importa el extracto en bloque en la base (natillera_importar_extracto):
+ * omite los movimientos que ya existen y, si una fila es inválida, no
+ * importa nada y devuelve los errores por fila.
+ */
 async function importarExtracto(banco: string, movimientos: unknown[]) {
   requireSupabaseEnv();
-  const resultado = { insertados: 0, duplicados: 0, errores: [] as { fila: number; motivo: string }[] };
-  for (let i = 0; i < movimientos.length; i++) {
-    const m = movimientos[i] as Record<string, unknown>;
-    try {
-      const r = await crearMovimientoBanco({
-        banco,
-        fecha: String(m.fecha ?? ""),
-        descripcion: (m.descripcion as string | undefined) ?? undefined,
-        monto: Number(m.monto),
-        saldo_cuenta: (m.saldo_cuenta ?? m.saldo) as number | null | undefined,
-        detalle_origen: (m.detalle_origen ?? m.detalle) as string | null | undefined,
-        socio_id: (m.socio_id as number | null | undefined) ?? null,
-        dependencia: (m.dependencia ?? m.cuenta) as string | null | undefined,
-      });
-      if (r.creado) resultado.insertados++;
-      else resultado.duplicados++;
-    } catch (err) {
-      resultado.errores.push({
-        fila: i + 1,
-        motivo: err instanceof Error ? err.message : String(err),
-      });
-    }
-  }
-  return resultado;
+  // Pesos enteros: el banco a veces trae centavos (p. ej. intereses).
+  const entero = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? Math.round(v) : v ?? null);
+  const filas = movimientos.map((raw) => {
+    const m = raw as Record<string, unknown>;
+    return {
+      fecha: m.fecha ?? null,
+      descripcion: m.descripcion ?? null,
+      monto: entero(m.monto),
+      saldo_cuenta: entero(m.saldo_cuenta ?? m.saldo),
+      detalle_origen: m.detalle_origen ?? m.detalle ?? null,
+      dependencia: m.dependencia ?? m.cuenta ?? null,
+    };
+  });
+  return q<{ insertados: number; duplicados: number; errores: { fila: number; motivo: string }[] }>(
+    supabase.rpc("natillera_importar_extracto", { p_banco: banco, p_filas: filas }),
+  );
 }
 
 async function contarExtractosRango(desde: string, hasta: string, banco?: string | null) {
@@ -644,11 +689,11 @@ async function contarExtractosRango(desde: string, hasta: string, banco?: string
     .gte("fecha", desde)
     .lte("fecha", hasta);
   let qConTx = supabase
-    .from("movimientos_banco")
+    .from("vw_extracto_estado")
     .select("id", { count: "exact", head: true })
     .gte("fecha", desde)
     .lte("fecha", hasta)
-    .not("transaccion_id", "is", null);
+    .gt("n_transacciones", 0);
   if (banco) {
     qTotal = qTotal.eq("banco", banco);
     qConTx = qConTx.eq("banco", banco);
@@ -681,6 +726,20 @@ function tipoDeConcepto(c: string): "ingreso" | "egreso" {
 
 async function crearTransaccion(t: NuevaTransaccion) {
   requireSupabaseEnv();
+  if (t.extracto_id != null) {
+    // Ligada a un movimiento del banco: crear + unir en una sola operación.
+    const r = await conciliarExtracto(t.extracto_id, [
+      {
+        socio_id: t.socio_id,
+        concepto: t.concepto,
+        valor: t.valor,
+        periodo_id: t.periodo_id ?? null,
+        fecha_pago: t.fecha_pago,
+        notas: t.notas,
+      },
+    ]);
+    return r.creadas[0];
+  }
   const fila_origen = -Date.now();
   const { data, error } = await supabase
     .from("transacciones")
@@ -697,14 +756,30 @@ async function crearTransaccion(t: NuevaTransaccion) {
     .select("id, socio_id, concepto, tipo, valor")
     .single();
   if (error) throw new Error(error.message);
-  if (t.extracto_id != null && data?.id != null) {
-    await vincularExtracto(t.extracto_id, data.id);
-  }
   return data!;
 }
 
 async function crearDesglose(d: DesglosePago) {
   requireSupabaseEnv();
+  if (d.extracto_id != null) {
+    // Todas las líneas se crean y se unen al movimiento juntas, o ninguna.
+    const r = await conciliarExtracto(
+      d.extracto_id,
+      d.lineas.map((l) => ({
+        socio_id: d.socio_id,
+        concepto: l.concepto,
+        valor: l.valor,
+        periodo_id: d.periodo_id ?? null,
+        fecha_pago: d.fecha_pago,
+        notas: l.notas ?? d.notas,
+      })),
+    );
+    return {
+      ids: r.creadas.map((c) => c.id),
+      extracto_id: d.extracto_id,
+      total: r.creadas.reduce((s, c) => s + c.valor, 0),
+    };
+  }
   const ids: number[] = [];
   let total = 0;
   for (const linea of d.lineas) {
@@ -719,10 +794,7 @@ async function crearDesglose(d: DesglosePago) {
     ids.push(res.id);
     total += linea.valor;
   }
-  if (d.extracto_id != null && ids.length > 0) {
-    await vincularExtracto(d.extracto_id, ids[0]);
-  }
-  return { ids, extracto_id: d.extracto_id ?? null, total };
+  return { ids, extracto_id: null, total };
 }
 
 async function eliminarTransaccion(id: number) {

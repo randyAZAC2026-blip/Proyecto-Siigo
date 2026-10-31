@@ -330,8 +330,17 @@ export interface Extracto {
   dependencia: string | null;
   socio_id: number | null;
   socio_nombre: string | null;
+  /** Primera transacción unida (compatibilidad con el modo express). */
   transaccion_id: number | null;
+  /** Solo en modo Supabase (vw_extracto_estado). */
+  estado?: EstadoExtracto;
+  valor_conciliado?: number;
+  valor_pendiente?: number;
+  n_transacciones?: number;
 }
+
+/** pendiente: nada unido · parcial: falta valor · excedido: unido de más · personal: no es de la natillera. */
+export type EstadoExtracto = "pendiente" | "parcial" | "conciliado" | "excedido" | "personal";
 
 export interface ExtractosPage {
   total: number;
@@ -352,6 +361,8 @@ export interface FiltrosExtracto {
   banco?: string;
   origen?: string;
   conciliado?: "true" | "false";
+  /** Solo modo Supabase; si viene, manda sobre `conciliado`. */
+  estado?: EstadoExtracto;
   desde?: string;
   hasta?: string;
   q?: string;
