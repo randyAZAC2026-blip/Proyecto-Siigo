@@ -34,8 +34,14 @@ export interface PagoPreset {
   periodo_id?: number | null;
   notas?: string;
   extracto_id?: number | null;
+  /** Sentido del movimiento del banco: entra (ingreso) o sale (egreso). */
+  direccion?: "ingreso" | "egreso";
   origen_contexto?: string;
 }
+
+/** Préstamo entregado sale de la natillera; todo lo demás entra. */
+const sentidoDe = (concepto: string): "ingreso" | "egreso" =>
+  concepto === "PRESTAMO" ? "egreso" : "ingreso";
 
 interface Linea {
   id: number;
@@ -68,13 +74,16 @@ export function RegistrarPagoModal({ open, onClose, onGuardado, preset, titulo }
   const [ok, setOk] = useState<string | null>(null);
 
   // Desde un movimiento del banco el pago SE DESGLOSA antes de registrarse:
-  // no se supone ningún concepto. Un egreso del banco solo puede ser un
-  // préstamo entregado, así que ese caso sí viene armado.
+  // no se supone ningún concepto. Una salida arranca con el préstamo entregado.
+  // El desglose cuadra por NETO: los conceptos en el sentido del movimiento
+  // suman y los del sentido contrario restan (p. ej. préstamo 450.000 −
+  // intereses descontados 50.000 = salen 400.000).
   const desdeExtracto = preset.extracto_id != null;
-  const esEgreso = preset.concepto === "PRESTAMO";
-  const conceptosValidos = desdeExtracto
-    ? CONCEPTOS.filter((c) => (esEgreso ? c.key === "PRESTAMO" : c.key !== "PRESTAMO"))
-    : CONCEPTOS;
+  const direccion = preset.direccion ?? (preset.concepto === "PRESTAMO" ? "egreso" : "ingreso");
+  const esEgreso = direccion === "egreso";
+  const conceptosValidos = CONCEPTOS;
+  const signo = (concepto: string) =>
+    !desdeExtracto || !concepto || sentidoDe(concepto) === direccion ? 1 : -1;
 
   // Al abrir: datos del movimiento y desglose vacío. Solo depende de open/preset,
   // para no borrar lo que la persona ya escribió cuando terminan de cargar otros datos.
@@ -119,7 +128,8 @@ export function RegistrarPagoModal({ open, onClose, onGuardado, preset, titulo }
 
   const socioSel = (socios.data ?? []).find((s) => String(s.id) === socioId);
   const totalObjetivo = preset.valor ?? 0;
-  const totalAsignado = lineas.reduce((a, l) => a + parseCOP(l.valor), 0);
+  const totalAsignado = lineas.reduce((a, l) => a + signo(l.concepto) * parseCOP(l.valor), 0);
+  const hayEnSentido = lineas.some((l) => l.concepto && sentidoDe(l.concepto) === direccion && parseCOP(l.valor) > 0);
   const restante = totalObjetivo - totalAsignado;
 
   function addLinea(conceptoInicial = "", valorInicial = "") {
@@ -145,7 +155,11 @@ export function RegistrarPagoModal({ open, onClose, onGuardado, preset, titulo }
       ? "Elige el concepto de cada valor."
       : sinValor
         ? "Escribe el valor de cada concepto o quita la línea."
-        : faltaCuadrar
+        : desdeExtracto && !hayEnSentido && lineas.some((l) => l.concepto)
+          ? esEgreso
+            ? "En una salida del banco debe haber un préstamo entregado; lo descontado (intereses, cuotas) va restando."
+            : "En una entrada del banco debe haber al menos un concepto que entre (ahorro, actividades, abono…)."
+          : faltaCuadrar
           ? restante > 0
             ? `Faltan ${formatCOP(restante)} por repartir entre los conceptos.`
             : `El desglose se pasa por ${formatCOP(-restante)}.`
@@ -300,9 +314,11 @@ export function RegistrarPagoModal({ open, onClose, onGuardado, preset, titulo }
               <div>
                 <Label className="text-sm">Desglose del pago</Label>
                 <p className="text-[11px] text-[var(--color-muted)]">
-                  {desdeExtracto && !esEgreso
-                    ? "Reparte el valor del movimiento entre sus conceptos. Se registra solo cuando el desglose cuadra exacto."
-                    : "Distribuye el monto entre los conceptos que correspondan."}
+                  {!desdeExtracto
+                    ? "Distribuye el monto entre los conceptos que correspondan."
+                    : esEgreso
+                      ? "Pon el préstamo por su valor completo y agrega lo que se le descontó al socio (intereses, cuotas): resta. Se registra cuando el neto cuadra con lo que salió del banco."
+                      : "Reparte el valor del movimiento entre sus conceptos. Se registra solo cuando el desglose cuadra exacto."}
                 </p>
               </div>
               {totalObjetivo > 0 && (
@@ -314,7 +330,7 @@ export function RegistrarPagoModal({ open, onClose, onGuardado, preset, titulo }
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-[10px] text-[var(--color-muted)]">Asignado</div>
+                    <div className="text-[10px] text-[var(--color-muted)]">{desdeExtracto ? "Neto" : "Asignado"}</div>
                     <div
                       className={`font-semibold tabular-nums ${
                         totalAsignado === totalObjetivo
@@ -372,6 +388,15 @@ export function RegistrarPagoModal({ open, onClose, onGuardado, preset, titulo }
                       </option>
                     ))}
                   </select>
+                  {/* Concepto en sentido contrario al movimiento: resta del neto. */}
+                  {signo(l.concepto) < 0 && (
+                    <span
+                      className="shrink-0 rounded-full bg-[var(--color-warning)]/15 px-2 py-0.5 text-[10px] font-medium text-[#8a5d00]"
+                      title={esEgreso ? "Se le descontó al socio: resta de lo que salió" : "Sale de la natillera: resta de lo que entró"}
+                    >
+                      − descuenta
+                    </span>
+                  )}
                   <Input
                     inputMode="numeric"
                     value={l.valor}
@@ -392,7 +417,7 @@ export function RegistrarPagoModal({ open, onClose, onGuardado, preset, titulo }
                 </div>
               ))}
               {/* Atajos: agregan una línea con el concepto ya elegido. */}
-              {!esEgreso && (
+              {(
                 <div className="flex flex-wrap gap-1.5">
                   {conceptosValidos
                     .filter((c) => !usados.has(c.key))

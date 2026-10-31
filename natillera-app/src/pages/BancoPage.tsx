@@ -462,6 +462,7 @@ function ExtractoRow({
           fecha_pago: fila.fecha ?? undefined,
           // Ingresos: sin concepto supuesto, se desglosa en la ventana.
           concepto: fila.monto < 0 ? "PRESTAMO" : undefined,
+          direccion: fila.monto < 0 ? "egreso" : "ingreso",
           extracto_id: fila.id,
           notas: fila.descripcion ?? undefined,
           origen_contexto: `Extracto ${fila.banco} · ${fila.fecha ?? "sin fecha"} · ${fila.descripcion ?? ""}${sugerencia && !fila.socio_id ? ` · sugerido: ${sugerencia.socio_nombre}` : ""}`,
