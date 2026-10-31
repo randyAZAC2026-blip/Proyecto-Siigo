@@ -20,20 +20,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatCOP } from "@/lib/natillera/format";
-import { api, type Deudor, type MatrizPrestamos, type MoraReporte, type MoraPrestamo } from "@/lib/dashboard/api";
+import { api, type Deudor, type MatrizPrestamos } from "@/lib/dashboard/api";
 import { useApi } from "@/lib/dashboard/useApi";
 import { USA_SUPABASE } from "@/lib/dashboard/api";
 import { DetalladoPrestamosButton } from "@/components/dashboard/DetalladoPrestamosButton";
 
-type Orden = "saldo_desc" | "mora_desc" | "nombre";
+type Orden = "saldo_desc" | "nombre";
 
 interface PrestamoDetalle {
   prestamo_id: number;
   monto_prestado: number;
   saldo: number;
   intereses_pagados: number;
-  mora_pagada: number;
-  mora_pendiente: number;
   fecha_desembolso: string | null;
 }
 
@@ -44,10 +42,7 @@ interface FilaSocio {
   monto_prestado: number;
   saldo: number;
   intereses_pagados: number;
-  mora_pagada: number;
-  mora_pendiente: number;
-  deuda_total: number;
-  estado: "al_dia" | "en_mora" | "cancelado";
+  estado: "activo" | "cancelado";
 }
 
 // modoSocio: "Mis préstamos" del socio que entró. RLS ya le devuelve solo sus filas;
@@ -55,19 +50,17 @@ interface FilaSocio {
 export function PrestamosPage({ onVolver, modoSocio = false }: { onVolver?: () => void; modoSocio?: boolean }) {
   const deudoresQ = useApi(() => api.deudores(), []);
   const matrizQ = useApi(() => api.matrizPrestamos(), []);
-  const moraQ = useApi(() => api.moraIntereses(true), []);
 
   const [busqueda, setBusqueda] = useState("");
   const [orden, setOrden] = useState<Orden>("saldo_desc");
   const [abiertos, setAbiertos] = useState<Set<number>>(new Set());
 
-  const loading = deudoresQ.loading || matrizQ.loading || moraQ.loading;
-  const error = deudoresQ.error || matrizQ.error || moraQ.error;
+  const loading = deudoresQ.loading || matrizQ.loading;
+  const error = deudoresQ.error || matrizQ.error;
 
   function reload() {
     deudoresQ.reload();
     matrizQ.reload();
-    moraQ.reload();
   }
 
   function toggle(id: number) {
@@ -81,23 +74,13 @@ export function PrestamosPage({ onVolver, modoSocio = false }: { onVolver?: () =
 
   const filas: FilaSocio[] = useMemo(() => {
     if (!deudoresQ.data) return [];
-    const moraByPrestamo = new Map<number, { pagada: number; pendiente: number }>();
-    for (const p of moraQ.data?.prestamos ?? []) {
-      moraByPrestamo.set(p.prestamo_id, {
-        pagada: p.mora_pagada,
-        pendiente: p.mora_pendiente,
-      });
-    }
     const porSocio = new Map<number, FilaSocio>();
     for (const d of deudoresQ.data as Deudor[]) {
-      const m = moraByPrestamo.get(d.prestamo_id) ?? { pagada: 0, pendiente: 0 };
       const detalle: PrestamoDetalle = {
         prestamo_id: d.prestamo_id,
         monto_prestado: d.monto_prestado,
         saldo: d.saldo,
         intereses_pagados: d.intereses_pagados,
-        mora_pagada: m.pagada,
-        mora_pendiente: m.pendiente,
         fecha_desembolso: d.fecha_desembolso,
       };
       const existente = porSocio.get(d.id);
@@ -106,8 +89,6 @@ export function PrestamosPage({ onVolver, modoSocio = false }: { onVolver?: () =
         existente.monto_prestado += detalle.monto_prestado;
         existente.saldo += detalle.saldo;
         existente.intereses_pagados += detalle.intereses_pagados;
-        existente.mora_pagada += detalle.mora_pagada;
-        existente.mora_pendiente += detalle.mora_pendiente;
       } else {
         porSocio.set(d.id, {
           socio_id: d.id,
@@ -116,24 +97,15 @@ export function PrestamosPage({ onVolver, modoSocio = false }: { onVolver?: () =
           monto_prestado: detalle.monto_prestado,
           saldo: detalle.saldo,
           intereses_pagados: detalle.intereses_pagados,
-          mora_pagada: detalle.mora_pagada,
-          mora_pendiente: detalle.mora_pendiente,
-          deuda_total: 0,
-          estado: "al_dia",
+          estado: "activo",
         });
       }
     }
     for (const f of porSocio.values()) {
-      f.deuda_total = f.saldo + f.mora_pendiente;
-      f.estado =
-        f.saldo <= 0 && f.mora_pendiente <= 0
-          ? "cancelado"
-          : f.mora_pendiente > 0
-            ? "en_mora"
-            : "al_dia";
+      f.estado = f.saldo <= 0 ? "cancelado" : "activo";
     }
     return Array.from(porSocio.values());
-  }, [deudoresQ.data, moraQ.data]);
+  }, [deudoresQ.data]);
 
   const filtradas = useMemo(() => {
     const q = busqueda.trim().toLowerCase();
@@ -142,7 +114,6 @@ export function PrestamosPage({ onVolver, modoSocio = false }: { onVolver?: () =
       : filas;
     const sorted = [...filtered];
     if (orden === "saldo_desc") sorted.sort((a, b) => b.saldo - a.saldo);
-    else if (orden === "mora_desc") sorted.sort((a, b) => b.mora_pendiente - a.mora_pendiente);
     else sorted.sort((a, b) => a.socio.localeCompare(b.socio));
     return sorted;
   }, [filas, busqueda, orden]);
@@ -154,14 +125,12 @@ export function PrestamosPage({ onVolver, modoSocio = false }: { onVolver?: () =
           total_prestado: a.total_prestado + f.monto_prestado,
           saldo_capital: a.saldo_capital + f.saldo,
           intereses_cobrados: a.intereses_cobrados + f.intereses_pagados,
-          mora_pendiente: a.mora_pendiente + f.mora_pendiente,
           activos: a.activos + (f.estado !== "cancelado" ? 1 : 0),
         }),
         {
           total_prestado: 0,
           saldo_capital: 0,
           intereses_cobrados: 0,
-          mora_pendiente: 0,
           activos: 0,
         },
       ),
@@ -200,7 +169,7 @@ export function PrestamosPage({ onVolver, modoSocio = false }: { onVolver?: () =
         </div>
       )}
 
-      <div className={`grid gap-3 grid-cols-2 ${modoSocio ? "sm:grid-cols-4" : "sm:grid-cols-5"}`}>
+      <div className={`grid gap-3 grid-cols-2 ${modoSocio ? "sm:grid-cols-3" : "sm:grid-cols-4"}`}>
         <MiniTile label="Total prestado" value={formatCOP(tot.total_prestado)} color="var(--color-muted)" />
         <MiniTile
           label="Saldo capital pendiente"
@@ -211,11 +180,6 @@ export function PrestamosPage({ onVolver, modoSocio = false }: { onVolver?: () =
           label="Intereses cobrados"
           value={formatCOP(tot.intereses_cobrados)}
           color="var(--color-success)"
-        />
-        <MiniTile
-          label="Mora pendiente"
-          value={formatCOP(tot.mora_pendiente)}
-          color="var(--color-destructive)"
         />
         {!modoSocio && (
           <MiniTile
@@ -246,7 +210,7 @@ export function PrestamosPage({ onVolver, modoSocio = false }: { onVolver?: () =
             <CardDescription>
               {modoSocio
                 ? "Tus préstamos, abonos mes a mes y vencimientos de intereses."
-                : "Clic en cualquier fila para ver los préstamos individuales, la matriz mensual y los vencimientos de mora."}
+                : "Clic en cualquier fila para ver los préstamos individuales y la matriz mensual."}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 max-sm:px-3">
@@ -261,7 +225,7 @@ export function PrestamosPage({ onVolver, modoSocio = false }: { onVolver?: () =
                 />
               </div>
               <div className="flex flex-wrap gap-1 text-xs">
-                {(["saldo_desc", "mora_desc", "nombre"] as Orden[]).map((o) => (
+                {(["saldo_desc", "nombre"] as Orden[]).map((o) => (
                   <button
                     key={o}
                     onClick={() => setOrden(o)}
@@ -273,9 +237,7 @@ export function PrestamosPage({ onVolver, modoSocio = false }: { onVolver?: () =
                   >
                     {o === "saldo_desc"
                       ? "Ordenar por saldo"
-                      : o === "mora_desc"
-                        ? "Ordenar por mora"
-                        : "Ordenar por nombre"}
+                      : "Ordenar por nombre"}
                   </button>
                 ))}
               </div>
@@ -288,7 +250,6 @@ export function PrestamosPage({ onVolver, modoSocio = false }: { onVolver?: () =
                   key={f.socio_id}
                   fila={f}
                   matriz={matrizQ.data}
-                  mora={moraQ.data}
                   abierto={modoSocio || abiertos.has(f.socio_id)}
                   onToggle={() => toggle(f.socio_id)}
                 />
@@ -313,8 +274,6 @@ export function PrestamosPage({ onVolver, modoSocio = false }: { onVolver?: () =
                   <TableHead className="text-right">Capital inicial</TableHead>
                   <TableHead className="text-right">Saldo capital</TableHead>
                   <TableHead className="text-right">Int. pagados</TableHead>
-                  <TableHead className="text-right">Mora pendiente</TableHead>
-                  <TableHead className="text-right">Deuda total</TableHead>
                   <TableHead className="text-center">Estado</TableHead>
                 </TableRow>
               </TableHeader>
@@ -324,14 +283,13 @@ export function PrestamosPage({ onVolver, modoSocio = false }: { onVolver?: () =
                     key={f.socio_id}
                     fila={f}
                     matriz={matrizQ.data}
-                    mora={moraQ.data}
-                    abierto={modoSocio || abiertos.has(f.socio_id)}
+                      abierto={modoSocio || abiertos.has(f.socio_id)}
                     onToggle={() => toggle(f.socio_id)}
                   />
                 ))}
                 {filtradas.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center text-sm text-[var(--color-muted)]">
+                    <TableCell colSpan={7} className="text-center text-sm text-[var(--color-muted)]">
                       {busqueda
                         ? "No hay socios con préstamo que coincidan con la búsqueda."
                         : modoSocio
@@ -365,11 +323,9 @@ function MiniTile({ label, value, color }: { label: string; value: string; color
 }
 
 function badgeEstado(estado: FilaSocio["estado"]) {
-  return estado === "al_dia"
-    ? { label: "Al día", clase: "bg-[var(--color-success)]/15 text-[var(--color-success)]" }
-    : estado === "en_mora"
-      ? { label: "En mora", clase: "bg-[var(--color-destructive)]/15 text-[var(--color-destructive)]" }
-      : { label: "Cancelado", clase: "bg-[var(--color-muted)]/20 text-[var(--color-muted)]" };
+  return estado === "activo"
+    ? { label: "Activo", clase: "bg-[var(--color-warning)]/15 text-[var(--color-warning)]" }
+    : { label: "Cancelado", clase: "bg-[var(--color-muted)]/20 text-[var(--color-muted)]" };
 }
 
 function Dato({ label, valor, clase = "" }: { label: string; valor: string; clase?: string }) {
@@ -385,13 +341,11 @@ function Dato({ label, valor, clase = "" }: { label: string; valor: string; clas
 function TarjetaSocio({
   fila,
   matriz,
-  mora,
   abierto,
   onToggle,
 }: {
   fila: FilaSocio;
   matriz: MatrizPrestamos | null;
-  mora: MoraReporte | null;
   abierto: boolean;
   onToggle: () => void;
 }) {
@@ -419,21 +373,16 @@ function TarjetaSocio({
         </div>
         <div className="grid grid-cols-3 gap-2">
           <Dato label="Saldo capital" valor={formatCOP(fila.saldo)} clase="font-semibold text-[var(--color-warning)]" />
-          <Dato
-            label="Mora pend."
-            valor={formatCOP(fila.mora_pendiente)}
-            clase={fila.mora_pendiente > 0 ? "font-semibold text-[var(--color-destructive)]" : "text-[var(--color-muted)]"}
-          />
-          <Dato label="Deuda total" valor={formatCOP(fila.deuda_total)} clase="font-semibold" />
+          <Dato label="Capital inicial" valor={formatCOP(fila.monto_prestado)} />
+          <Dato label="Int. pagados" valor={formatCOP(fila.intereses_pagados)} clase="text-[var(--color-success)]" />
         </div>
         <div className="text-[11px] text-[var(--color-muted)]">
-          {fila.prestamos.length} {fila.prestamos.length === 1 ? "préstamo" : "préstamos"} · capital inicial{" "}
-          {formatCOP(fila.monto_prestado)} · int. pagados {formatCOP(fila.intereses_pagados)}
+          {fila.prestamos.length} {fila.prestamos.length === 1 ? "préstamo" : "préstamos"}
         </div>
       </button>
       {abierto && (
         <div className="border-t border-[var(--color-border)] bg-[var(--color-primary)]/5 p-3">
-          <Detalle fila={fila} matriz={matriz} mora={mora} />
+          <Detalle fila={fila} matriz={matriz} />
         </div>
       )}
     </li>
@@ -443,13 +392,11 @@ function TarjetaSocio({
 function FilaExpansible({
   fila,
   matriz,
-  mora,
   abierto,
   onToggle,
 }: {
   fila: FilaSocio;
   matriz: MatrizPrestamos | null;
-  mora: MoraReporte | null;
   abierto: boolean;
   onToggle: () => void;
 }) {
@@ -476,18 +423,6 @@ function FilaExpansible({
         <TableCell className="text-right tabular-nums text-xs text-[var(--color-success)]">
           {formatCOP(fila.intereses_pagados)}
         </TableCell>
-        <TableCell
-          className={`text-right tabular-nums text-xs ${
-            fila.mora_pendiente > 0
-              ? "text-[var(--color-destructive)] font-semibold"
-              : "text-[var(--color-muted)]"
-          }`}
-        >
-          {formatCOP(fila.mora_pendiente)}
-        </TableCell>
-        <TableCell className="text-right tabular-nums text-xs font-semibold">
-          {formatCOP(fila.deuda_total)}
-        </TableCell>
         <TableCell className="text-center">
           <Badge variant="secondary" className={estadoBadge.clase}>
             {estadoBadge.label}
@@ -496,8 +431,8 @@ function FilaExpansible({
       </TableRow>
       {abierto && (
         <TableRow>
-          <TableCell colSpan={9} className="bg-[var(--color-primary)]/5 p-4">
-            <Detalle fila={fila} matriz={matriz} mora={mora} />
+          <TableCell colSpan={7} className="bg-[var(--color-primary)]/5 p-4">
+            <Detalle fila={fila} matriz={matriz} />
           </TableCell>
         </TableRow>
       )}
@@ -512,15 +447,11 @@ const TABLA_COMPACTA =
 function Detalle({
   fila,
   matriz,
-  mora,
 }: {
   fila: FilaSocio;
   matriz: MatrizPrestamos | null;
-  mora: MoraReporte | null;
 }) {
   const socioMatriz = matriz?.socios.find((s) => s.socio_id === fila.socio_id);
-  const prestamosMora: MoraPrestamo[] =
-    mora?.prestamos.filter((p) => p.socio_id === fila.socio_id) ?? [];
 
   return (
     <div className="space-y-4">
@@ -545,7 +476,6 @@ function Detalle({
                 <TableHead className="text-right">Capital inicial</TableHead>
                 <TableHead className="text-right">Saldo</TableHead>
                 <TableHead className="hidden sm:table-cell text-right">Intereses pagados</TableHead>
-                <TableHead className="text-right">Mora pendiente</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -561,9 +491,6 @@ function Detalle({
                   </TableCell>
                   <TableCell className="hidden sm:table-cell text-right tabular-nums text-xs">
                     {formatCOP(p.intereses_pagados)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums text-xs">
-                    {formatCOP(p.mora_pendiente)}
                   </TableCell>
                 </TableRow>
               ))}
@@ -630,65 +557,6 @@ function Detalle({
         )}
       </div>
 
-      {prestamosMora.map((pm) =>
-        pm.detalle && pm.detalle.length > 0 ? (
-          <div key={pm.prestamo_id}>
-            <div className="text-xs font-semibold text-[var(--color-muted)] uppercase tracking-wide mb-2">
-              Vencimientos de intereses — Préstamo #{pm.prestamo_id}
-              {pm.fecha_desembolso ? ` (desembolso ${pm.fecha_desembolso})` : ""}
-            </div>
-            <Table className={TABLA_COMPACTA}>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="hidden sm:table-cell">#</TableHead>
-                  <TableHead>Vencimiento</TableHead>
-                  <TableHead className="hidden sm:table-cell">Fecha de pago</TableHead>
-                  <TableHead className="hidden sm:table-cell text-center">Días atraso</TableHead>
-                  <TableHead className="text-center">Estado</TableHead>
-                  <TableHead className="text-right">Mora</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {pm.detalle.map((d, i) => (
-                  <TableRow key={i}>
-                    <TableCell className="hidden sm:table-cell text-xs">{i + 1}</TableCell>
-                    <TableCell className="text-xs">{d.vencimiento}</TableCell>
-                    <TableCell className="hidden sm:table-cell text-xs">{d.fecha_pago ?? "—"}</TableCell>
-                    <TableCell className="hidden sm:table-cell text-center text-xs tabular-nums">
-                      {d.dias_atraso}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Badge
-                        variant="secondary"
-                        className={
-                          d.estado === "pagado_a_tiempo"
-                            ? "bg-[var(--color-success)]/15 text-[var(--color-success)]"
-                            : d.estado === "pagado_tarde"
-                              ? "bg-[var(--color-warning)]/15 text-[var(--color-warning)]"
-                              : "bg-[var(--color-destructive)]/15 text-[var(--color-destructive)]"
-                        }
-                      >
-                        {d.estado === "pagado_a_tiempo"
-                          ? "A tiempo"
-                          : d.estado === "pagado_tarde"
-                            ? "Tarde"
-                            : "Sin pagar"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell
-                      className={`text-right tabular-nums text-xs ${
-                        d.mora > 0 ? "text-[var(--color-destructive)] font-semibold" : ""
-                      }`}
-                    >
-                      {formatCOP(d.mora)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        ) : null,
-      )}
     </div>
   );
 }

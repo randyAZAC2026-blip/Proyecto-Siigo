@@ -64,8 +64,6 @@ export function MiLiquidacionPage({ socioId }: { socioId: number }) {
               </div>
               <Linea label="Saldo de préstamos" valor={l.deducc_prestamo} signo="-" />
               <Linea label="Multas pendientes" valor={l.deducc_multas} signo="-" />
-              <Linea label="Mora de intereses" valor={l.deducc_mora_intereses} signo="-" />
-              <Linea label="Mora de ahorro" valor={l.deducc_mora_ahorro} signo="-" />
             </div>
             <div className="mt-3 flex items-center justify-between rounded-md border border-[var(--color-primary)]/20 bg-[var(--color-primary)]/5 px-3 py-2">
               <span className="text-sm font-semibold">Neto a recibir</span>

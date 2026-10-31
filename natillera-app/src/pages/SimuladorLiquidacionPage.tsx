@@ -18,7 +18,6 @@ import {
   api,
   type SimuladorParams,
   type SimuladorResultado,
-  type ModoMora,
   type ModoPrestamos,
   type ModoUtilidad,
   type ModoReparto,
@@ -33,8 +32,9 @@ const FIN_MES = (() => {
 export function SimuladorLiquidacionPage({ onVolver: _onVolver }: { onVolver: () => void }) {
   const [params, setParams] = useState<SimuladorParams>({
     fecha_corte: HOY,
-    mora_ahorros: { modo: "cobrar" },
-    mora_intereses: { modo: "cobrar" },
+    // La mora no se usa este año: siempre condonada (no descuenta nada).
+    mora_ahorros: { modo: "condonar" },
+    mora_intereses: { modo: "condonar" },
     prestamos: { modo: "total" },
     utilidad: { modo: "toda" },
     reparto: { modo: "proporcional_ahorro" },
@@ -66,7 +66,7 @@ export function SimuladorLiquidacionPage({ onVolver: _onVolver }: { onVolver: ()
 
   const t = data?.totales;
   const deducciones = t
-    ? t.total_prestamos + t.total_multas + t.total_mora_ahorro_cobrada + t.total_mora_intereses_cobrada
+    ? t.total_prestamos + t.total_multas
     : 0;
 
   return (
@@ -79,7 +79,7 @@ export function SimuladorLiquidacionPage({ onVolver: _onVolver }: { onVolver: ()
       cargando={loading}
       error={error}
       listo={!!data}
-      detalleImpresion={`Escenario: utilidad ${params.utilidad?.modo ?? "—"} · reparto ${params.reparto?.modo ?? "—"} · préstamos ${params.prestamos?.modo ?? "—"} · mora ahorros ${params.mora_ahorros?.modo ?? "—"} · mora intereses ${params.mora_intereses?.modo ?? "—"}`}
+      detalleImpresion={`Escenario: utilidad ${params.utilidad?.modo ?? "—"} · reparto ${params.reparto?.modo ?? "—"} · préstamos ${params.prestamos?.modo ?? "—"}`}
       resumen={
         t
           ? [
@@ -109,8 +109,6 @@ export function SimuladorLiquidacionPage({ onVolver: _onVolver }: { onVolver: ()
             { titulo: "Utilidad", tipo: "moneda" },
             { titulo: "Préstamo", tipo: "moneda" },
             { titulo: "Multas", tipo: "moneda" },
-            { titulo: "Mora ahorro", tipo: "moneda" },
-            { titulo: "Mora intereses", tipo: "moneda" },
             { titulo: "Neto a recibir", tipo: "moneda" },
           ],
           filas: (data?.socios ?? []).map((x) => [
@@ -119,8 +117,6 @@ export function SimuladorLiquidacionPage({ onVolver: _onVolver }: { onVolver: ()
             x.participacion_utilidad,
             -x.deducc_prestamo_aplicada,
             -x.deducc_multas,
-            -x.deducc_mora_ahorro,
-            -x.deducc_mora_intereses,
             x.neto_a_recibir,
           ]),
           totales: t
@@ -130,8 +126,6 @@ export function SimuladorLiquidacionPage({ onVolver: _onVolver }: { onVolver: ()
                 t.utilidad_a_repartir,
                 -t.total_prestamos,
                 -t.total_multas,
-                -t.total_mora_ahorro_cobrada,
-                -t.total_mora_intereses_cobrada,
                 t.total_neto,
               ]
             : undefined,
@@ -147,8 +141,6 @@ export function SimuladorLiquidacionPage({ onVolver: _onVolver }: { onVolver: ()
             ["Utilidad", JSON.stringify(params.utilidad)],
             ["Reparto", JSON.stringify(params.reparto)],
             ["Préstamos", JSON.stringify(params.prestamos)],
-            ["Mora de ahorros", JSON.stringify(params.mora_ahorros)],
-            ["Mora de intereses", JSON.stringify(params.mora_intereses)],
           ],
         },
       ]}
@@ -231,20 +223,6 @@ function ControlesPanel({
             ]}
           />
 
-          {/* Mora ahorros */}
-          <ModoMoraCtrl
-            label="Mora de ahorros"
-            value={params.mora_ahorros ?? { modo: "cobrar" }}
-            onChange={(v) => upd({ mora_ahorros: v })}
-          />
-
-          {/* Mora intereses */}
-          <ModoMoraCtrl
-            label="Mora de intereses"
-            value={params.mora_intereses ?? { modo: "cobrar" }}
-            onChange={(v) => upd({ mora_intereses: v })}
-          />
-
           {/* Préstamos */}
           <RadioGroup
             label="Préstamos vigentes"
@@ -264,64 +242,6 @@ function ControlesPanel({
         </div>
       </CardContent>
     </Card>
-  );
-}
-
-function ModoMoraCtrl({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: { modo: ModoMora; valor?: number };
-  onChange: (v: { modo: ModoMora; valor?: number }) => void;
-}) {
-  const opts: { key: ModoMora; label: string }[] = [
-    { key: "cobrar", label: "Cobrar" },
-    { key: "condonar", label: "Condonar" },
-    { key: "porcentaje", label: "%" },
-    { key: "manual", label: "Manual" },
-  ];
-  return (
-    <div className="space-y-1.5">
-      <Label>{label}</Label>
-      <div className="flex flex-wrap gap-1 items-center">
-        {opts.map((o) => (
-          <button
-            key={o.key}
-            onClick={() => onChange({ modo: o.key, valor: value.valor })}
-            className={`rounded-md border px-2 py-1 text-xs transition-colors ${
-              value.modo === o.key
-                ? "border-[var(--color-primary)] bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
-                : "border-[var(--color-border)] text-[var(--color-muted)] hover:border-[var(--color-primary)]/50"
-            }`}
-          >
-            {o.label}
-          </button>
-        ))}
-        {value.modo === "porcentaje" && (
-          <Input
-            type="number"
-            min={0}
-            max={1}
-            step={0.05}
-            value={value.valor ?? 0.5}
-            onChange={(e) => onChange({ modo: "porcentaje", valor: Number(e.target.value) })}
-            placeholder="0.5"
-            className="w-20 h-7"
-          />
-        )}
-        {value.modo === "manual" && (
-          <Input
-            inputMode="numeric"
-            value={value.valor ? String(value.valor) : ""}
-            onChange={(e) => onChange({ modo: "manual", valor: parseCOP(e.target.value) })}
-            placeholder="Monto"
-            className="w-28 h-7"
-          />
-        )}
-      </div>
-    </div>
   );
 }
 
@@ -435,8 +355,6 @@ function TablaSimulacion({ data }: { data: SimuladorResultado }) {
               <TableHead className="text-right">Utilidad</TableHead>
               <TableHead className="text-right">Préstamo</TableHead>
               <TableHead className="text-right">Multas</TableHead>
-              <TableHead className="text-right">Mora ahorro</TableHead>
-              <TableHead className="text-right">Mora int.</TableHead>
               <TableHead className="text-right">Neto</TableHead>
             </TableRow>
           </TableHeader>
@@ -457,14 +375,6 @@ function TablaSimulacion({ data }: { data: SimuladorResultado }) {
                 </TableCell>
                 <TableCell className="text-right tabular-nums text-xs text-[var(--color-warning)]">
                   {s.deducc_multas > 0 ? "-" + formatCOP(s.deducc_multas) : "—"}
-                </TableCell>
-                <TableCell className="text-right tabular-nums text-xs text-[var(--color-destructive)]">
-                  {s.deducc_mora_ahorro > 0 ? "-" + formatCOP(s.deducc_mora_ahorro) : "—"}
-                </TableCell>
-                <TableCell className="text-right tabular-nums text-xs text-[var(--color-destructive)]">
-                  {s.deducc_mora_intereses > 0
-                    ? "-" + formatCOP(s.deducc_mora_intereses)
-                    : "—"}
                 </TableCell>
                 <TableCell
                   className={`text-right tabular-nums font-semibold ${
@@ -490,12 +400,6 @@ function TablaSimulacion({ data }: { data: SimuladorResultado }) {
               </TableCell>
               <TableCell className="text-right tabular-nums font-semibold text-xs text-[var(--color-warning)]">
                 -{formatCOP(data.totales.total_multas)}
-              </TableCell>
-              <TableCell className="text-right tabular-nums font-semibold text-xs text-[var(--color-destructive)]">
-                -{formatCOP(data.totales.total_mora_ahorro_cobrada)}
-              </TableCell>
-              <TableCell className="text-right tabular-nums font-semibold text-xs text-[var(--color-destructive)]">
-                -{formatCOP(data.totales.total_mora_intereses_cobrada)}
               </TableCell>
               <TableCell
                 className={`text-right tabular-nums font-semibold ${

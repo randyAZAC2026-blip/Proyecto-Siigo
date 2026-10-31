@@ -62,7 +62,7 @@ const SECCIONES: { titulo: string; descripcion: string; fichas: Ficha[] }[] = [
       {
         vista: "simulador",
         titulo: "Simulador de cierre",
-        descripcion: "Prueba reglas de reparto de utilidades, mora y préstamos antes de cerrar.",
+        descripcion: "Prueba reglas de reparto de utilidades y préstamos antes de cerrar.",
         Icon: Calculator,
       },
     ],

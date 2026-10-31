@@ -13,7 +13,7 @@ export function LiquidacionPage({ onVolver: _onVolver }: { onVolver: () => void 
   const s = (fn: (f: (typeof filas)[number]) => number) => filas.reduce((t, f) => t + fn(f), 0);
   const aportes = s((f) => f.total_aportes);
   const deducciones = s(
-    (f) => f.deducc_prestamo + f.deducc_multas + (f.deducc_mora_ahorro ?? 0) + (f.deducc_mora_intereses ?? 0),
+    (f) => f.deducc_prestamo + f.deducc_multas,
   );
   const neto = s((f) => f.neto_a_recibir);
   const enNegativo = filas.filter((f) => f.neto_a_recibir < 0).length;
@@ -21,7 +21,7 @@ export function LiquidacionPage({ onVolver: _onVolver }: { onVolver: () => void 
   return (
     <InformeLayout
       titulo="Liquidación"
-      descripcion="Si el ciclo se cerrara hoy: cada socio recibe lo que aportó (ahorro, actividades, rifa e intereses pagados) menos lo que debe (saldo de préstamo, multas y mora)."
+      descripcion="Si el ciclo se cerrara hoy: cada socio recibe lo que aportó (ahorro, actividades, rifa e intereses pagados) menos lo que debe (saldo de préstamo y multas)."
       Icon={Wallet}
       horizontal
       cargando={loading}
@@ -51,8 +51,6 @@ export function LiquidacionPage({ onVolver: _onVolver }: { onVolver: () => void 
             { titulo: "Total aportes", tipo: "moneda" },
             { titulo: "Saldo préstamo", tipo: "moneda" },
             { titulo: "Multas", tipo: "moneda" },
-            { titulo: "Mora ahorro", tipo: "moneda" },
-            { titulo: "Mora intereses", tipo: "moneda" },
             { titulo: "Neto a recibir", tipo: "moneda" },
           ],
           filas: filas.map((f) => [
@@ -64,8 +62,6 @@ export function LiquidacionPage({ onVolver: _onVolver }: { onVolver: () => void 
             f.total_aportes,
             -f.deducc_prestamo,
             -f.deducc_multas,
-            -(f.deducc_mora_ahorro ?? 0),
-            -(f.deducc_mora_intereses ?? 0),
             f.neto_a_recibir,
           ]),
           totales: [
@@ -77,8 +73,6 @@ export function LiquidacionPage({ onVolver: _onVolver }: { onVolver: () => void 
             aportes,
             -s((f) => f.deducc_prestamo),
             -s((f) => f.deducc_multas),
-            -s((f) => f.deducc_mora_ahorro ?? 0),
-            -s((f) => f.deducc_mora_intereses ?? 0),
             neto,
           ],
         },
