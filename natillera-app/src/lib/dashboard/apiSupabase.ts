@@ -34,6 +34,7 @@ import type {
   CategoriaBanco,
   SugerenciaConciliacion,
   LineaDesgloseExtracto,
+  PrestamoDetallado,
   ResultadoDeshacerDesglose,
   ResultadoSugerencias,
   ReglaBanco,
@@ -781,6 +782,102 @@ async function conciliarExtracto(extracto_id: number, lineas: LineaConciliacion[
   );
 }
 
+/** Trae todas las filas de una consulta en páginas de 1000 (tope de la API). */
+async function todasLasFilas<T>(
+  consulta: (desde: number, hasta: number) => PromiseLike<{ data: unknown; error: { message: string } | null }>,
+): Promise<T[]> {
+  const filas: T[] = [];
+  for (let desde = 0; ; desde += 1000) {
+    const { data, error } = await consulta(desde, desde + 999);
+    if (error) throw new Error(error.message);
+    const pagina = (data ?? []) as T[];
+    filas.push(...pagina);
+    if (pagina.length < 1000) return filas;
+  }
+}
+
+/**
+ * Préstamos con sus abonos, intereses y la salida del banco con que se
+ * entregaron. Sin socioId trae los de todos los socios.
+ */
+async function detalladoPrestamos(socioId?: number | null): Promise<PrestamoDetallado[]> {
+  requireSupabaseEnv();
+  type FilaPrestamo = {
+    id: number;
+    socio_id: number;
+    transaccion_id: number | null;
+    monto_prestado: number;
+    tasa_interes: number | string | null;
+    saldo_pendiente: number;
+    fecha_desembolso: string | null;
+    estado: string;
+    deudor: { nombre: string } | null;
+    responsable: { nombre: string } | null;
+  };
+  const prestamos = await todasLasFilas<FilaPrestamo>((desde, hasta) => {
+    // prestamos tiene dos relaciones con socios: se nombra cada una.
+    let q2 = supabase
+      .from("prestamos")
+      .select(
+        "id, socio_id, transaccion_id, monto_prestado, tasa_interes, saldo_pendiente, fecha_desembolso, estado, " +
+          "deudor:socios!prestamos_socio_id_fkey(nombre), responsable:socios!prestamos_responsable_socio_id_fkey(nombre)",
+      )
+      .order("fecha_desembolso")
+      .order("id")
+      .range(desde, hasta);
+    if (socioId != null) q2 = q2.eq("socio_id", socioId);
+    return q2;
+  });
+  if (prestamos.length === 0) return [];
+  const ids = prestamos.map((p) => p.id);
+  const txIds = prestamos.map((p) => p.transaccion_id).filter((id): id is number => id != null);
+
+  type FilaAbono = { prestamo_id: number; fecha_abono: string | null; intereses_pagados: number | null; capital_pagado: number | null };
+  type FilaBanco = { transaccion_id: number; movimientos_banco: { fecha: string | null; descripcion: string | null; monto: number } | null };
+  const [abonos, bancos] = await Promise.all([
+    todasLasFilas<FilaAbono>((desde, hasta) =>
+      supabase
+        .from("abonos_prestamos")
+        .select("prestamo_id, fecha_abono, intereses_pagados, capital_pagado")
+        .in("prestamo_id", ids)
+        .order("fecha_abono")
+        .order("id")
+        .range(desde, hasta),
+    ),
+    txIds.length
+      ? todasLasFilas<FilaBanco>((desde, hasta) =>
+          supabase
+            .from("conciliaciones")
+            .select("transaccion_id, movimientos_banco(fecha, descripcion, monto)")
+            .in("transaccion_id", txIds)
+            .range(desde, hasta),
+        )
+      : Promise.resolve([] as FilaBanco[]),
+  ]);
+
+  const abonosDe = new Map<number, PrestamoDetallado["abonos"]>();
+  for (const a of abonos) {
+    const lista = abonosDe.get(a.prestamo_id) ?? [];
+    lista.push({ fecha: a.fecha_abono, intereses: a.intereses_pagados ?? 0, capital: a.capital_pagado ?? 0 });
+    abonosDe.set(a.prestamo_id, lista);
+  }
+  const bancoDe = new Map(bancos.filter((b) => b.movimientos_banco).map((b) => [b.transaccion_id, b.movimientos_banco!]));
+
+  return prestamos.map((p) => ({
+    prestamo_id: p.id,
+    socio_id: p.socio_id,
+    socio: p.deudor?.nombre ?? "?",
+    responsable: p.responsable?.nombre ?? null,
+    fecha_desembolso: p.fecha_desembolso,
+    monto_prestado: p.monto_prestado,
+    tasa: p.tasa_interes == null ? null : Number(p.tasa_interes),
+    saldo: p.saldo_pendiente,
+    estado: p.estado,
+    banco: p.transaccion_id != null ? (bancoDe.get(p.transaccion_id) ?? null) : null,
+    abonos: abonosDe.get(p.id) ?? [],
+  }));
+}
+
 /** Pagos unidos a un movimiento del banco, para ver o corregir su desglose. */
 async function desgloseExtracto(id: number): Promise<LineaDesgloseExtracto[]> {
   type Fila = {
@@ -1353,6 +1450,7 @@ export const apiSupabase = {
   sugerenciasConciliacion,
   desgloseExtracto,
   deshacerDesglose,
+  detalladoPrestamos,
   aceptarSugerencias,
   categorizarExtractos,
   aplicarReglas,

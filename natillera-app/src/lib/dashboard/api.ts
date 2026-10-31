@@ -429,6 +429,24 @@ export interface Extracto {
   categoria?: CategoriaBanco | null;
 }
 
+/** Un préstamo con todo su historial, para el detallado en Excel. */
+export interface PrestamoDetallado {
+  prestamo_id: number;
+  socio_id: number;
+  socio: string;
+  /** Socio que recomendó al deudor (préstamos a referidos). */
+  responsable: string | null;
+  fecha_desembolso: string | null;
+  monto_prestado: number;
+  /** Tasa mensual guardada (0.05 = 5%). */
+  tasa: number | null;
+  saldo: number;
+  estado: string;
+  /** Salida del banco con que se entregó, si está conciliada. */
+  banco: { fecha: string | null; descripcion: string | null; monto: number } | null;
+  abonos: { fecha: string | null; intereses: number; capital: number }[];
+}
+
 /** Un pago unido a un movimiento del banco (lo que muestra su desglose). */
 export interface LineaDesgloseExtracto {
   transaccion_id: number;
@@ -741,6 +759,7 @@ const apiHttp = {
   // Conciliación fase 2: solo existe con Supabase (vistas y funciones en la base).
   sugerenciasConciliacion: (): Promise<SugerenciaConciliacion[]> => soloNube(),
   desgloseExtracto: (_id: number): Promise<LineaDesgloseExtracto[]> => soloNube(),
+  detalladoPrestamos: (_socioId?: number | null): Promise<PrestamoDetallado[]> => soloNube(),
   deshacerDesglose: (_id: number): Promise<ResultadoDeshacerDesglose> => soloNube(),
   aceptarSugerencias: (_ids: number[]): Promise<ResultadoSugerencias> => soloNube(),
   categorizarExtractos: (_ids: number[], _categoria: CategoriaBanco | null): Promise<{ actualizados: number }> =>

@@ -22,6 +22,8 @@ import {
 import { formatCOP } from "@/lib/natillera/format";
 import { api, type Deudor, type MatrizPrestamos, type MoraReporte, type MoraPrestamo } from "@/lib/dashboard/api";
 import { useApi } from "@/lib/dashboard/useApi";
+import { USA_SUPABASE } from "@/lib/dashboard/api";
+import { DetalladoPrestamosButton } from "@/components/dashboard/DetalladoPrestamosButton";
 
 type Orden = "saldo_desc" | "mora_desc" | "nombre";
 
@@ -177,7 +179,8 @@ export function PrestamosPage({ onVolver, modoSocio = false }: { onVolver?: () =
               : "Un socio por fila con todos sus préstamos acumulados. Clic para ver el detalle."}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-start gap-2">
+          {USA_SUPABASE && !modoSocio && <DetalladoPrestamosButton />}
           <Button variant="outline" size="sm" onClick={reload} disabled={loading}>
             <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
             Actualizar
@@ -521,6 +524,14 @@ function Detalle({
 
   return (
     <div className="space-y-4">
+      {USA_SUPABASE && (
+        <div className="flex justify-end">
+          <DetalladoPrestamosButton
+            socio={{ id: fila.socio_id, nombre: fila.socio }}
+            etiqueta={`Detallado de ${fila.socio} en Excel`}
+          />
+        </div>
+      )}
       {fila.prestamos.length > 1 && (
         <div>
           <div className="text-xs font-semibold text-[var(--color-muted)] uppercase tracking-wide mb-2">
