@@ -42,27 +42,16 @@ CREATE TABLE IF NOT EXISTS actividad_boletas (
 CREATE INDEX IF NOT EXISTS idx_act_bol_actividad ON actividad_boletas(actividad_id);
 CREATE INDEX IF NOT EXISTS idx_act_bol_socio     ON actividad_boletas(socio_id);
 
--- RLS igual que el resto del esquema de la natillera
+-- RLS: se activa aquí, pero las políticas (lectura para usuarios de la
+-- natillera, escritura para admin/tesorero, nada para anon) viven en
+-- supabase-cerrar-actividades.sql. Córrelo después de este archivo.
+-- Antes aquí había políticas USING (true) que abrían las tablas a la anon key.
 ALTER TABLE actividades        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE actividad_boletas  ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "lectura publica actividades"   ON actividades;
-CREATE POLICY        "lectura publica actividades"   ON actividades FOR SELECT USING (true);
-DROP POLICY IF EXISTS "escritura publica actividades" ON actividades;
-CREATE POLICY        "escritura publica actividades" ON actividades FOR INSERT WITH CHECK (true);
-DROP POLICY IF EXISTS "update publica actividades"    ON actividades;
-CREATE POLICY        "update publica actividades"    ON actividades FOR UPDATE USING (true);
-
-DROP POLICY IF EXISTS "lectura publica act_boletas"   ON actividad_boletas;
-CREATE POLICY        "lectura publica act_boletas"   ON actividad_boletas FOR SELECT USING (true);
-DROP POLICY IF EXISTS "escritura publica act_boletas" ON actividad_boletas;
-CREATE POLICY        "escritura publica act_boletas" ON actividad_boletas FOR INSERT WITH CHECK (true);
-DROP POLICY IF EXISTS "update publica act_boletas"    ON actividad_boletas;
-CREATE POLICY        "update publica act_boletas"    ON actividad_boletas FOR UPDATE USING (true);
-
--- Resumen agregado por actividad
+-- Resumen agregado por actividad (security_invoker: respeta el RLS de quien consulta)
 DROP VIEW IF EXISTS vw_actividades_resumen;
-CREATE VIEW vw_actividades_resumen AS
+CREATE VIEW vw_actividades_resumen WITH (security_invoker = true) AS
 SELECT
   a.id, a.nombre, a.tipo, a.fecha_evento, a.valor_boleta, a.premios,
   a.estado, a.total_boletas, a.descripcion, a.notas, a.creado_en,
