@@ -44,6 +44,7 @@ import { AgregarMovimientoModal } from "@/components/dashboard/AgregarMovimiento
 import { ImportarExtractoModal } from "@/components/dashboard/ImportarExtractoModal";
 import { BorrarRangoModal } from "@/components/dashboard/BorrarRangoModal";
 import { DesgloseExtractoModal } from "@/components/dashboard/DesgloseExtractoModal";
+import { DescargarExtractosButton } from "@/components/dashboard/DescargarExtractosButton";
 
 const BANCO_FIJO = "Bancolombia";
 
@@ -133,6 +134,7 @@ export function BancoPage({ onVolver }: { onVolver: () => void }) {
                 <ListChecks className="size-4" />
                 Reglas
               </Button>
+              <DescargarExtractosButton desde={desde || undefined} hasta={hasta || undefined} />
             </>
           )}
           <Button

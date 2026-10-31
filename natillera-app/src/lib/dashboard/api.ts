@@ -429,6 +429,21 @@ export interface Extracto {
   categoria?: CategoriaBanco | null;
 }
 
+/** Un movimiento del banco tal como sale en la descarga de extractos. */
+export interface ExtractoDescarga {
+  banco: string;
+  fecha: string | null;
+  descripcion: string | null;
+  dependencia: string | null;
+  socio_nombre: string | null;
+  monto: number;
+  saldo_cuenta: number | null;
+  estado: EstadoExtracto;
+  detalle_origen: string | null;
+  categoria: CategoriaBanco | null;
+  valor_pendiente: number;
+}
+
 /** Un préstamo con todo su historial, para el detallado en Excel. */
 export interface PrestamoDetallado {
   prestamo_id: number;
@@ -760,6 +775,7 @@ const apiHttp = {
   sugerenciasConciliacion: (): Promise<SugerenciaConciliacion[]> => soloNube(),
   desgloseExtracto: (_id: number): Promise<LineaDesgloseExtracto[]> => soloNube(),
   detalladoPrestamos: (_socioId?: number | null): Promise<PrestamoDetallado[]> => soloNube(),
+  extractosRango: (_desde: string, _hasta: string): Promise<ExtractoDescarga[]> => soloNube(),
   deshacerDesglose: (_id: number): Promise<ResultadoDeshacerDesglose> => soloNube(),
   aceptarSugerencias: (_ids: number[]): Promise<ResultadoSugerencias> => soloNube(),
   categorizarExtractos: (_ids: number[], _categoria: CategoriaBanco | null): Promise<{ actualizados: number }> =>

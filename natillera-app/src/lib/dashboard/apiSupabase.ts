@@ -35,6 +35,7 @@ import type {
   SugerenciaConciliacion,
   LineaDesgloseExtracto,
   PrestamoDetallado,
+  ExtractoDescarga,
   ResultadoDeshacerDesglose,
   ResultadoSugerencias,
   ReglaBanco,
@@ -693,6 +694,36 @@ async function extractos(filtros: FiltrosExtracto = {}): Promise<ExtractosPage> 
     categoria: (m.categoria ?? null) as CategoriaBanco | null,
   }));
   return { total: count ?? filas.length, limit, offset, filas };
+}
+
+/** Todos los movimientos del banco entre dos fechas (todas las cuentas), para descargar. */
+async function extractosRango(desde: string, hasta: string): Promise<ExtractoDescarga[]> {
+  requireSupabaseEnv();
+  type Fila = {
+    banco: string;
+    fecha: string | null;
+    descripcion: string | null;
+    dependencia: string | null;
+    socio_nombre: string | null;
+    monto: number;
+    saldo_cuenta: number | null;
+    estado: EstadoExtracto;
+    detalle_origen: string | null;
+    categoria: CategoriaBanco | null;
+    valor_pendiente: number | null;
+  };
+  const filas = await todasLasFilas<Fila>((d, h) =>
+    supabase
+      .from("vw_extracto_estado")
+      .select("banco, fecha, descripcion, dependencia, socio_nombre, monto, saldo_cuenta, estado, detalle_origen, categoria, valor_pendiente")
+      .gte("fecha", desde)
+      .lte("fecha", hasta)
+      .order("banco")
+      .order("fecha")
+      .order("id")
+      .range(d, h),
+  );
+  return filas.map((f) => ({ ...f, valor_pendiente: Number(f.valor_pendiente ?? 0) }));
 }
 
 // -------------------- conciliación fase 2 --------------------
@@ -1451,6 +1482,7 @@ export const apiSupabase = {
   desgloseExtracto,
   deshacerDesglose,
   detalladoPrestamos,
+  extractosRango,
   aceptarSugerencias,
   categorizarExtractos,
   aplicarReglas,
