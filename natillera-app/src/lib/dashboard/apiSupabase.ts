@@ -26,6 +26,10 @@ import type {
   HistorialSocio,
   Periodo,
   ExtractosPage,
+  Extracto,
+  PrestamoReferido,
+  Referido,
+  TasasPrestamo,
   EstadoExtracto,
   CategoriaBanco,
   SugerenciaConciliacion,
@@ -84,7 +88,102 @@ async function socios(): Promise<Socio[]> {
     multas_pagadas: r.multas_pagadas ?? 0,
     total_aportado: r.total_aportado ?? 0,
     saldo_prestamos: r.saldo_prestamos ?? 0,
+    saldo_referidos: Number(r.saldo_referidos ?? 0),
   }));
+}
+
+// -------------------- préstamos a referidos --------------------
+
+async function prestamosReferidos(): Promise<PrestamoReferido[]> {
+  requireSupabaseEnv();
+  const filas = await q<any[]>(
+    supabase.from("vw_prestamos_referidos").select("*").order("fecha_desembolso", { ascending: false }),
+  );
+  return filas.map((p) => ({
+    ...p,
+    monto_prestado: Number(p.monto_prestado),
+    tasa_interes: Number(p.tasa_interes),
+    saldo: Number(p.saldo),
+    intereses_pagados: Number(p.intereses_pagados),
+  }));
+}
+
+async function referidos(): Promise<Referido[]> {
+  requireSupabaseEnv();
+  return q<Referido[]>(
+    supabase
+      .from("socios")
+      .select("id, nombre, identificacion, telefono, referido_por, estado")
+      .eq("tipo", "referido")
+      .order("nombre"),
+  );
+}
+
+async function crearReferido(r: { nombre: string; identificacion?: string; telefono?: string; referido_por: number }) {
+  requireSupabaseEnv();
+  return q<{ id: number }>(
+    supabase
+      .from("socios")
+      .insert({
+        nombre: r.nombre.trim(),
+        identificacion: r.identificacion?.trim() || null,
+        telefono: r.telefono?.trim() || null,
+        referido_por: r.referido_por,
+        tipo: "referido",
+        estado: "activo",
+        cuota_sostenimiento: 0,
+      })
+      .select("id")
+      .single(),
+  );
+}
+
+async function tasasPrestamo(): Promise<TasasPrestamo> {
+  requireSupabaseEnv();
+  const filas = await q<{ clave: string; valor: number }[]>(
+    supabase.from("configuracion_natillera").select("clave, valor").like("clave", "tasa_prestamo_%"),
+  );
+  const de = (c: string) => {
+    const f = filas.find((x) => x.clave === c);
+    return f ? Number(f.valor) : null;
+  };
+  return { socios: de("tasa_prestamo_socios"), referidos: de("tasa_prestamo_referidos") };
+}
+
+async function guardarTasa(tipo: "socios" | "referidos", valor: number) {
+  requireSupabaseEnv();
+  const { error } = await supabase
+    .from("configuracion_natillera")
+    .update({ valor, actualizado_en: new Date().toISOString() })
+    .eq("clave", `tasa_prestamo_${tipo}`);
+  if (error) throw new Error(error.message);
+  return { ok: true as const };
+}
+
+/** Préstamo entregado en efectivo (sin movimiento del banco). */
+async function crearPrestamo(p: {
+  socio_id: number;
+  monto: number;
+  fecha: string;
+  intereses_descontados?: number;
+  notas?: string;
+}) {
+  requireSupabaseEnv();
+  return q<{ ok: true; prestamo_id: number; entregado: number }>(
+    supabase.rpc("natillera_crear_prestamo", {
+      p_socio_id: p.socio_id,
+      p_monto: p.monto,
+      p_fecha: p.fecha,
+      p_intereses_descontados: p.intereses_descontados ?? 0,
+      p_notas: p.notas ?? null,
+    }),
+  );
+}
+
+/** Salidas del banco aún sin conciliar (para entregar un préstamo por banco). */
+async function egresosPendientes(): Promise<Extracto[]> {
+  const r = await extractos({ banco: "Bancolombia", estado: "pendiente", limit: 300 });
+  return r.filas.filter((f) => f.monto < 0);
 }
 
 async function periodos(): Promise<Periodo[]> {
@@ -1196,6 +1295,13 @@ async function actualizarActividad(id: number, patch: ActividadPatch) {
 export const apiSupabase = {
   resumen,
   panel,
+  prestamosReferidos,
+  referidos,
+  crearReferido,
+  tasasPrestamo,
+  guardarTasa,
+  crearPrestamo,
+  egresosPendientes,
   sugerenciasConciliacion,
   aceptarSugerencias,
   categorizarExtractos,

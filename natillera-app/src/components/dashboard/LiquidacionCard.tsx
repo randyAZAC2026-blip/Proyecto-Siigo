@@ -32,7 +32,7 @@ export function LiquidacionCard({ filas }: { filas: Liquidacion[] }) {
       <CardHeader>
         <CardTitle className="text-base">Detalle por socio</CardTitle>
         <CardDescription>
-          Aportes (+) menos deducciones (−). Neto en rojo: el socio queda debiendo a la natillera.
+          Aportes (+) menos deducciones (−). Neto en rojo: el socio queda debiendo a la natillera. * El préstamo incluye lo que deben los referidos que el socio recomendó.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -79,8 +79,16 @@ export function LiquidacionCard({ filas }: { filas: Liquidacion[] }) {
                   <TableCell className="text-right tabular-nums text-xs">
                     {formatCOP(f.intereses_pagados)}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums text-xs border-l text-[var(--color-warning)]">
+                  <TableCell
+                    className="text-right tabular-nums text-xs border-l text-[var(--color-warning)]"
+                    title={
+                      (f.deducc_prestamo_referidos ?? 0) > 0
+                        ? `Incluye ${formatCOP(f.deducc_prestamo_referidos ?? 0)} de préstamos de sus referidos`
+                        : undefined
+                    }
+                  >
                     {f.deducc_prestamo > 0 ? "-" + formatCOP(f.deducc_prestamo) : "—"}
+                    {(f.deducc_prestamo_referidos ?? 0) > 0 && <sup className="ml-0.5">*</sup>}
                   </TableCell>
                   <TableCell className="text-right tabular-nums text-xs text-[var(--color-warning)]">
                     {f.deducc_multas > 0 ? "-" + formatCOP(f.deducc_multas) : "—"}

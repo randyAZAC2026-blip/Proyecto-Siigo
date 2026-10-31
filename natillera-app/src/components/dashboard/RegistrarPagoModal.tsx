@@ -120,7 +120,8 @@ export function RegistrarPagoModal({ open, onClose, onGuardado, preset, titulo }
   }, [open, periodos.data, preset.periodo_id, preset.fecha_pago]);
 
   const sociosFiltrados = useMemo(() => {
-    const lista = (socios.data ?? []).filter((s) => s.tipo === "persona");
+    // Socios y referidos (estos últimos pagan intereses y abonos de sus préstamos).
+    const lista = (socios.data ?? []).filter((s) => s.tipo === "persona" || s.tipo === "referido");
     if (!busqueda.trim()) return lista;
     const q = busqueda.toLowerCase();
     return lista.filter((s) => s.nombre.toLowerCase().includes(q));
@@ -265,7 +266,7 @@ export function RegistrarPagoModal({ open, onClose, onGuardado, preset, titulo }
                 <option value="">— Elige —</option>
                 {sociosFiltrados.map((s: Socio) => (
                   <option key={s.id} value={s.id}>
-                    #{s.id} · {s.nombre}
+                    #{s.id} · {s.nombre}{s.tipo === "referido" ? " (referido)" : ""}
                   </option>
                 ))}
               </select>

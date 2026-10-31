@@ -19,6 +19,7 @@ import { ActividadesPage } from "@/pages/ActividadesPage";
 import { EstadoCuentaPage } from "@/pages/EstadoCuentaPage";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { InformesPage } from "@/pages/InformesPage";
+import { ReferidosPage } from "@/pages/ReferidosPage";
 import { MiInicioPage } from "@/pages/socio/MiInicioPage";
 import { MiLiquidacionPage } from "@/pages/socio/MiLiquidacionPage";
 import { USA_SUPABASE } from "@/lib/dashboard/api";
@@ -216,6 +217,7 @@ function Estructura({ perfil, onSalir }: { perfil: Perfil | null; onSalir?: () =
                 {vista === "control" && <ControlPagosPage onVolver={volverPanel} />}
                 {vista === "mora-ahorros" && <MoraAhorrosPage onVolver={volverPanel} />}
                 {vista === "prestamos" && <PrestamosPage onVolver={volverPanel} />}
+                {vista === "referidos" && <ReferidosPage onVolver={volverPanel} />}
                 {vista === "mora-intereses" && <MoraInteresesPage onVolver={volverPanel} />}
                 {vista === "liquidacion" && <LiquidacionPage onVolver={volverPanel} />}
                 {vista === "simulador" && <SimuladorLiquidacionPage onVolver={volverPanel} />}

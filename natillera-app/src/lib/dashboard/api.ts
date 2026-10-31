@@ -129,7 +129,7 @@ export interface TotalesGenerales {
 export interface Socio {
   id: number;
   nombre: string;
-  tipo: "persona" | "cuenta_admin";
+  tipo: "persona" | "cuenta_admin" | "referido";
   estado: "activo" | "inactivo";
   cuota_sostenimiento: number;
   ahorro: number;
@@ -141,6 +141,40 @@ export interface Socio {
   multas_pagadas: number;
   total_aportado: number;
   saldo_prestamos: number;
+  /** Saldo pendiente de los préstamos de sus referidos (responde por ellos). */
+  saldo_referidos?: number;
+}
+
+/** Persona externa que pidió un préstamo recomendada por un socio. */
+export interface Referido {
+  id: number;
+  nombre: string;
+  identificacion: string | null;
+  telefono: string | null;
+  referido_por: number;
+  estado: "activo" | "inactivo";
+}
+
+export interface PrestamoReferido {
+  prestamo_id: number;
+  referido_id: number;
+  referido: string;
+  identificacion: string | null;
+  telefono: string | null;
+  responsable_id: number;
+  responsable: string;
+  monto_prestado: number;
+  tasa_interes: number;
+  fecha_desembolso: string | null;
+  estado: "activo" | "pagado";
+  saldo: number;
+  intereses_pagados: number;
+}
+
+/** Tasas mensuales (0.05 = 5%). null si no están configuradas. */
+export interface TasasPrestamo {
+  socios: number | null;
+  referidos: number | null;
 }
 
 export interface Liquidacion {
@@ -157,6 +191,8 @@ export interface Liquidacion {
   deducc_mora_intereses: number;
   deducc_mora_ahorro: number;
   neto_a_recibir: number;
+  /** Parte de deducc_prestamo que viene de préstamos de sus referidos. */
+  deducc_prestamo_referidos?: number;
 }
 
 export interface MoraDetalle {
@@ -661,6 +697,22 @@ const apiHttp = {
       clasificados?: number;
       errores: { fila: number; motivo: string }[];
     }>("/api/extractos/importar", { banco, movimientos }),
+
+  // Préstamos a referidos: solo con Supabase.
+  prestamosReferidos: (): Promise<PrestamoReferido[]> => soloNube(),
+  referidos: (): Promise<Referido[]> => soloNube(),
+  crearReferido: (_r: { nombre: string; identificacion?: string; telefono?: string; referido_por: number }): Promise<{ id: number }> =>
+    soloNube(),
+  tasasPrestamo: (): Promise<TasasPrestamo> => soloNube(),
+  guardarTasa: (_tipo: "socios" | "referidos", _valor: number): Promise<{ ok: true }> => soloNube(),
+  crearPrestamo: (_p: {
+    socio_id: number;
+    monto: number;
+    fecha: string;
+    intereses_descontados?: number;
+    notas?: string;
+  }): Promise<{ ok: true; prestamo_id: number; entregado: number }> => soloNube(),
+  egresosPendientes: (): Promise<Extracto[]> => soloNube(),
 
   // Conciliación fase 2: solo existe con Supabase (vistas y funciones en la base).
   sugerenciasConciliacion: (): Promise<SugerenciaConciliacion[]> => soloNube(),

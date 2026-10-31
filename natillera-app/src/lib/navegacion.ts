@@ -12,6 +12,7 @@ import {
   PiggyBank,
   Receipt,
   Sparkles,
+  UserPlus,
   Users,
   Wallet,
 } from "lucide-react";
@@ -25,6 +26,7 @@ export type Vista =
   | "control"
   | "mora-ahorros"
   | "prestamos"
+  | "referidos"
   | "mora-intereses"
   | "liquidacion"
   | "simulador"
@@ -63,6 +65,7 @@ export const GRUPOS_ADMIN: Grupo[] = [
       { key: "banco", label: "Banco", Icon: Landmark },
       { key: "control", label: "Control de pagos", Icon: CheckCircle2 },
       { key: "prestamos", label: "Préstamos", Icon: HandCoins },
+      { key: "referidos", label: "Referidos", Icon: UserPlus },
       { key: "actividades", label: "Actividades", corto: "Rifas", Icon: Sparkles },
     ],
   },
