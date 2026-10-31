@@ -222,7 +222,9 @@ async function deudores(): Promise<Deudor[]> {
   const prestamos = await q<any[]>(
     supabase
       .from("prestamos")
-      .select("id, socio_id, monto_prestado, fecha_desembolso, socios(nombre)")
+      // prestamos tiene dos relaciones con socios (deudor y responsable):
+      // hay que decir cuál, o PostgREST responde "more than one relationship".
+      .select("id, socio_id, monto_prestado, fecha_desembolso, socios!prestamos_socio_id_fkey(nombre)")
       .eq("estado", "activo")
       .gt("monto_prestado", 0),
   );
