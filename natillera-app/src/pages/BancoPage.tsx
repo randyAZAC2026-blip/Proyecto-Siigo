@@ -448,8 +448,10 @@ function ExtractoRow({
         // Un movimiento ya cubierto no se vuelve a registrar: eso duplicaba pagos.
         if (fila.estado === "conciliado" || fila.estado === "excedido") {
           window.alert(
-            `Este movimiento ya está ${fila.estado === "conciliado" ? "conciliado" : "conciliado de más"} con ${fila.n_transacciones ?? 0} pago(s) registrados. ` +
-              "No hace falta registrarlo otra vez.",
+            fila.estado === "conciliado" && !fila.n_transacciones
+              ? "Este movimiento ya venía conciliado desde el Excel. No hace falta registrarlo otra vez."
+              : `Este movimiento ya está ${fila.estado === "conciliado" ? "conciliado" : "conciliado de más"} con ${fila.n_transacciones ?? 0} pago(s) registrados. ` +
+                  "No hace falta registrarlo otra vez.",
           );
           return;
         }
@@ -488,7 +490,10 @@ function ExtractoRow({
   const pendienteTxt =
     fila.valor_pendiente != null ? formatCOP(Math.abs(fila.valor_pendiente)) : "";
   const ESTADO_UI: Record<EstadoExtracto, { color: string; titulo: string }> = {
-    conciliado: { color: "bg-[var(--color-success)]", titulo: "Conciliado" },
+    conciliado: {
+      color: "bg-[var(--color-success)]",
+      titulo: fila.estado === "conciliado" && !fila.n_transacciones ? "Conciliado en el Excel" : "Conciliado",
+    },
     parcial: { color: "bg-[var(--color-warning)]", titulo: `Parcial — faltan ${pendienteTxt}. Clic en el monto para completar` },
     excedido: { color: "bg-[var(--color-destructive)] ring-2 ring-[var(--color-destructive)]/30", titulo: `Excedido — hay ${pendienteTxt} unido de más. Revisar` },
     pendiente: { color: "bg-[var(--color-destructive)]", titulo: "Pendiente — clic en el monto para registrar el pago" },
