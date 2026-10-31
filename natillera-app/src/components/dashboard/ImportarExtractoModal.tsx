@@ -98,6 +98,7 @@ export function ImportarExtractoModal({ open, onClose, onImportado }: Props) {
   const [resultado, setResultado] = useState<{
     insertados: number;
     duplicados: number;
+    clasificados?: number;
     errores: { fila: number; motivo: string }[];
   } | null>(null);
 
@@ -279,6 +280,12 @@ export function ImportarExtractoModal({ open, onClose, onImportado }: Props) {
               </div>
               <p>• Insertados: <strong>{resultado.insertados}</strong></p>
               <p>• Ya estaban (omitidos): <strong>{resultado.duplicados}</strong></p>
+              {(resultado.clasificados ?? 0) > 0 && (
+                <p>• Clasificados por las reglas (gastos o rendimientos del banco): <strong>{resultado.clasificados}</strong></p>
+              )}
+              <p className="pt-1 text-xs text-[var(--color-muted)]">
+                Revisa el botón <strong>Sugerencias</strong> para conciliar lo que ya coincide con pagos registrados.
+              </p>
             </div>
           )}
 

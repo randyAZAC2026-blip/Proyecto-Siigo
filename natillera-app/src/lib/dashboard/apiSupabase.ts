@@ -27,6 +27,10 @@ import type {
   Periodo,
   ExtractosPage,
   EstadoExtracto,
+  CategoriaBanco,
+  SugerenciaConciliacion,
+  ResultadoSugerencias,
+  ReglaBanco,
   Panel,
   FiltrosExtracto,
   Transaccion,
@@ -582,8 +586,67 @@ async function extractos(filtros: FiltrosExtracto = {}): Promise<ExtractosPage> 
     valor_conciliado: Number(m.valor_conciliado ?? 0),
     valor_pendiente: Number(m.valor_pendiente ?? 0),
     n_transacciones: Number(m.n_transacciones ?? 0),
+    categoria: (m.categoria ?? null) as CategoriaBanco | null,
   }));
   return { total: count ?? filas.length, limit, offset, filas };
+}
+
+// -------------------- conciliación fase 2 --------------------
+
+async function sugerenciasConciliacion(): Promise<SugerenciaConciliacion[]> {
+  requireSupabaseEnv();
+  const filas = await q<any[]>(
+    supabase.from("vw_sugerencias_conciliacion").select("*").order("fecha", { ascending: false }),
+  );
+  return filas.map((s) => ({
+    ...s,
+    monto: Number(s.monto),
+    socio_id: Number(s.socio_id),
+    dias: Number(s.dias),
+    transaccion_ids: (s.transaccion_ids ?? []).map(Number),
+  }));
+}
+
+async function aceptarSugerencias(ids: number[]): Promise<ResultadoSugerencias> {
+  requireSupabaseEnv();
+  return q<ResultadoSugerencias>(supabase.rpc("natillera_aceptar_sugerencias", { p_extracto_ids: ids }));
+}
+
+async function categorizarExtractos(ids: number[], categoria: CategoriaBanco | null) {
+  requireSupabaseEnv();
+  return q<{ actualizados: number }>(
+    supabase.rpc("natillera_categorizar_extractos", { p_ids: ids, p_categoria: categoria }),
+  );
+}
+
+async function aplicarReglas(): Promise<number> {
+  requireSupabaseEnv();
+  return q<number>(supabase.rpc("natillera_aplicar_reglas", {}));
+}
+
+async function reglasBanco(): Promise<ReglaBanco[]> {
+  requireSupabaseEnv();
+  return q<ReglaBanco[]>(
+    supabase.from("reglas_banco").select("id, nombre, patron, tipo, categoria, activa").order("id"),
+  );
+}
+
+async function guardarRegla(r: Omit<ReglaBanco, "id" | "activa">): Promise<ReglaBanco> {
+  requireSupabaseEnv();
+  return q<ReglaBanco>(
+    supabase
+      .from("reglas_banco")
+      .insert({ nombre: r.nombre.trim(), patron: r.patron.trim(), tipo: r.tipo, categoria: r.categoria })
+      .select("id, nombre, patron, tipo, categoria, activa")
+      .single(),
+  );
+}
+
+async function cambiarRegla(id: number, patch: Partial<Pick<ReglaBanco, "activa">>) {
+  requireSupabaseEnv();
+  const { error } = await supabase.from("reglas_banco").update(patch).eq("id", id);
+  if (error) throw new Error(error.message);
+  return { ok: true as const };
 }
 
 // -------------------- conciliación (RPC, todo o nada) --------------------
@@ -716,7 +779,7 @@ async function importarExtracto(banco: string, movimientos: unknown[]) {
       dependencia: m.dependencia ?? m.cuenta ?? null,
     };
   });
-  return q<{ insertados: number; duplicados: number; errores: { fila: number; motivo: string }[] }>(
+  return q<{ insertados: number; duplicados: number; clasificados?: number; errores: { fila: number; motivo: string }[] }>(
     supabase.rpc("natillera_importar_extracto", { p_banco: banco, p_filas: filas }),
   );
 }
@@ -1133,6 +1196,13 @@ async function actualizarActividad(id: number, patch: ActividadPatch) {
 export const apiSupabase = {
   resumen,
   panel,
+  sugerenciasConciliacion,
+  aceptarSugerencias,
+  categorizarExtractos,
+  aplicarReglas,
+  reglasBanco,
+  guardarRegla,
+  cambiarRegla,
   totalesGenerales,
   socios,
   socioById,

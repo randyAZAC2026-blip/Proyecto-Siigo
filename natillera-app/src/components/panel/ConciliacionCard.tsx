@@ -62,6 +62,7 @@ export function ConciliacionCard({
     return { ...e, n: fs.reduce((s, f) => s + f.n, 0), monto: fs.reduce((s, f) => s + f.monto, 0) };
   });
   const personal = filas.filter((f) => f.estado === "personal").reduce((s, f) => s + f.n, 0);
+  const delBanco = filas.filter((f) => f.estado === "banco").reduce((s, f) => s + f.n, 0);
 
   return (
     <PanelCard
@@ -88,9 +89,10 @@ export function ConciliacionCard({
               </li>
             ))}
           </ul>
-          {personal > 0 && (
+          {(personal > 0 || delBanco > 0) && (
             <p className="text-[11px] text-[var(--color-muted)]">
-              No se cuentan {personal} movimientos marcados como personales.
+              No se cuentan {personal} movimientos personales
+              {delBanco > 0 ? ` ni ${delBanco} gastos o rendimientos del banco` : ""}.
             </p>
           )}
         </div>

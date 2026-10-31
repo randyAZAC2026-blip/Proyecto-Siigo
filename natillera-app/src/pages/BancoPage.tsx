@@ -8,7 +8,12 @@ import {
   PlusCircle,
   RefreshCw,
   Trash2,
+  Sparkles,
+  ListChecks,
 } from "lucide-react";
+import { SugerenciasModal } from "@/components/dashboard/SugerenciasModal";
+import { ReglasModal } from "@/components/dashboard/ReglasModal";
+import { ClasificarMenu } from "@/components/dashboard/ClasificarMenu";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,7 +27,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatCOP } from "@/lib/natillera/format";
-import { api, type EstadoExtracto, type Extracto, type SugerenciaDependencia } from "@/lib/dashboard/api";
+import {
+  api,
+  NOMBRE_CATEGORIA,
+  USA_SUPABASE,
+  type EstadoExtracto,
+  type Extracto,
+  type SugerenciaDependencia,
+} from "@/lib/dashboard/api";
 import { useApi } from "@/lib/dashboard/useApi";
 import {
   RegistrarPagoModal,
@@ -47,6 +59,8 @@ export function BancoPage({ onVolver }: { onVolver: () => void }) {
   const [modalAgregar, setModalAgregar] = useState(false);
   const [modalImportar, setModalImportar] = useState(false);
   const [modalBorrar, setModalBorrar] = useState(false);
+  const [modalSugerencias, setModalSugerencias] = useState(false);
+  const [modalReglas, setModalReglas] = useState(false);
 
   const filtros = useMemo(
     () => ({
@@ -67,6 +81,16 @@ export function BancoPage({ onVolver }: { onVolver: () => void }) {
   const { data, loading, error, reload } = useApi(() => api.extractos(filtros), [filtros]);
   const bancosQ = useApi(() => api.bancos(), []);
   const sugerenciasQ = useApi(() => api.sugerenciasDependencia(), []);
+  // Cuántas conciliaciones seguras hay listas para aceptar (solo en la nube).
+  const conciliablesQ = useApi(
+    () => (USA_SUPABASE ? api.sugerenciasConciliacion() : Promise.resolve([])),
+    [],
+  );
+  const recargarTodo = () => {
+    reload();
+    bancosQ.reload();
+    conciliablesQ.reload();
+  };
 
   useEffect(() => setOffset(0), [origen, conciliado, desde, hasta, q]);
 
@@ -92,13 +116,27 @@ export function BancoPage({ onVolver }: { onVolver: () => void }) {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          {USA_SUPABASE && (
+            <>
+              <Button size="sm" onClick={() => setModalSugerencias(true)} className="gap-1">
+                <Sparkles className="size-4" />
+                Sugerencias
+                {(conciliablesQ.data?.length ?? 0) > 0 && (
+                  <span className="ml-0.5 rounded-full bg-white/20 px-1.5 text-[11px] font-semibold tabular-nums">
+                    {conciliablesQ.data!.length}
+                  </span>
+                )}
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setModalReglas(true)} className="gap-1">
+                <ListChecks className="size-4" />
+                Reglas
+              </Button>
+            </>
+          )}
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {
-              reload();
-              bancosQ.reload();
-            }}
+            onClick={recargarTodo}
             disabled={loading}
           >
             <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
@@ -195,6 +233,7 @@ export function BancoPage({ onVolver }: { onVolver: () => void }) {
                 <option value="excedido">Excedido</option>
                 <option value="conciliado">Conciliado</option>
                 <option value="personal">Personal</option>
+                <option value="banco">Gasto o rendimiento del banco</option>
               </select>
             </div>
             <div className="space-y-1.5">
@@ -247,7 +286,7 @@ export function BancoPage({ onVolver }: { onVolver: () => void }) {
                 fila={fila}
                 variante="tarjeta"
                 sugerencia={!fila.socio_id && fila.dependencia ? sugerenciasMap.get(fila.dependencia) : undefined}
-                onCambio={reload}
+                onCambio={recargarTodo}
                 onRegistrarPago={(preset) => setModalPreset(preset)}
               />
             ))}
@@ -274,7 +313,7 @@ export function BancoPage({ onVolver }: { onVolver: () => void }) {
                   key={fila.id}
                   fila={fila}
                   sugerencia={!fila.socio_id && fila.dependencia ? sugerenciasMap.get(fila.dependencia) : undefined}
-                  onCambio={reload}
+                  onCambio={recargarTodo}
                   onRegistrarPago={(preset) => setModalPreset(preset)}
                 />
               ))}
@@ -328,14 +367,22 @@ export function BancoPage({ onVolver }: { onVolver: () => void }) {
       <AgregarMovimientoModal
         open={modalAgregar}
         onClose={() => setModalAgregar(false)}
-        onGuardado={reload}
+        onGuardado={recargarTodo}
       />
 
       <ImportarExtractoModal
         open={modalImportar}
         onClose={() => setModalImportar(false)}
-        onImportado={reload}
+        onImportado={recargarTodo}
       />
+
+      <SugerenciasModal
+        open={modalSugerencias}
+        onClose={() => setModalSugerencias(false)}
+        onAceptadas={recargarTodo}
+      />
+
+      <ReglasModal open={modalReglas} onClose={() => setModalReglas(false)} onCambio={recargarTodo} />
 
       <BorrarRangoModal
         open={modalBorrar}
@@ -369,6 +416,7 @@ function ExtractoRow({
   fila,
   variante = "fila",
   sugerencia,
+  onCambio,
   onRegistrarPago,
 }: {
   fila: Extracto;
@@ -435,14 +483,26 @@ function ExtractoRow({
     excedido: { color: "bg-[var(--color-destructive)] ring-2 ring-[var(--color-destructive)]/30", titulo: `Excedido — hay ${pendienteTxt} unido de más. Revisar` },
     pendiente: { color: "bg-[var(--color-destructive)]", titulo: "Pendiente — clic en el monto para registrar el pago" },
     personal: { color: "bg-[var(--color-muted)]/50", titulo: "Personal — no es de la natillera" },
+    banco: {
+      color: "bg-[var(--chart-2)]/60",
+      titulo: fila.categoria ? `${NOMBRE_CATEGORIA[fila.categoria]} — no lleva pago de socio` : "Del banco",
+    },
   };
   const ui = ESTADO_UI[estado];
-  const origen = (
+  const punto = (
     <span
       aria-label={ui.titulo}
       title={ui.titulo}
       className={`inline-block size-3 rounded-full ${ui.color}`}
     />
+  );
+  // En la nube el punto abre el menú para clasificar lo que no es pago de un socio.
+  const origen = USA_SUPABASE ? (
+    <ClasificarMenu fila={fila} onCambio={onCambio}>
+      {punto}
+    </ClasificarMenu>
+  ) : (
+    punto
   );
 
   if (variante === "tarjeta") {

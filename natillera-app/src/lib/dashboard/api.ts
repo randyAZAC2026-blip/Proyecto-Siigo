@@ -2,6 +2,11 @@
 
 const BASE = import.meta.env.VITE_NAT_API || "http://localhost:4000";
 
+/** Funciones que solo existen en la base de Supabase (no en el backend local). */
+function soloNube(): Promise<never> {
+  return Promise.reject(new Error("Disponible solo con la base de datos en la nube (Supabase)."));
+}
+
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`);
   if (!res.ok) {
@@ -385,10 +390,54 @@ export interface Extracto {
   valor_conciliado?: number;
   valor_pendiente?: number;
   n_transacciones?: number;
+  categoria?: CategoriaBanco | null;
 }
 
-/** pendiente: nada unido · parcial: falta valor · excedido: unido de más · personal: no es de la natillera. */
-export type EstadoExtracto = "pendiente" | "parcial" | "conciliado" | "excedido" | "personal";
+/**
+ * pendiente: nada unido · parcial: falta valor · excedido: unido de más ·
+ * personal: no es de la natillera · banco: gasto o rendimiento del banco.
+ */
+export type EstadoExtracto = "pendiente" | "parcial" | "conciliado" | "excedido" | "personal" | "banco";
+
+/** Movimientos que no llevan pago de un socio. */
+export type CategoriaBanco = "personal" | "gasto_bancario" | "rendimiento_bancario";
+
+export const NOMBRE_CATEGORIA: Record<CategoriaBanco, string> = {
+  personal: "Personal",
+  gasto_bancario: "Gasto bancario",
+  rendimiento_bancario: "Rendimiento bancario",
+};
+
+/** Emparejamiento seguro propuesto por la base (vw_sugerencias_conciliacion). */
+export interface SugerenciaConciliacion {
+  extracto_id: number;
+  fecha: string;
+  descripcion: string | null;
+  monto: number;
+  dependencia: string | null;
+  socio_id: number;
+  socio_nombre: string;
+  transaccion_ids: number[];
+  /** Conceptos separados por coma (AHORRO,ACTIVIDADES). */
+  conceptos: string;
+  fecha_pago: string;
+  dias: number;
+  confianza: "alta" | "media";
+}
+
+export interface ResultadoSugerencias {
+  aceptadas: number;
+  omitidas: { extracto_id: number; motivo: string }[];
+}
+
+export interface ReglaBanco {
+  id: number;
+  nombre: string;
+  patron: string;
+  tipo: "ingreso" | "egreso" | "ambos";
+  categoria: CategoriaBanco;
+  activa: boolean;
+}
 
 export interface ExtractosPage {
   total: number;
@@ -606,10 +655,22 @@ const apiHttp = {
     dependencia?: string | null;
   }) => post<{ creado: boolean; id?: number; id_existente?: number }>("/api/extractos", m),
   importarExtracto: (banco: string, movimientos: unknown[]) =>
-    post<{ insertados: number; duplicados: number; errores: { fila: number; motivo: string }[] }>(
-      "/api/extractos/importar",
-      { banco, movimientos },
-    ),
+    post<{
+      insertados: number;
+      duplicados: number;
+      clasificados?: number;
+      errores: { fila: number; motivo: string }[];
+    }>("/api/extractos/importar", { banco, movimientos }),
+
+  // Conciliación fase 2: solo existe con Supabase (vistas y funciones en la base).
+  sugerenciasConciliacion: (): Promise<SugerenciaConciliacion[]> => soloNube(),
+  aceptarSugerencias: (_ids: number[]): Promise<ResultadoSugerencias> => soloNube(),
+  categorizarExtractos: (_ids: number[], _categoria: CategoriaBanco | null): Promise<{ actualizados: number }> =>
+    soloNube(),
+  aplicarReglas: (): Promise<number> => soloNube(),
+  reglasBanco: (): Promise<ReglaBanco[]> => soloNube(),
+  guardarRegla: (_r: Omit<ReglaBanco, "id" | "activa">): Promise<ReglaBanco> => soloNube(),
+  cambiarRegla: (_id: number, _patch: Partial<Pick<ReglaBanco, "activa">>): Promise<{ ok: true }> => soloNube(),
   contarExtractosRango: (desde: string, hasta: string, banco?: string | null) => {
     const qs = new URLSearchParams({ desde, hasta });
     if (banco) qs.set("banco", banco);
