@@ -1,0 +1,850 @@
+// Cliente HTTP tipado para la API de natillera-backend.
+
+const BASE = import.meta.env.VITE_NAT_API || "http://localhost:4000";
+
+/** Funciones que solo existen en la base de Supabase (no en el backend local). */
+function soloNube(): Promise<never> {
+  return Promise.reject(new Error("Disponible solo con la base de datos en la nube (Supabase)."));
+}
+
+async function get<T>(path: string): Promise<T> {
+  const res = await fetch(`${BASE}${path}`);
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`${res.status} ${res.statusText}${body ? " — " + body : ""}`);
+  }
+  return res.json() as Promise<T>;
+}
+
+async function post<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`${res.status} ${res.statusText}${text ? " — " + text : ""}`);
+  }
+  return res.json() as Promise<T>;
+}
+
+async function del<T>(path: string): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, { method: "DELETE" });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`${res.status} ${res.statusText}${text ? " — " + text : ""}`);
+  }
+  return res.json() as Promise<T>;
+}
+
+export interface Resumen {
+  socios_activos: number;
+  cuentas_admin: number;
+  n_transacciones: number;
+  n_bancos: number;
+  pendientes_conciliar: number;
+  ahorros: number;
+  actividades: number;
+  rifa: number;
+  intereses: number;
+  prestamos_desembolsados: number;
+  abonos_prestamos: number;
+  multas: number;
+  deuda_pendiente: number;
+  utilidad_ciclo: number;
+  total_aportado: number;
+  // Leading: socios que ya pagaron AHORRO en el mes actual.
+  al_dia_mes: { al_dia: number; total: number };
+  // Leading: actividad en estado "activa" más reciente, con progreso de boletas.
+  actividad_activa: {
+    id: number;
+    nombre: string;
+    pagadas: number;
+    total: number;
+  } | null;
+  // Leading: préstamos activos sin abono registrado en los últimos 30 días.
+  prestamos_sin_abono_reciente: number;
+}
+
+/** Totales del panel financiero, sumados en la base (vw_panel_financiero). */
+export interface PanelFinanciero {
+  socios_activos: number;
+  ahorro: number;
+  actividades: number;
+  rifa: number;
+  intereses: number;
+  multas: number;
+  prestamos_desembolsados: number;
+  abonos_prestamos: number;
+  ingresos: number;
+  egresos: number;
+  /** Préstamos desembolsados − abonos a capital. */
+  cartera: number;
+  /** Ingresos − egresos registrados (lo que debería haber en caja según libros). */
+  caja_libros: number;
+  /** Intereses + multas + rifa. */
+  rendimientos: number;
+  /** Último saldo que trae el extracto de Bancolombia (null en modo express). */
+  saldo_banco: number | null;
+  fecha_saldo_banco: string | null;
+  ultimo_pago: string | null;
+}
+
+export interface PanelAhorroPeriodo {
+  id: number;
+  nombre: string;
+  orden: number;
+  fecha_corte_ahorro: string | null;
+  ahorro: number;
+  socios_pagaron: number;
+}
+
+export interface PanelConciliacion {
+  tipo: "ingreso" | "egreso";
+  estado: EstadoExtracto;
+  n: number;
+  monto: number;
+  pendiente: number;
+}
+
+export interface Panel {
+  financiero: PanelFinanciero;
+  ahorroPeriodos: PanelAhorroPeriodo[];
+  /** Vacío en modo express (no hay estado de conciliación). */
+  conciliacion: PanelConciliacion[];
+}
+
+/** Totales de toda la natillera, sin nombres: lo que un socio puede ver del fondo común. */
+export interface TotalesGenerales {
+  socios_activos: number;
+  total_ahorrado: number;
+  total_actividades: number;
+  intereses_cobrados: number;
+  capital_prestado: number;
+  fondo_disponible: number;
+  ultimo_movimiento: string | null;
+}
+
+export interface Socio {
+  id: number;
+  nombre: string;
+  tipo: "persona" | "cuenta_admin" | "referido";
+  estado: "activo" | "inactivo";
+  cuota_sostenimiento: number;
+  ahorro: number;
+  actividades: number;
+  rifa_chance: number;
+  intereses_pagados: number;
+  abonado_a_prestamos: number;
+  prestamos_recibidos: number;
+  multas_pagadas: number;
+  total_aportado: number;
+  saldo_prestamos: number;
+  /** Saldo pendiente de los préstamos de sus referidos (responde por ellos). */
+  saldo_referidos?: number;
+}
+
+/** Persona externa que pidió un préstamo recomendada por un socio. */
+export interface Referido {
+  id: number;
+  nombre: string;
+  identificacion: string | null;
+  telefono: string | null;
+  referido_por: number;
+  estado: "activo" | "inactivo";
+}
+
+export interface PrestamoReferido {
+  prestamo_id: number;
+  referido_id: number;
+  referido: string;
+  identificacion: string | null;
+  telefono: string | null;
+  responsable_id: number;
+  responsable: string;
+  monto_prestado: number;
+  tasa_interes: number;
+  fecha_desembolso: string | null;
+  estado: "activo" | "pagado";
+  saldo: number;
+  intereses_pagados: number;
+}
+
+/** Tasas mensuales (0.05 = 5%). null si no están configuradas. */
+export interface TasasPrestamo {
+  socios: number | null;
+  referidos: number | null;
+}
+
+export interface Liquidacion {
+  id: number;
+  nombre: string;
+  cuota_sostenimiento: number;
+  ahorro: number;
+  actividades: number;
+  rifa_chance: number;
+  intereses_pagados: number;
+  total_aportes: number;
+  deducc_prestamo: number;
+  deducc_multas: number;
+  deducc_mora_intereses: number;
+  deducc_mora_ahorro: number;
+  neto_a_recibir: number;
+  /** Parte de deducc_prestamo que viene de préstamos de sus referidos. */
+  deducc_prestamo_referidos?: number;
+}
+
+export interface MoraDetalle {
+  vencimiento: string;
+  fecha_pago: string | null;
+  dias_atraso: number;
+  mora: number;
+  estado: "pagado_a_tiempo" | "pagado_tarde" | "sin_pagar";
+}
+
+export interface MoraPrestamo {
+  socio_id: number;
+  socio: string;
+  prestamo_id: number;
+  fecha_desembolso: string | null;
+  monto_prestado: number;
+  total_vencimientos: number;
+  pagados_a_tiempo: number;
+  pagados_tarde: number;
+  sin_pagar: number;
+  mora_pagada: number;
+  mora_pendiente: number;
+  mora_total: number;
+  detalle?: MoraDetalle[];
+}
+
+export interface MoraReporte {
+  hoy: string;
+  regla: {
+    habilitada?: boolean;
+    mora_por_dia: number;
+    aniversario?: string;
+    aplica_desde?: string;
+    criterio?: string;
+  };
+  totales: {
+    mora_pagada: number;
+    mora_pendiente: number;
+    mora_total: number;
+    sin_pagar: number;
+  };
+  prestamos: MoraPrestamo[];
+}
+
+export interface MoraAhorroDetalle {
+  periodo: string;
+  fecha_corte: string | null;
+  fecha_pago: string | null;
+  dias_atraso: number;
+  mora: number;
+  estado: "pagado_a_tiempo" | "pagado_tarde" | "sin_pagar";
+}
+
+export interface MoraAhorroSocio {
+  socio_id: number;
+  socio: string;
+  cuota_sostenimiento: number;
+  total_periodos: number;
+  pagados_a_tiempo: number;
+  pagados_tarde: number;
+  sin_pagar: number;
+  mora_pagada: number;
+  mora_pendiente: number;
+  mora_total: number;
+  detalle?: MoraAhorroDetalle[];
+}
+
+export interface MoraAhorroReporte {
+  hoy: string;
+  regla: {
+    habilitada?: boolean;
+    mora_por_dia: number;
+    criterio?: string;
+    aplica_desde?: string;
+  };
+  totales: {
+    mora_pagada: number;
+    mora_pendiente: number;
+    mora_total: number;
+    sin_pagar: number;
+  };
+  socios: MoraAhorroSocio[];
+}
+
+export type ModoMora = "cobrar" | "porcentaje" | "condonar" | "manual";
+export type ModoPrestamos = "total" | "capital_vencido" | "no_descontar";
+export type ModoUtilidad = "toda" | "reserva" | "porcentaje" | "no_repartir";
+export type ModoReparto = "igual" | "proporcional_ahorro" | "proporcional_aportes";
+
+export interface SimuladorParams {
+  fecha_corte?: string;
+  mora_ahorros?: { modo: ModoMora; valor?: number };
+  mora_intereses?: { modo: ModoMora; valor?: number };
+  prestamos?: { modo: ModoPrestamos };
+  utilidad?: { modo: ModoUtilidad; reserva?: number; porcentaje?: number };
+  reparto?: { modo: ModoReparto };
+}
+
+export interface SimuladorSocio {
+  id: number;
+  nombre: string;
+  ahorro: number;
+  actividades: number;
+  rifa_chance: number;
+  intereses_pagados: number;
+  total_aportes: number;
+  mora_ahorro_bruta: number;
+  mora_intereses_bruta: number;
+  deducc_prestamo_aplicada: number;
+  deducc_multas: number;
+  deducc_mora_ahorro: number;
+  deducc_mora_intereses: number;
+  participacion_utilidad: number;
+  proporcion: number;
+  neto_a_recibir: number;
+}
+
+export interface SimuladorResultado {
+  parametros: SimuladorParams;
+  totales: {
+    total_ahorros: number;
+    total_aportes: number;
+    utilidad_total: number;
+    utilidad_a_repartir: number;
+    reserva: number;
+    total_prestamos: number;
+    total_multas: number;
+    total_mora_ahorro_bruta: number;
+    total_mora_intereses_bruta: number;
+    total_mora_ahorro_cobrada: number;
+    total_mora_intereses_cobrada: number;
+    total_neto: number;
+    socios_negativos: number;
+    socios_positivos: number;
+  };
+  socios: SimuladorSocio[];
+}
+
+export interface MatrizPrestamos {
+  meses: { nombre: string; orden: number }[];
+  socios: {
+    socio_id: number;
+    nombre: string;
+    celdas: Record<string, { abono: number; intereses: number; total: number }>;
+    totalAbono: number;
+    totalIntereses: number;
+    total: number;
+  }[];
+}
+
+export interface Matriz {
+  meses: { nombre: string; orden: number }[];
+  socios: {
+    socio_id: number;
+    nombre: string;
+    total: number;
+    celdas: Record<string, number>;
+  }[];
+}
+
+export interface Banco {
+  banco: string;
+  n_movs: number;
+  ingresos: number;
+  egresos: number;
+  ingresos_natillera: number;
+}
+
+export interface PeriodoResumen {
+  id: number;
+  nombre: string;
+  orden: number;
+  fecha_corte_ahorro: string | null;
+  ahorro: number;
+  n_pagos: number;
+}
+
+export interface Deudor {
+  id: number;
+  nombre: string;
+  prestamo_id: number;
+  monto_prestado: number;
+  saldo: number;
+  intereses_pagados: number;
+  fecha_desembolso: string | null;
+}
+
+export interface Moroso {
+  id: number;
+  nombre: string;
+  cuota_sostenimiento: number;
+  ultimo_aporte: string | null;
+}
+
+export interface HistorialSocio {
+  socio: Socio;
+  historial: {
+    id: number;
+    fecha_pago: string | null;
+    concepto: string;
+    tipo: "ingreso" | "egreso";
+    valor: number;
+    periodo: string | null;
+  }[];
+}
+
+export interface Periodo {
+  id: number;
+  nombre: string;
+  orden: number;
+  fecha_corte_ahorro: string | null;
+  fecha_corte_actividad: string | null;
+  estado: "abierto" | "cerrado";
+}
+
+export interface Extracto {
+  id: number;
+  banco: "Bancolombia" | "Nequi";
+  fecha: string | null;
+  descripcion: string | null;
+  monto: number;
+  saldo_cuenta: number | null;
+  detalle_origen: string | null;
+  dependencia: string | null;
+  socio_id: number | null;
+  socio_nombre: string | null;
+  /** Primera transacción unida (compatibilidad con el modo express). */
+  transaccion_id: number | null;
+  /** Solo en modo Supabase (vw_extracto_estado). */
+  estado?: EstadoExtracto;
+  valor_conciliado?: number;
+  valor_pendiente?: number;
+  n_transacciones?: number;
+  categoria?: CategoriaBanco | null;
+}
+
+/** Un movimiento del banco tal como sale en la descarga de extractos. */
+export interface ExtractoDescarga {
+  banco: string;
+  fecha: string | null;
+  descripcion: string | null;
+  dependencia: string | null;
+  socio_nombre: string | null;
+  monto: number;
+  saldo_cuenta: number | null;
+  estado: EstadoExtracto;
+  detalle_origen: string | null;
+  categoria: CategoriaBanco | null;
+  valor_pendiente: number;
+}
+
+/** Un préstamo con todo su historial, para el detallado en Excel. */
+export interface PrestamoDetallado {
+  prestamo_id: number;
+  socio_id: number;
+  socio: string;
+  /** Socio que recomendó al deudor (préstamos a referidos). */
+  responsable: string | null;
+  fecha_desembolso: string | null;
+  monto_prestado: number;
+  /** Tasa mensual guardada (0.05 = 5%). */
+  tasa: number | null;
+  saldo: number;
+  estado: string;
+  /** Salida del banco con que se entregó, si está conciliada. */
+  banco: { fecha: string | null; descripcion: string | null; monto: number } | null;
+  abonos: { fecha: string | null; intereses: number; capital: number }[];
+}
+
+/** Un pago unido a un movimiento del banco (lo que muestra su desglose). */
+export interface LineaDesgloseExtracto {
+  transaccion_id: number;
+  concepto: string;
+  tipo: "ingreso" | "egreso";
+  valor: number;
+  fecha_pago: string | null;
+  socio_nombre: string | null;
+  /** true si el pago venía del Excel: al deshacer solo se suelta, no se borra. */
+  del_excel: boolean;
+}
+
+export interface ResultadoDeshacerDesglose {
+  ok: true;
+  /** Pagos creados desde la app que se borraron. */
+  borradas: number;
+  /** Préstamos que se borraron con su desglose. */
+  prestamos: number;
+  /** Pagos del Excel que se soltaron pero siguen registrados. */
+  conservadas?: number;
+  /** Socio que queda en el movimiento después de deshacer. */
+  socio_id: number | null;
+}
+
+/**
+ * pendiente: nada unido · parcial: falta valor · excedido: unido de más ·
+ * personal: no es de la natillera · banco: gasto o rendimiento del banco.
+ */
+export type EstadoExtracto = "pendiente" | "parcial" | "conciliado" | "excedido" | "personal" | "banco";
+
+/** Movimientos que no llevan pago de un socio. */
+export type CategoriaBanco = "personal" | "gasto_bancario" | "rendimiento_bancario";
+
+export const NOMBRE_CATEGORIA: Record<CategoriaBanco, string> = {
+  personal: "Personal",
+  gasto_bancario: "Gasto bancario",
+  rendimiento_bancario: "Rendimiento bancario",
+};
+
+/** Emparejamiento seguro propuesto por la base (vw_sugerencias_conciliacion). */
+export interface SugerenciaConciliacion {
+  extracto_id: number;
+  fecha: string;
+  descripcion: string | null;
+  monto: number;
+  dependencia: string | null;
+  socio_id: number;
+  socio_nombre: string;
+  transaccion_ids: number[];
+  /** Conceptos separados por coma (AHORRO,ACTIVIDADES). */
+  conceptos: string;
+  fecha_pago: string;
+  dias: number;
+  confianza: "alta" | "media";
+}
+
+export interface ResultadoSugerencias {
+  aceptadas: number;
+  omitidas: { extracto_id: number; motivo: string }[];
+}
+
+export interface ReglaBanco {
+  id: number;
+  nombre: string;
+  patron: string;
+  tipo: "ingreso" | "egreso" | "ambos";
+  categoria: CategoriaBanco;
+  activa: boolean;
+}
+
+export interface ExtractosPage {
+  total: number;
+  limit: number;
+  offset: number;
+  filas: Extracto[];
+}
+
+/** Aprendizaje: por cada número de cuenta visto antes, el socio al que se asignó más veces. */
+export interface SugerenciaDependencia {
+  dependencia: string;
+  socio_id: number;
+  socio_nombre: string;
+  frecuencia: number;
+}
+
+export interface FiltrosExtracto {
+  banco?: string;
+  origen?: string;
+  conciliado?: "true" | "false";
+  /** Solo modo Supabase; si viene, manda sobre `conciliado`. */
+  estado?: EstadoExtracto;
+  desde?: string;
+  hasta?: string;
+  q?: string;
+  socio_id?: number;
+  limit?: number;
+  offset?: number;
+}
+
+export interface Transaccion {
+  id: number;
+  socio_id: number;
+  socio: string;
+  concepto: string;
+  tipo: "ingreso" | "egreso";
+  valor: number;
+  fecha_pago: string | null;
+  periodo: string | null;
+  origen: "excel" | "manual";
+}
+
+export interface NuevaTransaccion {
+  socio_id: number;
+  concepto: string;
+  valor: number;
+  fecha_pago?: string;
+  periodo_id?: number | null;
+  notas?: string;
+  extracto_id?: number | null;
+}
+
+export interface LineaDesglose {
+  concepto: string;
+  valor: number;
+  notas?: string;
+}
+
+export interface DesglosePago {
+  socio_id: number;
+  fecha_pago?: string;
+  periodo_id?: number | null;
+  notas?: string;
+  extracto_id?: number | null;
+  lineas: LineaDesglose[];
+}
+
+// ---------------- Actividades (rifas, bazares) ----------------
+
+export interface ActividadResumen {
+  id: number;
+  nombre: string;
+  tipo: "rifa" | "bazar" | "otra";
+  descripcion: string | null;
+  fecha_evento: string | null;
+  valor_boleta: number;
+  total_boletas: number | null;
+  premios: Record<string, unknown>;
+  estado: "activa" | "cerrada" | "cancelada";
+  notas: string | null;
+  boletas_asignadas: number;
+  boletas_pagadas: number;
+  boletas_pendientes: number;
+  participantes: number;
+  recaudado: number;
+  por_cobrar: number;
+}
+
+export interface ActividadBoleta {
+  id: number;
+  actividad_id: number;
+  numero: string;
+  socio_id: number | null;
+  socio_nombre: string | null;
+  nombre_externo: string | null;
+  pagada: boolean;
+  fecha_pago: string | null;
+  transaccion_id: number | null;
+  es_ganadora: boolean;
+  premio_tipo: "mayor" | "segundo" | null;
+  notas: string | null;
+}
+
+export interface ActividadDetalle {
+  actividad: ActividadResumen;
+  boletas: ActividadBoleta[];
+}
+
+export interface ActividadPatch {
+  nombre?: string;
+  tipo?: "rifa" | "bazar" | "otra";
+  descripcion?: string | null;
+  fecha_evento?: string | null;
+  valor_boleta?: number;
+  estado?: "activa" | "cerrada" | "cancelada";
+  notas?: string | null;
+  premios?: Record<string, unknown>;
+}
+
+const apiHttp = {
+  resumen: () => get<Resumen>("/api/resumen"),
+  // El backend local no tiene vistas del panel: se arma con lo que ya expone.
+  panel: async (): Promise<Panel> => {
+    const [r, periodos] = await Promise.all([
+      get<Resumen>("/api/resumen"),
+      get<PeriodoResumen[]>("/api/ahorros-por-periodo"),
+    ]);
+    return {
+      financiero: {
+        socios_activos: r.socios_activos,
+        ahorro: r.ahorros,
+        actividades: r.actividades,
+        rifa: r.rifa,
+        intereses: r.intereses,
+        multas: r.multas,
+        prestamos_desembolsados: r.prestamos_desembolsados,
+        abonos_prestamos: r.abonos_prestamos,
+        ingresos: r.total_aportado,
+        egresos: r.prestamos_desembolsados,
+        cartera: r.deuda_pendiente,
+        caja_libros: r.total_aportado - r.prestamos_desembolsados,
+        rendimientos: r.utilidad_ciclo,
+        saldo_banco: null,
+        fecha_saldo_banco: null,
+        ultimo_pago: null,
+      },
+      ahorroPeriodos: periodos.map((p) => ({ ...p, socios_pagaron: p.n_pagos })),
+      conciliacion: [],
+    };
+  },
+  // El backend local no tiene este endpoint: se arma desde /api/resumen.
+  totalesGenerales: async (): Promise<TotalesGenerales> => {
+    const r = await get<Resumen>("/api/resumen");
+    return {
+      socios_activos: r.socios_activos,
+      total_ahorrado: r.ahorros,
+      total_actividades: r.actividades + r.rifa,
+      intereses_cobrados: r.intereses,
+      capital_prestado: r.deuda_pendiente,
+      fondo_disponible: r.total_aportado - r.prestamos_desembolsados,
+      ultimo_movimiento: null,
+    };
+  },
+  socios: () => get<Socio[]>("/api/socios"),
+  socioById: (id: number) => get<HistorialSocio>(`/api/socios/${id}`),
+  matrizAhorro: () => get<Matriz>("/api/matriz-ahorro"),
+  matrizActividades: () => get<Matriz>("/api/matriz-actividades"),
+  matrizPrestamos: () => get<MatrizPrestamos>("/api/matriz-prestamos"),
+  moraIntereses: (detalle = false) =>
+    get<MoraReporte>(`/api/mora-intereses${detalle ? "?detalle=true" : ""}`),
+  moraAhorros: (detalle = false) =>
+    get<MoraAhorroReporte>(`/api/mora-ahorros${detalle ? "?detalle=true" : ""}`),
+  liquidacion: () => get<Liquidacion[]>("/api/liquidacion"),
+  bancos: () => get<Banco[]>("/api/bancos"),
+  ahorrosPorPeriodo: () => get<PeriodoResumen[]>("/api/ahorros-por-periodo"),
+  deudores: () => get<Deudor[]>("/api/deudores"),
+  morosos: (dias = 60) => get<Moroso[]>(`/api/morosos?dias=${dias}`),
+  health: () => get<{ ok: boolean; db: string }>("/api/health"),
+
+  periodos: () => get<Periodo[]>("/api/periodos"),
+  extractos: (filtros: FiltrosExtracto = {}) => {
+    const qs = new URLSearchParams();
+    for (const [k, v] of Object.entries(filtros)) {
+      if (v !== undefined && v !== "") qs.set(k, String(v));
+    }
+    const query = qs.toString();
+    return get<ExtractosPage>(`/api/extractos${query ? "?" + query : ""}`);
+  },
+  vincularExtracto: (id: number, transaccion_id: number | null) =>
+    post<{ ok: true }>(`/api/extractos/${id}/vincular`, { transaccion_id }),
+  marcarOrigenExtracto: (id: number, detalle_origen: string | null) =>
+    post<{ ok: true }>(`/api/extractos/${id}/origen`, { detalle_origen }),
+  asignarSocioExtracto: (id: number, socio_id: number | null) =>
+    post<{ ok: true }>(`/api/extractos/${id}/socio`, { socio_id }),
+  sugerenciasDependencia: () =>
+    get<{ sugerencias: SugerenciaDependencia[] }>("/api/extractos/sugerencias/dependencia"),
+  crearTransaccion: (t: NuevaTransaccion) =>
+    post<{ id: number; socio_id: number; concepto: string; tipo: string; valor: number }>(
+      "/api/transacciones",
+      t,
+    ),
+  crearDesglose: (d: DesglosePago) =>
+    post<{ ids: number[]; extracto_id: number | null; total: number }>(
+      "/api/transacciones/desglose",
+      d,
+    ),
+  crearMovimientoBanco: (m: {
+    banco: string;
+    fecha: string;
+    descripcion?: string;
+    monto: number;
+    saldo_cuenta?: number | null;
+    detalle_origen?: string | null;
+    socio_id?: number | null;
+    dependencia?: string | null;
+  }) => post<{ creado: boolean; id?: number; id_existente?: number }>("/api/extractos", m),
+  importarExtracto: (banco: string, movimientos: unknown[]) =>
+    post<{
+      insertados: number;
+      duplicados: number;
+      clasificados?: number;
+      errores: { fila: number; motivo: string }[];
+    }>("/api/extractos/importar", { banco, movimientos }),
+
+  // Préstamos a referidos: solo con Supabase.
+  prestamosReferidos: (): Promise<PrestamoReferido[]> => soloNube(),
+  referidos: (): Promise<Referido[]> => soloNube(),
+  crearReferido: (_r: { nombre: string; identificacion?: string; telefono?: string; referido_por: number }): Promise<{ id: number }> =>
+    soloNube(),
+  tasasPrestamo: (): Promise<TasasPrestamo> => soloNube(),
+  guardarTasa: (_tipo: "socios" | "referidos", _valor: number): Promise<{ ok: true }> => soloNube(),
+  crearPrestamo: (_p: {
+    socio_id: number;
+    monto: number;
+    fecha: string;
+    intereses_descontados?: number;
+    notas?: string;
+  }): Promise<{ ok: true; prestamo_id: number; entregado: number }> => soloNube(),
+  egresosPendientes: (): Promise<Extracto[]> => soloNube(),
+
+  // Conciliación fase 2: solo existe con Supabase (vistas y funciones en la base).
+  sugerenciasConciliacion: (): Promise<SugerenciaConciliacion[]> => soloNube(),
+  desgloseExtracto: (_id: number): Promise<LineaDesgloseExtracto[]> => soloNube(),
+  detalladoPrestamos: (_socioId?: number | null): Promise<PrestamoDetallado[]> => soloNube(),
+  extractosRango: (_desde: string, _hasta: string): Promise<ExtractoDescarga[]> => soloNube(),
+  deshacerDesglose: (_id: number): Promise<ResultadoDeshacerDesglose> => soloNube(),
+  aceptarSugerencias: (_ids: number[]): Promise<ResultadoSugerencias> => soloNube(),
+  categorizarExtractos: (_ids: number[], _categoria: CategoriaBanco | null): Promise<{ actualizados: number }> =>
+    soloNube(),
+  aplicarReglas: (): Promise<number> => soloNube(),
+  reglasBanco: (): Promise<ReglaBanco[]> => soloNube(),
+  guardarRegla: (_r: Omit<ReglaBanco, "id" | "activa">): Promise<ReglaBanco> => soloNube(),
+  cambiarRegla: (_id: number, _patch: Partial<Pick<ReglaBanco, "activa">>): Promise<{ ok: true }> => soloNube(),
+  contarExtractosRango: (desde: string, hasta: string, banco?: string | null) => {
+    const qs = new URLSearchParams({ desde, hasta });
+    if (banco) qs.set("banco", banco);
+    return get<{ total: number; con_transaccion: number }>(`/api/extractos/contar?${qs}`);
+  },
+  borrarExtractosRango: (desde: string, hasta: string, banco?: string | null) => {
+    const qs = new URLSearchParams({ desde, hasta });
+    if (banco) qs.set("banco", banco);
+    return del<{ borrados: number }>(`/api/extractos?${qs}`);
+  },
+  simularLiquidacion: (params: SimuladorParams) =>
+    post<SimuladorResultado>("/api/liquidacion/simular", params),
+  eliminarTransaccion: (id: number) => del<{ ok: true }>(`/api/transacciones/${id}`),
+  buscarTransacciones: (params: {
+    socio_id?: number;
+    concepto?: string;
+    desde?: string;
+    hasta?: string;
+    limit?: number;
+  }) => {
+    const qs = new URLSearchParams();
+    for (const [k, v] of Object.entries(params)) {
+      if (v !== undefined && v !== "") qs.set(k, String(v));
+    }
+    const query = qs.toString();
+    return get<Transaccion[]>(`/api/transacciones${query ? "?" + query : ""}`);
+  },
+
+  // Módulo Actividades
+  listarActividades: () => get<ActividadResumen[]>("/api/actividades"),
+  actividadDetalle: (id: number) => get<ActividadDetalle>(`/api/actividades/${id}`),
+  actualizarActividad: (id: number, patch: ActividadPatch) =>
+    post<{ ok: true }>(`/api/actividades/${id}`, patch),
+  marcarBoletaPagada: (id: number, pagada: boolean) =>
+    post<{ ok: true }>(`/api/actividades/boletas/${id}/pagada`, { pagada }),
+  marcarBoletaGanadora: (id: number, premio: "mayor" | "segundo" | null) =>
+    post<{ ok: true }>(`/api/actividades/boletas/${id}/ganadora`, { premio }),
+};
+
+// Selector de origen de datos según VITE_NAT_DATA_SOURCE.
+// Import dinámico para no cargar el cliente Supabase cuando no se usa.
+const source = (import.meta.env.VITE_NAT_DATA_SOURCE as string | undefined) ?? "express";
+/** true cuando la app lee de Supabase: entonces hay login por cédula + PIN y permisos por socio. */
+export const USA_SUPABASE = source === "supabase";
+
+async function loadSupabaseApi() {
+  const mod = await import("./apiSupabase");
+  return mod.apiSupabase;
+}
+
+// Proxy que reenvía cada llamada a la implementación elegida.
+// Con source="express" es sincrónico; con "supabase" espera al módulo lazy.
+type ApiShape = typeof apiHttp;
+let apiSupabaseCache: ApiShape | null = null;
+
+export const api: ApiShape = new Proxy({} as ApiShape, {
+  get(_target, prop: string) {
+    if (source !== "supabase") return (apiHttp as any)[prop];
+    return async (...args: unknown[]) => {
+      if (!apiSupabaseCache) apiSupabaseCache = (await loadSupabaseApi()) as unknown as ApiShape;
+      return (apiSupabaseCache as any)[prop](...args);
+    };
+  },
+});

@@ -1,0 +1,8 @@
+node_modules/
+natillera.db
+natillera.db-shm
+natillera.db-wal
+*.db
+*.db-journal
+backups/
+accesos_natillera*.csv

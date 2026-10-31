@@ -1,0 +1,597 @@
+import { useEffect, useMemo, useState } from "react";
+import {
+  Landmark,
+  Search,
+  AlertCircle,
+  Plus,
+  Upload,
+  PlusCircle,
+  RefreshCw,
+  Trash2,
+  Sparkles,
+  ListChecks,
+} from "lucide-react";
+import { SugerenciasModal } from "@/components/dashboard/SugerenciasModal";
+import { ReglasModal } from "@/components/dashboard/ReglasModal";
+import { ClasificarMenu } from "@/components/dashboard/ClasificarMenu";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { formatCOP } from "@/lib/natillera/format";
+import {
+  api,
+  NOMBRE_CATEGORIA,
+  USA_SUPABASE,
+  type EstadoExtracto,
+  type Extracto,
+  type SugerenciaDependencia,
+} from "@/lib/dashboard/api";
+import { useApi } from "@/lib/dashboard/useApi";
+import {
+  RegistrarPagoModal,
+  type PagoPreset,
+} from "@/components/dashboard/RegistrarPagoModal";
+import { AgregarMovimientoModal } from "@/components/dashboard/AgregarMovimientoModal";
+import { ImportarExtractoModal } from "@/components/dashboard/ImportarExtractoModal";
+import { BorrarRangoModal } from "@/components/dashboard/BorrarRangoModal";
+import { DesgloseExtractoModal } from "@/components/dashboard/DesgloseExtractoModal";
+import { DescargarExtractosButton } from "@/components/dashboard/DescargarExtractosButton";
+
+const BANCO_FIJO = "Bancolombia";
+
+export function BancoPage({ onVolver }: { onVolver: () => void }) {
+  const [origen, setOrigen] = useState<string>("");
+  const [conciliado, setConciliado] = useState<string>("");
+  const [desde, setDesde] = useState<string>("");
+  const [hasta, setHasta] = useState<string>("");
+  const [q, setQ] = useState<string>("");
+  const [offset, setOffset] = useState(0);
+  const limit = 50;
+
+  const [modalPreset, setModalPreset] = useState<PagoPreset | null>(null);
+  const [desgloseFila, setDesgloseFila] = useState<Extracto | null>(null);
+  const [modalAgregar, setModalAgregar] = useState(false);
+  const [modalImportar, setModalImportar] = useState(false);
+  const [modalBorrar, setModalBorrar] = useState(false);
+  const [modalSugerencias, setModalSugerencias] = useState(false);
+  const [modalReglas, setModalReglas] = useState(false);
+
+  const filtros = useMemo(
+    () => ({
+      banco: BANCO_FIJO,
+      origen: origen || undefined,
+      // "abiertos" = todo lo que requiere trabajo (pendiente, parcial, excedido).
+      conciliado: conciliado === "abiertos" ? ("false" as const) : undefined,
+      estado: conciliado && conciliado !== "abiertos" ? (conciliado as EstadoExtracto) : undefined,
+      desde: desde || undefined,
+      hasta: hasta || undefined,
+      q: q || undefined,
+      limit,
+      offset,
+    }),
+    [origen, conciliado, desde, hasta, q, offset],
+  );
+
+  const { data, loading, error, reload } = useApi(() => api.extractos(filtros), [filtros]);
+  const bancosQ = useApi(() => api.bancos(), []);
+  const sugerenciasQ = useApi(() => api.sugerenciasDependencia(), []);
+  // Cuántas conciliaciones seguras hay listas para aceptar (solo en la nube).
+  const conciliablesQ = useApi(
+    () => (USA_SUPABASE ? api.sugerenciasConciliacion() : Promise.resolve([])),
+    [],
+  );
+  const recargarTodo = () => {
+    reload();
+    bancosQ.reload();
+    conciliablesQ.reload();
+  };
+
+  useEffect(() => setOffset(0), [origen, conciliado, desde, hasta, q]);
+
+  const resumen = bancosQ.data?.find((b) => b.banco === BANCO_FIJO);
+
+  // Aprendizaje: lookup rápido dependencia → socio más visto antes.
+  const sugerenciasMap = useMemo(() => {
+    const map = new Map<string, SugerenciaDependencia>();
+    for (const s of sugerenciasQ.data?.sugerencias ?? []) map.set(s.dependencia, s);
+    return map;
+  }, [sugerenciasQ.data]);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="flex items-center gap-2 text-2xl font-semibold text-[var(--color-text)]">
+            <Landmark className="size-6 text-[var(--color-primary)]" />
+            Banco
+          </h1>
+          <p className="text-sm text-[var(--color-muted)] mt-1">
+            Resumen de la cuenta de {BANCO_FIJO} y detalle de sus movimientos.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {USA_SUPABASE && (
+            <>
+              <Button size="sm" onClick={() => setModalSugerencias(true)} className="gap-1">
+                <Sparkles className="size-4" />
+                Sugerencias
+                {(conciliablesQ.data?.length ?? 0) > 0 && (
+                  <span className="ml-0.5 rounded-full bg-white/20 px-1.5 text-[11px] font-semibold tabular-nums">
+                    {conciliablesQ.data!.length}
+                  </span>
+                )}
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setModalReglas(true)} className="gap-1">
+                <ListChecks className="size-4" />
+                Reglas
+              </Button>
+              <DescargarExtractosButton desde={desde || undefined} hasta={hasta || undefined} />
+            </>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={recargarTodo}
+            disabled={loading}
+          >
+            <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
+            Actualizar
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setModalAgregar(true)}
+            className="gap-1"
+          >
+            <PlusCircle className="size-4" />
+            Agregar movimiento
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setModalImportar(true)}
+            className="gap-1"
+          >
+            <Upload className="size-4" />
+            Importar extracto
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setModalBorrar(true)}
+            className="gap-1 text-[var(--color-destructive)] border-[var(--color-destructive)]/40 hover:bg-[var(--color-destructive)]/5"
+          >
+            <Trash2 className="size-4" />
+            Borrar por fecha
+          </Button>
+          <Button variant="ghost" size="sm" onClick={onVolver}>
+            ← Volver
+          </Button>
+        </div>
+      </div>
+
+      {resumen && (
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
+          <MiniTile
+            label="Movimientos"
+            value={String(resumen.n_movs)}
+            color="var(--color-muted)"
+          />
+          <MiniTile
+            label="Ingresos totales"
+            value={formatCOP(resumen.ingresos)}
+            color="var(--color-success)"
+          />
+          <MiniTile
+            label="Egresos totales"
+            value={formatCOP(resumen.egresos)}
+            color="var(--color-destructive)"
+          />
+          <MiniTile
+            label="Ingresos natillera"
+            value={formatCOP(resumen.ingresos_natillera)}
+            color="var(--color-primary)"
+          />
+        </div>
+      )}
+
+      <Card className="rounded-[var(--radius-card)] border-[var(--color-border)]">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Filtros</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 sm:grid-cols-5">
+            <div className="space-y-1.5">
+              <Label>Origen</Label>
+              <select
+                className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1.5 text-sm"
+                value={origen}
+                onChange={(e) => setOrigen(e.target.value)}
+              >
+                <option value="">Todos</option>
+                <option value="NATILLERA">NATILLERA</option>
+                <option value="PERSONAL">PERSONAL</option>
+                <option value="N/A">N/A</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Estado</Label>
+              <select
+                className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1.5 text-sm"
+                value={conciliado}
+                onChange={(e) => setConciliado(e.target.value)}
+              >
+                <option value="">Todos</option>
+                <option value="abiertos">Por conciliar (todo lo abierto)</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="parcial">Parcial</option>
+                <option value="excedido">Excedido</option>
+                <option value="conciliado">Conciliado</option>
+                <option value="personal">Personal</option>
+                <option value="banco">Gasto o rendimiento del banco</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Desde</Label>
+              <Input type="date" value={desde} onChange={(e) => setDesde(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Hasta</Label>
+              <Input type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Buscar</Label>
+              <div className="relative">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-3.5 text-[var(--color-muted)]" />
+                <Input
+                  className="pl-7"
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="descripción / socio"
+                />
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {error && (
+        <div className="flex items-start gap-2 rounded-md border border-[var(--color-destructive)]/40 bg-[var(--color-destructive)]/5 p-3">
+          <AlertCircle className="size-4 text-[var(--color-destructive)] shrink-0 mt-0.5" />
+          <p className="text-sm text-[var(--color-destructive)]">{error}</p>
+        </div>
+      )}
+
+      <Card className="rounded-[var(--radius-card)] border-[var(--color-border)]">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">
+            Movimientos {loading && "cargando…"}
+          </CardTitle>
+          <CardDescription>
+            Página {Math.floor(offset / limit) + 1} de{" "}
+            {Math.max(1, Math.ceil((data?.total ?? 0) / limit))}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {/* En celular cada movimiento es una tarjeta; la tabla aparece desde sm. */}
+          <ul className="sm:hidden divide-y divide-[var(--color-border)]">
+            {data?.filas.map((fila) => (
+              <ExtractoRow
+                key={fila.id}
+                fila={fila}
+                variante="tarjeta"
+                sugerencia={!fila.socio_id && fila.dependencia ? sugerenciasMap.get(fila.dependencia) : undefined}
+                onCambio={recargarTodo}
+                onRegistrarPago={(preset) => setModalPreset(preset)}
+                onVerDesglose={setDesgloseFila}
+              />
+            ))}
+            {!loading && data?.filas.length === 0 && (
+              <li className="py-6 text-center text-sm text-[var(--color-muted)]">
+                Sin movimientos con esos filtros
+              </li>
+            )}
+          </ul>
+          <Table className="hidden sm:table">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Fecha</TableHead>
+                <TableHead>Descripción</TableHead>
+                <TableHead>Cuenta</TableHead>
+                <TableHead>Socio</TableHead>
+                <TableHead className="text-right">Monto</TableHead>
+                <TableHead className="text-center">Estado</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data?.filas.map((fila) => (
+                <ExtractoRow
+                  key={fila.id}
+                  fila={fila}
+                  sugerencia={!fila.socio_id && fila.dependencia ? sugerenciasMap.get(fila.dependencia) : undefined}
+                  onCambio={recargarTodo}
+                  onRegistrarPago={(preset) => setModalPreset(preset)}
+                  onVerDesglose={setDesgloseFila}
+                />
+              ))}
+              {!loading && data?.filas.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-sm text-[var(--color-muted)]">
+                    Sin movimientos con esos filtros
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+
+          <div className="flex items-center justify-between gap-2 pt-3">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={offset === 0}
+              onClick={() => setOffset(Math.max(0, offset - limit))}
+            >
+              ← Anterior
+            </Button>
+            <span className="text-xs text-[var(--color-muted)]">
+              Mostrando {data?.filas.length ?? 0} de {data?.total ?? 0}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!data || offset + limit >= data.total}
+              onClick={() => setOffset(offset + limit)}
+            >
+              Siguiente →
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {modalPreset && (
+        <RegistrarPagoModal
+          open={true}
+          onClose={() => setModalPreset(null)}
+          onGuardado={() => {
+            reload();
+            setModalPreset(null);
+          }}
+          preset={modalPreset}
+          titulo="Registrar pago desde extracto"
+        />
+      )}
+
+      {desgloseFila && (
+        <DesgloseExtractoModal
+          fila={desgloseFila}
+          onClose={() => setDesgloseFila(null)}
+          onCompletar={
+            desgloseFila.estado === "parcial"
+              ? () => {
+                  setModalPreset(presetDesdeFila(desgloseFila));
+                  setDesgloseFila(null);
+                }
+              : undefined
+          }
+          onDeshecho={(r) => {
+            // Queda pendiente: se reabre el registro con el valor completo
+            // y el socio que quedó (vacío si lo había puesto el desglose).
+            const f = { ...desgloseFila, estado: "pendiente" as const };
+            setDesgloseFila(null);
+            recargarTodo();
+            setModalPreset(presetDesdeFila(f, undefined, r.socio_id));
+          }}
+        />
+      )}
+
+      <AgregarMovimientoModal
+        open={modalAgregar}
+        onClose={() => setModalAgregar(false)}
+        onGuardado={recargarTodo}
+      />
+
+      <ImportarExtractoModal
+        open={modalImportar}
+        onClose={() => setModalImportar(false)}
+        onImportado={recargarTodo}
+      />
+
+      <SugerenciasModal
+        open={modalSugerencias}
+        onClose={() => setModalSugerencias(false)}
+        onAceptadas={recargarTodo}
+      />
+
+      <ReglasModal open={modalReglas} onClose={() => setModalReglas(false)} onCambio={recargarTodo} />
+
+      <BorrarRangoModal
+        open={modalBorrar}
+        banco={BANCO_FIJO}
+        onClose={() => setModalBorrar(false)}
+        onBorrado={() => {
+          reload();
+          bancosQ.reload();
+        }}
+      />
+    </div>
+  );
+}
+
+function MiniTile({ label, value, color }: { label: string; value: string; color: string }) {
+  return (
+    <Card className="rounded-[var(--radius-card)] border-[var(--color-border)]">
+      <CardContent className="py-3">
+        <div className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
+          {label}
+        </div>
+        <div className="text-lg font-semibold tabular-nums mt-1" style={{ color }}>
+          {value}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+/** Datos con que se abre el registro de pago a partir de un movimiento del banco. */
+function presetDesdeFila(fila: Extracto, sugerencia?: SugerenciaDependencia, socioId?: number | null): PagoPreset {
+  return {
+    socio_id: socioId !== undefined ? socioId : (fila.socio_id ?? sugerencia?.socio_id ?? null),
+    // Si ya está conciliado en parte, se propone solo lo que falta.
+    valor: fila.estado === "parcial" && fila.valor_pendiente != null && fila.valor_pendiente > 0
+      ? fila.valor_pendiente
+      : Math.abs(fila.monto),
+    fecha_pago: fila.fecha ?? undefined,
+    // Ingresos: sin concepto supuesto, se desglosa en la ventana.
+    concepto: fila.monto < 0 ? "PRESTAMO" : undefined,
+    direccion: fila.monto < 0 ? "egreso" : "ingreso",
+    extracto_id: fila.id,
+    notas: fila.descripcion ?? undefined,
+    origen_contexto: `Extracto ${fila.banco} · ${fila.fecha ?? "sin fecha"} · ${fila.descripcion ?? ""}${sugerencia && !fila.socio_id ? ` · sugerido: ${sugerencia.socio_nombre}` : ""}`,
+  };
+}
+
+function ExtractoRow({
+  fila,
+  variante = "fila",
+  sugerencia,
+  onCambio,
+  onRegistrarPago,
+  onVerDesglose,
+}: {
+  fila: Extracto;
+  variante?: "fila" | "tarjeta";
+  sugerencia?: SugerenciaDependencia;
+  onCambio: () => void;
+  onRegistrarPago: (preset: PagoPreset) => void;
+  /** Movimiento ya desglosado (total o parcial): ver el desglose y poder corregirlo. */
+  onVerDesglose: (fila: Extracto) => void;
+}) {
+  // En la columna solo se muestra; la asignación pasa al abrir el modal del monto.
+  const socioCell = fila.socio_nombre ? (
+    <span>{fila.socio_nombre}</span>
+  ) : sugerencia ? (
+    <span
+      title={`Sugerido por ${sugerencia.frecuencia} coincidencias previas de esta cuenta. Clic en el monto para registrar con este socio.`}
+      className="text-[var(--color-primary)]/80"
+    >
+      💡 {sugerencia.socio_nombre}
+    </span>
+  ) : (
+    <span className="text-[var(--color-muted)]">—</span>
+  );
+
+  const monto = (
+    <button
+      type="button"
+      onClick={() => {
+        // Un movimiento ya desglosado no se vuelve a registrar (duplicaba pagos):
+        // se abre su desglose, desde donde se puede corregir o completar.
+        if (USA_SUPABASE && (fila.estado === "conciliado" || fila.estado === "excedido" || fila.estado === "parcial")) {
+          onVerDesglose(fila);
+          return;
+        }
+        if (fila.estado === "conciliado" || fila.estado === "excedido") {
+          window.alert("Este movimiento ya está conciliado. No hace falta registrarlo otra vez.");
+          return;
+        }
+        onRegistrarPago(presetDesdeFila(fila, sugerencia));
+      }}
+      title={sugerencia && !fila.socio_id
+        ? `Registrar pago (socio sugerido: ${sugerencia.socio_nombre})`
+        : "Registrar este movimiento como pago"}
+      className={`${variante === "fila" ? "w-full h-full px-2 py-1.5" : "shrink-0 rounded-md px-2 py-1 font-semibold"} text-right tabular-nums text-xs cursor-pointer hover:bg-[var(--color-primary)]/10 transition-colors ${
+        fila.monto < 0 ? "text-[var(--color-destructive)]" : "text-[var(--color-success)]"
+      }`}
+    >
+      {fila.monto < 0 ? "-" : "+"}
+      {formatCOP(Math.abs(fila.monto))}
+      <Plus className="inline size-3 ml-1 opacity-40" />
+    </button>
+  );
+
+  // Estado de conciliación (vw_extracto_estado). En modo express no viene:
+  // se deduce de si hay transacción ligada.
+  const estado: EstadoExtracto =
+    fila.estado ?? (fila.transaccion_id != null ? "conciliado" : "pendiente");
+  const pendienteTxt =
+    fila.valor_pendiente != null ? formatCOP(Math.abs(fila.valor_pendiente)) : "";
+  const ESTADO_UI: Record<EstadoExtracto, { color: string; titulo: string }> = {
+    conciliado: {
+      color: "bg-[var(--color-success)]",
+      titulo: fila.estado === "conciliado" && !fila.n_transacciones ? "Conciliado en el Excel" : "Conciliado",
+    },
+    parcial: { color: "bg-[var(--color-warning)]", titulo: `Parcial — faltan ${pendienteTxt}. Clic en el monto para completar` },
+    excedido: { color: "bg-[var(--color-destructive)] ring-2 ring-[var(--color-destructive)]/30", titulo: `Excedido — hay ${pendienteTxt} unido de más. Revisar` },
+    pendiente: { color: "bg-[var(--color-destructive)]", titulo: "Pendiente — clic en el monto para registrar el pago" },
+    personal: { color: "bg-[var(--color-muted)]/50", titulo: "Personal — no es de la natillera" },
+    banco: {
+      color: "bg-[var(--chart-2)]/60",
+      titulo: fila.categoria ? `${NOMBRE_CATEGORIA[fila.categoria]} — no lleva pago de socio` : "Del banco",
+    },
+  };
+  const ui = ESTADO_UI[estado];
+  const punto = (
+    <span
+      aria-label={ui.titulo}
+      title={ui.titulo}
+      className={`inline-block size-3 rounded-full ${ui.color}`}
+    />
+  );
+  // En la nube el punto abre el menú para clasificar lo que no es pago de un socio.
+  const origen = USA_SUPABASE ? (
+    <ClasificarMenu fila={fila} onCambio={onCambio}>
+      {punto}
+    </ClasificarMenu>
+  ) : (
+    punto
+  );
+
+  if (variante === "tarjeta") {
+    return (
+      <li className="py-3 space-y-1.5">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-xs text-[var(--color-muted)] tabular-nums">{fila.fecha ?? "—"}</span>
+          {monto}
+        </div>
+        <p className="text-xs text-[var(--color-text)] break-words line-clamp-2" title={fila.descripcion ?? ""}>
+          {fila.descripcion ?? "—"}
+        </p>
+        {fila.dependencia && (
+          <p className="text-[11px] text-[var(--color-muted)] tabular-nums truncate" title={fila.dependencia}>
+            Cta: {fila.dependencia}
+          </p>
+        )}
+        <div className="flex items-center justify-between gap-2">
+          <span className="min-w-0 truncate text-xs text-[var(--color-muted)]">
+            {socioCell}
+          </span>
+          {origen}
+        </div>
+      </li>
+    );
+  }
+
+  return (
+    <TableRow>
+      <TableCell className="text-xs">{fila.fecha ?? "—"}</TableCell>
+      <TableCell className="max-w-[320px] truncate text-xs" title={fila.descripcion ?? ""}>
+        {fila.descripcion ?? "—"}
+      </TableCell>
+      <TableCell className="text-xs tabular-nums" title={fila.dependencia ?? ""}>
+        {fila.dependencia ?? "—"}
+      </TableCell>
+      <TableCell className="text-xs">{socioCell}</TableCell>
+      <TableCell className="text-right p-0">{monto}</TableCell>
+      <TableCell className="text-center">{origen}</TableCell>
+    </TableRow>
+  );
+}

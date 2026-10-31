@@ -1,0 +1,18 @@
+{
+  "name": "natillera-backend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "API HTTP local que expone natillera.db al frontend. Usa node:sqlite (Node 22+), sin compilación nativa.",
+  "scripts": {
+    "dev": "node --watch server.js",
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  }
+}

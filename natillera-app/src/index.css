@@ -1,0 +1,278 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f4f6f4;
+  --foreground: #1f2a24;
+  --card: #ffffff;
+  --card-foreground: #1f2a24;
+  --popover: #ffffff;
+  --popover-foreground: #1f2a24;
+  --primary: #3f7a5c;
+  --primary-foreground: #ffffff;
+  --secondary: #eef1ec;
+  --secondary-foreground: #1f2a24;
+  --muted: #eef1ec;
+  --muted-foreground: #6b7a70;
+  --accent: #eef1ec;
+  --accent-foreground: #1f2a24;
+  --destructive: #c1443a;
+  --destructive-foreground: #ffffff;
+  --border: #e4e7e1;
+  --input: #e4e7e1;
+  --ring: #3f7a5c;
+  --radius: 0.625rem;
+
+  --color-primary: var(--primary);
+  --color-primary-hover: #2e5c44;
+  --color-background: var(--background);
+  --color-surface: var(--card);
+  --color-text: var(--foreground);
+  --color-muted: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-success: #6fa980;
+  --color-warning: #c98a2e;
+
+  /* Menú lateral (verde muy oscuro: da la sobriedad de una app financiera). */
+  --sidebar: #0f2a20;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-fg: #d6e4dc;
+  --sidebar-muted: #84a293;
+  --sidebar-hover: rgba(255, 255, 255, 0.06);
+  --sidebar-active: rgba(255, 255, 255, 0.1);
+  --sidebar-accent: #6fd3a0;
+
+  /* Tarjetas */
+  --shadow-card: 0 1px 2px rgba(15, 42, 32, 0.04), 0 2px 6px rgba(15, 42, 32, 0.05);
+
+  /* Gráficas. Paleta categórica validada (validate_palette.js, superficie #fff):
+     verde (ahorro) · azul · naranja · violeta. Pasa todas las pruebas de CVD. */
+  --chart-1: #2f8f5b;
+  --chart-1-suave: #a9d3bb;
+  --chart-2: #2a78d6;
+  --chart-3: #eb6834;
+  --chart-4: #6250d6;
+  --chart-grid: #e8ebe7;
+  --chart-axis: #c9cfc9;
+  --chart-tinta-muted: #7b877f;
+
+  /* Estados (siempre con ícono + texto, nunca solo color). */
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-critical: #d03b3b;
+  --status-neutral: #c3c9c4;
+}
+
+@theme inline {
+  --font-sans: "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-default: 10px;
+  --radius-card: 14px;
+}
+
+/* Tailwind v4 pinta los bordes con el color del texto si no se dice otro:
+   sin esta regla las tablas y tarjetas de shadcn salen con líneas casi negras. */
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--color-border);
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100svh;
+}
+
+/* --------------------------------------------------------------
+   Impresión: se usa Ctrl+P (o botón "Imprimir") desde Estado
+   cuenta para generar un PDF profesional por socio.
+   -------------------------------------------------------------- */
+@media print {
+  @page {
+    size: A4;
+    margin: 1.5cm;
+  }
+
+  /* Informes con tablas anchas: hoja horizontal (páginas con nombre, Chrome 85+). */
+  @page horizontal {
+    size: A4 landscape;
+    margin: 1.2cm;
+  }
+  [data-pagina="horizontal"] {
+    page: horizontal;
+  }
+
+  /* En papel no hay scroll: la tabla se muestra completa, nunca recortada. */
+  [data-slot="table-container"] {
+    overflow: visible !important;
+  }
+
+  html,
+  body,
+  #root {
+    background: #fff !important;
+    color: #000 !important;
+    min-height: 0 !important;
+  }
+
+  /* Oculta header, nav, sidebar de selección de socio y botones. */
+  header,
+  nav,
+  [data-print="hide"],
+  button {
+    display: none !important;
+  }
+
+  main {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Fuerza el layout de una sola columna (colapsa el grid del estado de cuenta). */
+  [data-print="single-col"] {
+    display: block !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Aparece solo al imprimir: encabezado con nombre de la natillera y fecha. */
+  [data-print="header"] {
+    display: block !important;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #333;
+  }
+
+  [data-print="header"] h1 {
+    margin: 0;
+    font-size: 20pt;
+    color: #000 !important;
+  }
+
+  [data-print="header"] p {
+    margin: 0.25rem 0 0 0;
+    font-size: 10pt;
+    color: #666 !important;
+  }
+
+  /* Cada estado de cuenta empieza en una página nueva (para PDF batch). */
+  [data-print="page-break"] {
+    page-break-before: always;
+  }
+
+  /* Cards sin sombras ni bordes de color. */
+  .rounded-\[var\(--radius-card\)\] {
+    border: 1px solid #ccc !important;
+    background: #fff !important;
+    box-shadow: none !important;
+  }
+
+  /* Tablas legibles con separadores nítidos. */
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+    font-size: 9pt;
+  }
+
+  table th,
+  table td {
+    border: 1px solid #ccc !important;
+    padding: 4px 6px !important;
+    color: #000 !important;
+  }
+
+  table thead {
+    background: #f0f0f0 !important;
+  }
+
+  /* Colores tenues para badges e íconos monocromáticos. */
+  .text-\[var\(--color-success\)\] {
+    color: #050 !important;
+  }
+  .text-\[var\(--color-destructive\)\] {
+    color: #a00 !important;
+  }
+  .text-\[var\(--color-warning\)\] {
+    color: #a60 !important;
+  }
+  .text-\[var\(--color-primary\)\] {
+    color: #000 !important;
+  }
+}
+
+/* Por defecto (pantalla), el encabezado de impresión está oculto. */
+[data-print="header"] {
+  display: none;
+}
+
+@media print {
+  /* Encabezado formal de los informes: línea pequeña arriba, título, corte. */
+  [data-print="header"] p:first-child {
+    font-size: 9pt;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #2e6b4c !important;
+    margin: 0 0 0.25rem 0;
+  }
+
+  /* La franja de totales se imprime compacta, en una sola fila. */
+  [data-print="resumen"] {
+    display: grid !important;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    grid-template-columns: none !important;
+    box-shadow: none !important;
+    margin-bottom: 0.75rem;
+  }
+  [data-print="resumen"] dd {
+    font-size: 11pt !important;
+  }
+
+  /* Fila de totales de las tablas, siempre visible y marcada. */
+  tr[data-total] td {
+    font-weight: 700 !important;
+    background: #f0f0f0 !important;
+  }
+
+  /* Tablas largas: no partir una fila entre dos hojas y repetir encabezados. */
+  tr {
+    break-inside: avoid;
+  }
+  thead {
+    display: table-header-group;
+  }
+}
