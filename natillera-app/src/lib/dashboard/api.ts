@@ -429,6 +429,30 @@ export interface Extracto {
   categoria?: CategoriaBanco | null;
 }
 
+/** Un pago unido a un movimiento del banco (lo que muestra su desglose). */
+export interface LineaDesgloseExtracto {
+  transaccion_id: number;
+  concepto: string;
+  tipo: "ingreso" | "egreso";
+  valor: number;
+  fecha_pago: string | null;
+  socio_nombre: string | null;
+  /** true si el pago venía del Excel: al deshacer solo se suelta, no se borra. */
+  del_excel: boolean;
+}
+
+export interface ResultadoDeshacerDesglose {
+  ok: true;
+  /** Pagos creados desde la app que se borraron. */
+  borradas: number;
+  /** Préstamos que se borraron con su desglose. */
+  prestamos: number;
+  /** Pagos del Excel que se soltaron pero siguen registrados. */
+  conservadas?: number;
+  /** Socio que queda en el movimiento después de deshacer. */
+  socio_id: number | null;
+}
+
 /**
  * pendiente: nada unido · parcial: falta valor · excedido: unido de más ·
  * personal: no es de la natillera · banco: gasto o rendimiento del banco.
@@ -716,6 +740,8 @@ const apiHttp = {
 
   // Conciliación fase 2: solo existe con Supabase (vistas y funciones en la base).
   sugerenciasConciliacion: (): Promise<SugerenciaConciliacion[]> => soloNube(),
+  desgloseExtracto: (_id: number): Promise<LineaDesgloseExtracto[]> => soloNube(),
+  deshacerDesglose: (_id: number): Promise<ResultadoDeshacerDesglose> => soloNube(),
   aceptarSugerencias: (_ids: number[]): Promise<ResultadoSugerencias> => soloNube(),
   categorizarExtractos: (_ids: number[], _categoria: CategoriaBanco | null): Promise<{ actualizados: number }> =>
     soloNube(),

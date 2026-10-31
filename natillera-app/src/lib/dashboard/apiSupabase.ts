@@ -33,6 +33,8 @@ import type {
   EstadoExtracto,
   CategoriaBanco,
   SugerenciaConciliacion,
+  LineaDesgloseExtracto,
+  ResultadoDeshacerDesglose,
   ResultadoSugerencias,
   ReglaBanco,
   Panel,
@@ -779,6 +781,50 @@ async function conciliarExtracto(extracto_id: number, lineas: LineaConciliacion[
   );
 }
 
+/** Pagos unidos a un movimiento del banco, para ver o corregir su desglose. */
+async function desgloseExtracto(id: number): Promise<LineaDesgloseExtracto[]> {
+  type Fila = {
+    valor: number;
+    transacciones: {
+      id: number;
+      concepto: string;
+      tipo: "ingreso" | "egreso";
+      fecha_pago: string | null;
+      fila_origen: number | null;
+      socios: { nombre: string } | null;
+    } | null;
+  };
+  // PostgREST tipa los embebidos como arreglos; aquí son uno a uno.
+  const filas = (await q(
+    supabase
+      .from("conciliaciones")
+      .select("valor, transacciones(id, concepto, tipo, fecha_pago, fila_origen, socios(nombre))")
+      .eq("extracto_id", id)
+      .order("id"),
+  )) as unknown as Fila[];
+  return filas
+    .filter((f) => f.transacciones)
+    .map((f) => ({
+      transaccion_id: f.transacciones!.id,
+      concepto: f.transacciones!.concepto,
+      tipo: f.transacciones!.tipo,
+      valor: f.valor,
+      fecha_pago: f.transacciones!.fecha_pago,
+      socio_nombre: f.transacciones!.socios?.nombre ?? null,
+      del_excel: (f.transacciones!.fila_origen ?? 0) >= 0,
+    }));
+}
+
+/**
+ * Deshace el desglose completo: borra los pagos creados desde la app (y su
+ * préstamo o abono) y suelta los del Excel. El movimiento queda pendiente.
+ */
+async function deshacerDesglose(id: number): Promise<ResultadoDeshacerDesglose> {
+  return q<ResultadoDeshacerDesglose>(
+    supabase.rpc("natillera_deshacer_desglose", { p_extracto_id: id }),
+  );
+}
+
 /** Une una transacción existente al movimiento (o quita todas las uniones con null). */
 async function vincularExtracto(id: number, transaccion_id: number | null) {
   requireSupabaseEnv();
@@ -1305,6 +1351,8 @@ export const apiSupabase = {
   crearPrestamo,
   egresosPendientes,
   sugerenciasConciliacion,
+  desgloseExtracto,
+  deshacerDesglose,
   aceptarSugerencias,
   categorizarExtractos,
   aplicarReglas,

@@ -43,6 +43,7 @@ import {
 import { AgregarMovimientoModal } from "@/components/dashboard/AgregarMovimientoModal";
 import { ImportarExtractoModal } from "@/components/dashboard/ImportarExtractoModal";
 import { BorrarRangoModal } from "@/components/dashboard/BorrarRangoModal";
+import { DesgloseExtractoModal } from "@/components/dashboard/DesgloseExtractoModal";
 
 const BANCO_FIJO = "Bancolombia";
 
@@ -56,6 +57,7 @@ export function BancoPage({ onVolver }: { onVolver: () => void }) {
   const limit = 50;
 
   const [modalPreset, setModalPreset] = useState<PagoPreset | null>(null);
+  const [desgloseFila, setDesgloseFila] = useState<Extracto | null>(null);
   const [modalAgregar, setModalAgregar] = useState(false);
   const [modalImportar, setModalImportar] = useState(false);
   const [modalBorrar, setModalBorrar] = useState(false);
@@ -288,6 +290,7 @@ export function BancoPage({ onVolver }: { onVolver: () => void }) {
                 sugerencia={!fila.socio_id && fila.dependencia ? sugerenciasMap.get(fila.dependencia) : undefined}
                 onCambio={recargarTodo}
                 onRegistrarPago={(preset) => setModalPreset(preset)}
+                onVerDesglose={setDesgloseFila}
               />
             ))}
             {!loading && data?.filas.length === 0 && (
@@ -315,6 +318,7 @@ export function BancoPage({ onVolver }: { onVolver: () => void }) {
                   sugerencia={!fila.socio_id && fila.dependencia ? sugerenciasMap.get(fila.dependencia) : undefined}
                   onCambio={recargarTodo}
                   onRegistrarPago={(preset) => setModalPreset(preset)}
+                  onVerDesglose={setDesgloseFila}
                 />
               ))}
               {!loading && data?.filas.length === 0 && (
@@ -361,6 +365,29 @@ export function BancoPage({ onVolver }: { onVolver: () => void }) {
           }}
           preset={modalPreset}
           titulo="Registrar pago desde extracto"
+        />
+      )}
+
+      {desgloseFila && (
+        <DesgloseExtractoModal
+          fila={desgloseFila}
+          onClose={() => setDesgloseFila(null)}
+          onCompletar={
+            desgloseFila.estado === "parcial"
+              ? () => {
+                  setModalPreset(presetDesdeFila(desgloseFila));
+                  setDesgloseFila(null);
+                }
+              : undefined
+          }
+          onDeshecho={(r) => {
+            // Queda pendiente: se reabre el registro con el valor completo
+            // y el socio que quedó (vacío si lo había puesto el desglose).
+            const f = { ...desgloseFila, estado: "pendiente" as const };
+            setDesgloseFila(null);
+            recargarTodo();
+            setModalPreset(presetDesdeFila(f, undefined, r.socio_id));
+          }}
         />
       )}
 
@@ -412,18 +439,39 @@ function MiniTile({ label, value, color }: { label: string; value: string; color
   );
 }
 
+/** Datos con que se abre el registro de pago a partir de un movimiento del banco. */
+function presetDesdeFila(fila: Extracto, sugerencia?: SugerenciaDependencia, socioId?: number | null): PagoPreset {
+  return {
+    socio_id: socioId !== undefined ? socioId : (fila.socio_id ?? sugerencia?.socio_id ?? null),
+    // Si ya está conciliado en parte, se propone solo lo que falta.
+    valor: fila.estado === "parcial" && fila.valor_pendiente != null && fila.valor_pendiente > 0
+      ? fila.valor_pendiente
+      : Math.abs(fila.monto),
+    fecha_pago: fila.fecha ?? undefined,
+    // Ingresos: sin concepto supuesto, se desglosa en la ventana.
+    concepto: fila.monto < 0 ? "PRESTAMO" : undefined,
+    direccion: fila.monto < 0 ? "egreso" : "ingreso",
+    extracto_id: fila.id,
+    notas: fila.descripcion ?? undefined,
+    origen_contexto: `Extracto ${fila.banco} · ${fila.fecha ?? "sin fecha"} · ${fila.descripcion ?? ""}${sugerencia && !fila.socio_id ? ` · sugerido: ${sugerencia.socio_nombre}` : ""}`,
+  };
+}
+
 function ExtractoRow({
   fila,
   variante = "fila",
   sugerencia,
   onCambio,
   onRegistrarPago,
+  onVerDesglose,
 }: {
   fila: Extracto;
   variante?: "fila" | "tarjeta";
   sugerencia?: SugerenciaDependencia;
   onCambio: () => void;
   onRegistrarPago: (preset: PagoPreset) => void;
+  /** Movimiento ya desglosado (total o parcial): ver el desglose y poder corregirlo. */
+  onVerDesglose: (fila: Extracto) => void;
 }) {
   // En la columna solo se muestra; la asignación pasa al abrir el modal del monto.
   const socioCell = fila.socio_nombre ? (
@@ -439,36 +487,21 @@ function ExtractoRow({
     <span className="text-[var(--color-muted)]">—</span>
   );
 
-  const socioIdSugerido = fila.socio_id ?? sugerencia?.socio_id ?? null;
-
   const monto = (
     <button
       type="button"
       onClick={() => {
-        // Un movimiento ya cubierto no se vuelve a registrar: eso duplicaba pagos.
-        if (fila.estado === "conciliado" || fila.estado === "excedido") {
-          window.alert(
-            fila.estado === "conciliado" && !fila.n_transacciones
-              ? "Este movimiento ya venía conciliado desde el Excel. No hace falta registrarlo otra vez."
-              : `Este movimiento ya está ${fila.estado === "conciliado" ? "conciliado" : "conciliado de más"} con ${fila.n_transacciones ?? 0} pago(s) registrados. ` +
-                  "No hace falta registrarlo otra vez.",
-          );
+        // Un movimiento ya desglosado no se vuelve a registrar (duplicaba pagos):
+        // se abre su desglose, desde donde se puede corregir o completar.
+        if (USA_SUPABASE && (fila.estado === "conciliado" || fila.estado === "excedido" || fila.estado === "parcial")) {
+          onVerDesglose(fila);
           return;
         }
-        onRegistrarPago({
-          socio_id: socioIdSugerido,
-          // Si ya está conciliado en parte, se propone solo lo que falta.
-          valor: fila.valor_pendiente != null && fila.valor_pendiente > 0
-            ? fila.valor_pendiente
-            : Math.abs(fila.monto),
-          fecha_pago: fila.fecha ?? undefined,
-          // Ingresos: sin concepto supuesto, se desglosa en la ventana.
-          concepto: fila.monto < 0 ? "PRESTAMO" : undefined,
-          direccion: fila.monto < 0 ? "egreso" : "ingreso",
-          extracto_id: fila.id,
-          notas: fila.descripcion ?? undefined,
-          origen_contexto: `Extracto ${fila.banco} · ${fila.fecha ?? "sin fecha"} · ${fila.descripcion ?? ""}${sugerencia && !fila.socio_id ? ` · sugerido: ${sugerencia.socio_nombre}` : ""}`,
-        });
+        if (fila.estado === "conciliado" || fila.estado === "excedido") {
+          window.alert("Este movimiento ya está conciliado. No hace falta registrarlo otra vez.");
+          return;
+        }
+        onRegistrarPago(presetDesdeFila(fila, sugerencia));
       }}
       title={sugerencia && !fila.socio_id
         ? `Registrar pago (socio sugerido: ${sugerencia.socio_nombre})`
