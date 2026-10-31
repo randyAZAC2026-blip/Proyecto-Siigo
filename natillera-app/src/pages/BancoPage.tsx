@@ -444,7 +444,15 @@ function ExtractoRow({
   const monto = (
     <button
       type="button"
-      onClick={() =>
+      onClick={() => {
+        // Un movimiento ya cubierto no se vuelve a registrar: eso duplicaba pagos.
+        if (fila.estado === "conciliado" || fila.estado === "excedido") {
+          window.alert(
+            `Este movimiento ya está ${fila.estado === "conciliado" ? "conciliado" : "conciliado de más"} con ${fila.n_transacciones ?? 0} pago(s) registrados. ` +
+              "No hace falta registrarlo otra vez.",
+          );
+          return;
+        }
         onRegistrarPago({
           socio_id: socioIdSugerido,
           // Si ya está conciliado en parte, se propone solo lo que falta.
@@ -452,12 +460,13 @@ function ExtractoRow({
             ? fila.valor_pendiente
             : Math.abs(fila.monto),
           fecha_pago: fila.fecha ?? undefined,
-          concepto: fila.monto < 0 ? "PRESTAMO" : "AHORRO",
+          // Ingresos: sin concepto supuesto, se desglosa en la ventana.
+          concepto: fila.monto < 0 ? "PRESTAMO" : undefined,
           extracto_id: fila.id,
           notas: fila.descripcion ?? undefined,
           origen_contexto: `Extracto ${fila.banco} · ${fila.fecha ?? "sin fecha"} · ${fila.descripcion ?? ""}${sugerencia && !fila.socio_id ? ` · sugerido: ${sugerencia.socio_nombre}` : ""}`,
-        })
-      }
+        });
+      }}
       title={sugerencia && !fila.socio_id
         ? `Registrar pago (socio sugerido: ${sugerencia.socio_nombre})`
         : "Registrar este movimiento como pago"}

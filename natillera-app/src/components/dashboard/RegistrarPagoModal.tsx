@@ -67,6 +67,17 @@ export function RegistrarPagoModal({ open, onClose, onGuardado, preset, titulo }
   const [enviando, setEnviando] = useState(false);
   const [ok, setOk] = useState<string | null>(null);
 
+  // Desde un movimiento del banco el pago SE DESGLOSA antes de registrarse:
+  // no se supone ningún concepto. Un egreso del banco solo puede ser un
+  // préstamo entregado, así que ese caso sí viene armado.
+  const desdeExtracto = preset.extracto_id != null;
+  const esEgreso = preset.concepto === "PRESTAMO";
+  const conceptosValidos = desdeExtracto
+    ? CONCEPTOS.filter((c) => (esEgreso ? c.key === "PRESTAMO" : c.key !== "PRESTAMO"))
+    : CONCEPTOS;
+
+  // Al abrir: datos del movimiento y desglose vacío. Solo depende de open/preset,
+  // para no borrar lo que la persona ya escribió cuando terminan de cargar otros datos.
   useEffect(() => {
     if (!open) return;
     setSocioId(preset.socio_id ? String(preset.socio_id) : "");
@@ -75,27 +86,29 @@ export function RegistrarPagoModal({ open, onClose, onGuardado, preset, titulo }
     setBusqueda("");
     setError(null);
     setOk(null);
-    // Auto-selecciona periodo por mes
-    if (periodos.data) {
-      if (preset.periodo_id) {
-        setPeriodoId(String(preset.periodo_id));
-      } else {
-        const iso = preset.fecha_pago || new Date().toISOString().slice(0, 10);
-        const mes = new Date(iso + "T00:00:00").getMonth() + 1;
-        const orden = ((mes + 1) % 12) + 1;
-        const match = periodos.data.find((p) => p.orden === orden);
-        setPeriodoId(match ? String(match.id) : "");
-      }
-    }
-    // Línea inicial con el valor completo
+    setPeriodoId(preset.periodo_id ? String(preset.periodo_id) : "");
+    const armada = !desdeExtracto || esEgreso;
     setLineas([
       {
         id: idSeq++,
-        concepto: preset.concepto || "AHORRO",
-        valor: preset.valor ? String(preset.valor) : "",
+        concepto: armada ? preset.concepto || "AHORRO" : "",
+        valor: armada && preset.valor ? String(preset.valor) : "",
       },
     ]);
-  }, [open, preset, periodos.data]);
+  }, [open, preset, desdeExtracto, esEgreso]);
+
+  // Periodo sugerido por el mes de la fecha, solo si aún no hay uno elegido.
+  useEffect(() => {
+    if (!open || !periodos.data || preset.periodo_id) return;
+    setPeriodoId((actual) => {
+      if (actual) return actual;
+      const iso = preset.fecha_pago || new Date().toISOString().slice(0, 10);
+      const mes = new Date(iso + "T00:00:00").getMonth() + 1;
+      const orden = ((mes + 1) % 12) + 1;
+      const match = periodos.data!.find((p) => p.orden === orden);
+      return match ? String(match.id) : "";
+    });
+  }, [open, periodos.data, preset.periodo_id, preset.fecha_pago]);
 
   const sociosFiltrados = useMemo(() => {
     const lista = (socios.data ?? []).filter((s) => s.tipo === "persona");
@@ -109,12 +122,34 @@ export function RegistrarPagoModal({ open, onClose, onGuardado, preset, titulo }
   const totalAsignado = lineas.reduce((a, l) => a + parseCOP(l.valor), 0);
   const restante = totalObjetivo - totalAsignado;
 
-  function addLinea(conceptoInicial = "AHORRO", valorInicial = "") {
-    setLineas((prev) => [
-      ...prev,
-      { id: idSeq++, concepto: conceptoInicial, valor: valorInicial },
-    ]);
+  function addLinea(conceptoInicial = "", valorInicial = "") {
+    setLineas((prev) => {
+      // Si hay una línea vacía sin concepto, se reutiliza en vez de agregar otra.
+      const vacia = prev.find((l) => !l.concepto && parseCOP(l.valor) === 0);
+      if (vacia && conceptoInicial) {
+        return prev.map((l) => (l.id === vacia.id ? { ...l, concepto: conceptoInicial } : l));
+      }
+      return [...prev, { id: idSeq++, concepto: conceptoInicial, valor: valorInicial }];
+    });
   }
+
+  const usados = new Set(lineas.map((l) => l.concepto).filter(Boolean));
+  const repetido = lineas.map((l) => l.concepto).find((c, i, arr) => c && arr.indexOf(c) !== i);
+  const sinConcepto = lineas.some((l) => !l.concepto && parseCOP(l.valor) > 0);
+  const sinValor = lineas.some((l) => l.concepto && parseCOP(l.valor) === 0);
+  // Desde el banco, el desglose debe cuadrar exacto con el movimiento.
+  const faltaCuadrar = desdeExtracto && totalObjetivo > 0 && totalAsignado !== totalObjetivo;
+  const motivoBloqueo = repetido
+    ? `${CONCEPTOS.find((c) => c.key === repetido)?.label ?? repetido} está repetido: déjalo en una sola línea.`
+    : sinConcepto
+      ? "Elige el concepto de cada valor."
+      : sinValor
+        ? "Escribe el valor de cada concepto o quita la línea."
+        : faltaCuadrar
+          ? restante > 0
+            ? `Faltan ${formatCOP(restante)} por repartir entre los conceptos.`
+            : `El desglose se pasa por ${formatCOP(-restante)}.`
+          : null;
 
   function updateLinea(id: number, patch: Partial<Linea>) {
     setLineas((prev) => prev.map((l) => (l.id === id ? { ...l, ...patch } : l)));
@@ -141,18 +176,16 @@ export function RegistrarPagoModal({ open, onClose, onGuardado, preset, titulo }
     setError(null);
     setOk(null);
     if (!socioId) return setError("Elige un socio");
+    if (motivoBloqueo) return setError(motivoBloqueo);
     const preparadas = lineas
       .map((l) => ({ concepto: l.concepto, valor: parseCOP(l.valor) }))
-      .filter((l) => l.valor > 0);
+      .filter((l) => l.concepto && l.valor > 0);
     if (preparadas.length === 0)
-      return setError("Ingresa al menos un valor mayor a 0");
+      return setError("Ingresa al menos un concepto con su valor");
 
-    if (preset.extracto_id != null && totalObjetivo > 0 && totalAsignado > totalObjetivo) {
-      return setError(
-        `El total (${formatCOP(totalAsignado)}) supera lo que falta por conciliar de este movimiento (${formatCOP(totalObjetivo)}). Ajusta los valores.`,
-      );
-    }
-    if (totalObjetivo > 0 && Math.abs(totalAsignado - totalObjetivo) > 0) {
+    // Registro manual (sin movimiento del banco): se puede guardar distinto al
+    // total sugerido, pero se pregunta.
+    if (!desdeExtracto && totalObjetivo > 0 && totalAsignado !== totalObjetivo) {
       const diff = totalObjetivo - totalAsignado;
       if (!confirm(
         `El total desglosado (${formatCOP(totalAsignado)}) es distinto al del extracto (${formatCOP(totalObjetivo)}). Diferencia: ${formatCOP(diff)}. ¿Guardar de todas formas?`,
@@ -267,7 +300,9 @@ export function RegistrarPagoModal({ open, onClose, onGuardado, preset, titulo }
               <div>
                 <Label className="text-sm">Desglose del pago</Label>
                 <p className="text-[11px] text-[var(--color-muted)]">
-                  Distribuye el monto entre los conceptos que correspondan.
+                  {desdeExtracto && !esEgreso
+                    ? "Reparte el valor del movimiento entre sus conceptos. Se registra solo cuando el desglose cuadra exacto."
+                    : "Distribuye el monto entre los conceptos que correspondan."}
                 </p>
               </div>
               {totalObjetivo > 0 && (
@@ -321,12 +356,18 @@ export function RegistrarPagoModal({ open, onClose, onGuardado, preset, titulo }
               {lineas.map((l) => (
                 <div key={l.id} className="flex items-center gap-2">
                   <select
-                    className="flex-1 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1.5 text-sm"
+                    aria-label="Concepto"
+                    className={`flex-1 rounded-md border bg-[var(--color-surface)] px-2 py-1.5 text-sm ${
+                      !l.concepto || l.concepto === repetido
+                        ? "border-[var(--color-warning)]"
+                        : "border-[var(--color-border)]"
+                    }`}
                     value={l.concepto}
                     onChange={(e) => updateLinea(l.id, { concepto: e.target.value })}
                   >
-                    {CONCEPTOS.map((c) => (
-                      <option key={c.key} value={c.key}>
+                    <option value="">— Elige el concepto —</option>
+                    {conceptosValidos.map((c) => (
+                      <option key={c.key} value={c.key} disabled={c.key !== l.concepto && usados.has(c.key)}>
                         {c.label}
                       </option>
                     ))}
@@ -350,28 +391,43 @@ export function RegistrarPagoModal({ open, onClose, onGuardado, preset, titulo }
                   </Button>
                 </div>
               ))}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => addLinea()}
-                className="w-full gap-1"
-              >
-                <Plus className="size-4" />
-                Agregar concepto
-              </Button>
+              {/* Atajos: agregan una línea con el concepto ya elegido. */}
+              {!esEgreso && (
+                <div className="flex flex-wrap gap-1.5">
+                  {conceptosValidos
+                    .filter((c) => !usados.has(c.key))
+                    .map((c) => (
+                      <button
+                        key={c.key}
+                        type="button"
+                        onClick={() => addLinea(c.key)}
+                        className="inline-flex items-center gap-1 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-1 text-[11px] text-[var(--color-text)] hover:border-[var(--color-primary)]/60 hover:text-[var(--color-primary)]"
+                      >
+                        <Plus className="size-3" aria-hidden />
+                        {c.label}
+                      </button>
+                    ))}
+                </div>
+              )}
             </div>
           </div>
 
-          {preset.extracto_id != null && (
+          {desdeExtracto && (
             <div className="flex items-center gap-2 rounded-md border border-[var(--color-primary)]/40 bg-[var(--color-primary)]/5 p-2">
               <Badge className="bg-[var(--color-primary)] text-white">
                 Extracto #{preset.extracto_id}
               </Badge>
               <span className="text-xs text-[var(--color-text)]">
-                Se vinculará al primer concepto del desglose.
+                Todos los conceptos del desglose quedan unidos a este movimiento del banco.
               </span>
             </div>
+          )}
+
+          {motivoBloqueo && !error && (
+            <p className="flex items-center gap-2 text-xs text-[var(--color-warning)]">
+              <AlertCircle className="size-3.5 shrink-0" aria-hidden />
+              {motivoBloqueo}
+            </p>
           )}
 
           {error && (
@@ -393,7 +449,7 @@ export function RegistrarPagoModal({ open, onClose, onGuardado, preset, titulo }
             </Button>
             <Button
               type="submit"
-              disabled={enviando}
+              disabled={enviando || !!motivoBloqueo || !socioId}
               className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)]"
             >
               {enviando ? "Guardando…" : "Registrar"}
