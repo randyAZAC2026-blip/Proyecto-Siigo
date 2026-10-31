@@ -18,6 +18,7 @@ import { BancoPage } from "@/pages/BancoPage";
 import { ActividadesPage } from "@/pages/ActividadesPage";
 import { EstadoCuentaPage } from "@/pages/EstadoCuentaPage";
 import { DashboardPage } from "@/pages/DashboardPage";
+import { InformesPage } from "@/pages/InformesPage";
 import { MiInicioPage } from "@/pages/socio/MiInicioPage";
 import { MiLiquidacionPage } from "@/pages/socio/MiLiquidacionPage";
 import { USA_SUPABASE } from "@/lib/dashboard/api";
@@ -73,9 +74,20 @@ function Estructura({ perfil, onSalir }: { perfil: Perfil | null; onSalir?: () =
   const esSocio = perfil?.rol === "socio";
   const grupos = esSocio ? GRUPOS_SOCIO : GRUPOS_ADMIN;
   const inicio: Vista = esSocio ? "mi-inicio" : "dashboard";
-  const [vista, setVista] = useState<Vista>(inicio);
+  // La sección vive en la dirección (?v=matriz): recargar deja a la persona donde
+  // estaba y se puede compartir el enlace a un informe. Solo se aceptan secciones
+  // que su rol puede ver.
+  const permitidas = grupos.flatMap((g) => g.items.map((m) => m.key));
+  const [vista, setVista] = useState<Vista>(() => {
+    const v = new URLSearchParams(window.location.search).get("v") as Vista | null;
+    return v && permitidas.includes(v) ? v : inicio;
+  });
   const ir = (v: Vista) => {
     setVista(v);
+    const url = new URL(window.location.href);
+    if (v === inicio) url.searchParams.delete("v");
+    else url.searchParams.set("v", v);
+    window.history.replaceState(null, "", url);
     window.scrollTo({ top: 0 });
   };
   const volverPanel = () => ir(inicio);
@@ -197,6 +209,7 @@ function Estructura({ perfil, onSalir }: { perfil: Perfil | null; onSalir?: () =
                 {vista === "dashboard" && (
                   <DashboardPage onVolver={volverPanel} onIr={(k) => ir(k as Vista)} nombre={perfil?.nombre} />
                 )}
+                {vista === "informes" && <InformesPage onIr={ir} />}
                 {vista === "socios" && <SociosAportesPage onVolver={volverPanel} />}
                 {vista === "estado" && <EstadoCuentaPage onVolver={volverPanel} />}
                 {vista === "matriz" && <MatrizAhorrosPage onVolver={volverPanel} />}

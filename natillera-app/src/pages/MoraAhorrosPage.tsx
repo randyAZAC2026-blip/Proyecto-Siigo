@@ -1,7 +1,5 @@
 import { useState } from "react";
-import { AlertCircle, RefreshCw, ChevronDown, ChevronRight, Info } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { AlertCircle, ChevronDown, ChevronRight, Info, CalendarClock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -12,11 +10,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatCOP } from "@/lib/natillera/format";
-import { api, type MoraAhorroSocio } from "@/lib/dashboard/api";
+import { formatCOP, formatFechaCorta } from "@/lib/natillera/format";
+import { InformeLayout } from "@/components/informes/InformeLayout";
+import { api, USA_SUPABASE, type MoraAhorroSocio } from "@/lib/dashboard/api";
 import { useApi } from "@/lib/dashboard/useApi";
 
-export function MoraAhorrosPage({ onVolver }: { onVolver: () => void }) {
+const ESTADO_TXT = { pagado_a_tiempo: "A tiempo", pagado_tarde: "Tarde", sin_pagar: "Sin pagar" } as const;
+
+export function MoraAhorrosPage({ onVolver: _onVolver }: { onVolver: () => void }) {
   const { data, loading, error, reload } = useApi(() => api.moraAhorros(true), []);
   const [abiertos, setAbiertos] = useState<Set<number>>(new Set());
 
@@ -30,27 +31,77 @@ export function MoraAhorrosPage({ onVolver }: { onVolver: () => void }) {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-[var(--color-text)]">
-            Mora — Ahorros
-          </h1>
-          <p className="text-sm text-[var(--color-muted)] mt-1">
-            Cálculo automático de mora por atraso en el pago del ahorro mensual.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={reload} disabled={loading}>
-            <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
-            Actualizar
-          </Button>
-          <Button variant="ghost" size="sm" onClick={onVolver}>
-            ← Volver
-          </Button>
-        </div>
-      </div>
-
+    <InformeLayout
+      titulo="Mora de ahorros"
+      descripcion="Pagos de ahorro hechos después de la fecha de corte de cada mes, o que no se han hecho, y la mora que generan."
+      Icon={CalendarClock}
+      corte={data ? formatFechaCorta(data.hoy) : undefined}
+      horizontal
+      cargando={loading}
+      error={error}
+      listo={!!data}
+      onActualizar={reload}
+      resumen={
+        data
+          ? [
+              { label: "Mora pendiente por cobrar", valor: formatCOP(data.totales.mora_pendiente),
+                tono: data.totales.mora_pendiente > 0 ? "alerta" : "bueno" },
+              { label: "Mora ya pagada", valor: formatCOP(data.totales.mora_pagada) },
+              { label: "Mora total", valor: formatCOP(data.totales.mora_total) },
+              { label: "Meses sin pagar", valor: String(data.totales.sin_pagar),
+                tono: data.totales.sin_pagar > 0 ? "alerta" : "bueno" },
+            ]
+          : undefined
+      }
+      excel={() => [
+        {
+          nombre: "Mora por socio",
+          columnas: [
+            { titulo: "Socio", tipo: "texto", ancho: 30 },
+            { titulo: "Cuota", tipo: "moneda" },
+            { titulo: "Meses", tipo: "numero" },
+            { titulo: "A tiempo", tipo: "numero" },
+            { titulo: "Tarde", tipo: "numero" },
+            { titulo: "Sin pagar", tipo: "numero" },
+            { titulo: "Mora pagada", tipo: "moneda" },
+            { titulo: "Mora pendiente", tipo: "moneda" },
+          ],
+          filas: (data?.socios ?? []).map((s) => [
+            s.socio, s.cuota_sostenimiento, s.total_periodos, s.pagados_a_tiempo,
+            s.pagados_tarde, s.sin_pagar, s.mora_pagada, s.mora_pendiente,
+          ]),
+          totales: ["TOTAL", null, null, null, null, data?.totales.sin_pagar ?? 0,
+            data?.totales.mora_pagada ?? 0, data?.totales.mora_pendiente ?? 0],
+        },
+        {
+          nombre: "Detalle mes a mes",
+          columnas: [
+            { titulo: "Socio", tipo: "texto", ancho: 30 },
+            { titulo: "Periodo", tipo: "texto", ancho: 14 },
+            { titulo: "Fecha de corte", tipo: "fecha" },
+            { titulo: "Fecha de pago", tipo: "fecha" },
+            { titulo: "Días de atraso", tipo: "numero" },
+            { titulo: "Estado", tipo: "texto", ancho: 12 },
+            { titulo: "Mora", tipo: "moneda" },
+          ],
+          filas: (data?.socios ?? []).flatMap((s) =>
+            (s.detalle ?? []).map((d) => [
+              s.socio, d.periodo, d.fecha_corte, d.fecha_pago, d.dias_atraso, ESTADO_TXT[d.estado], d.mora,
+            ]),
+          ),
+        },
+      ]}
+      avisos={
+        <>
+          {USA_SUPABASE && (
+            <div className="flex items-start gap-2 rounded-[var(--radius-card)] border border-[var(--color-warning)]/40 bg-[var(--color-warning)]/5 p-3 text-sm" data-print="hide">
+              <AlertCircle className="mt-0.5 size-4 shrink-0 text-[var(--color-warning)]" />
+              <span>
+                <strong>Todavía no se calcula en la versión en la nube.</strong> Los números de este informe salen
+                en cero aunque haya atrasos; por ahora solo el servidor local hace este cálculo.
+              </span>
+            </div>
+          )}
       {data && data.regla.habilitada === false && (
         <Card className="rounded-[var(--radius-card)] border-[var(--color-warning)]/40 bg-[var(--color-warning)]/5">
           <CardContent className="py-4 flex items-start gap-2">
@@ -86,40 +137,9 @@ export function MoraAhorrosPage({ onVolver }: { onVolver: () => void }) {
         </Card>
       )}
 
-      {data && (
-        <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
-          <MiniTile
-            label="Mora total acumulada"
-            value={formatCOP(data.totales.mora_total)}
-            color="var(--color-warning)"
-          />
-          <MiniTile
-            label="Mora ya pagada"
-            value={formatCOP(data.totales.mora_pagada)}
-            color="var(--color-success)"
-          />
-          <MiniTile
-            label="Mora PENDIENTE por cobrar"
-            value={formatCOP(data.totales.mora_pendiente)}
-            color="var(--color-destructive)"
-          />
-          <MiniTile
-            label="Meses sin pagar"
-            value={String(data.totales.sin_pagar)}
-            color="var(--color-warning)"
-          />
-        </div>
-      )}
-
-      {error && (
-        <div className="flex items-start gap-2 rounded-md border border-[var(--color-destructive)]/40 bg-[var(--color-destructive)]/5 p-3">
-          <AlertCircle className="size-4 text-[var(--color-destructive)] shrink-0 mt-0.5" />
-          <p className="text-sm text-[var(--color-destructive)]">{error}</p>
-        </div>
-      )}
-
-      {loading && !data && <Skeleton className="h-96 rounded-[var(--radius-card)]" />}
-
+        </>
+      }
+    >
       {data && (
         <Card className="rounded-[var(--radius-card)] border-[var(--color-border)]">
           <CardHeader className="pb-2">
@@ -164,22 +184,7 @@ export function MoraAhorrosPage({ onVolver }: { onVolver: () => void }) {
           </CardContent>
         </Card>
       )}
-    </div>
-  );
-}
-
-function MiniTile({ label, value, color }: { label: string; value: string; color: string }) {
-  return (
-    <Card className="rounded-[var(--radius-card)] border-[var(--color-border)]">
-      <CardContent className="py-3">
-        <div className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
-          {label}
-        </div>
-        <div className="text-lg font-semibold tabular-nums mt-1" style={{ color }}>
-          {value}
-        </div>
-      </CardContent>
-    </Card>
+    </InformeLayout>
   );
 }
 

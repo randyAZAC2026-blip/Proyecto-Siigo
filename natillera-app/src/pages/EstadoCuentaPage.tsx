@@ -4,8 +4,6 @@ import {
   Search,
   TrendingUp,
   TrendingDown,
-  AlertCircle,
-  Printer,
   MessageCircle,
   ClipboardCheck,
 } from "lucide-react";
@@ -24,9 +22,10 @@ import {
 import { formatCOP, nombreConcepto } from "@/lib/natillera/format";
 import { api, type Socio } from "@/lib/dashboard/api";
 import { useApi } from "@/lib/dashboard/useApi";
+import { InformeLayout } from "@/components/informes/InformeLayout";
 
 // Con socioFijo es "Mis ahorros" del socio que entró: sin lista de socios ni selector.
-export function EstadoCuentaPage({ onVolver, socioFijo }: { onVolver?: () => void; socioFijo?: number }) {
+export function EstadoCuentaPage({ onVolver: _onVolver, socioFijo }: { onVolver?: () => void; socioFijo?: number }) {
   const socios = useApi(() => (socioFijo ? Promise.resolve([]) : api.socios()), [socioFijo]);
   const [busqueda, setBusqueda] = useState("");
   const [socioElegido, setSocioId] = useState<number | null>(null);
@@ -51,27 +50,64 @@ export function EstadoCuentaPage({ onVolver, socioFijo }: { onVolver?: () => voi
     return detalle.data.historial.filter((t) => t.concepto === filtroConcepto);
   }, [detalle.data, filtroConcepto]);
 
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-start justify-between gap-3" data-print="hide">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-semibold text-[var(--color-text)]">
-            <FileText className="size-6 text-[var(--color-primary)]" />
-            {socioFijo ? "Mis ahorros" : "Estado de cuenta"}
-          </h1>
-          <p className="text-sm text-[var(--color-muted)] mt-1">
-            {socioFijo
-              ? "Todos tus aportes y movimientos en la natillera."
-              : "Detallado por socio — todos los movimientos, saldos, deuda."}
-          </p>
-        </div>
-        {onVolver && (
-          <Button variant="ghost" size="sm" onClick={onVolver}>
-            ← Volver
-          </Button>
-        )}
-      </div>
+  const s = detalle.data?.socio;
+  const historial = detalle.data?.historial ?? [];
+  const firmado = (t: { tipo: string; valor: number }) => (t.tipo === "egreso" ? -t.valor : t.valor);
 
+  return (
+    <InformeLayout
+      titulo={socioFijo ? "Mis ahorros" : "Estado de cuenta"}
+      descripcion={
+        socioFijo
+          ? "Todos tus aportes y movimientos en la natillera."
+          : "Aportes, movimientos y deuda de un socio. Elige el socio en la lista; se puede imprimir, exportar o enviar por WhatsApp."
+      }
+      Icon={FileText}
+      cargando={socios.loading || detalle.loading}
+      error={socios.error ?? detalle.error}
+      listo={socioFijo ? !!detalle.data : !!socios.data}
+      imprimible={!!s}
+      onActualizar={() => {
+        socios.reload();
+        detalle.reload();
+      }}
+      detalleImpresion={s ? `Socio: ${s.nombre} · ID #${s.id} · Cuota base ${formatCOP(s.cuota_sostenimiento)}` : undefined}
+      excel={
+        s
+          ? () => [
+              {
+                nombre: "Resumen",
+                columnas: [
+                  { titulo: "Concepto", tipo: "texto", ancho: 26 },
+                  { titulo: "Valor", tipo: "moneda" },
+                ],
+                filas: [
+                  ["Socio", s.nombre],
+                  ["Ahorro", s.ahorro],
+                  ["Actividades", s.actividades],
+                  ["Rifa / chance", s.rifa_chance],
+                  ["Intereses pagados", s.intereses_pagados],
+                  ["Multas pagadas", s.multas_pagadas],
+                  ["Deuda en préstamos", s.saldo_prestamos],
+                ],
+                totales: ["TOTAL APORTADO", s.total_aportado],
+              },
+              {
+                nombre: "Movimientos",
+                columnas: [
+                  { titulo: "Fecha", tipo: "fecha" },
+                  { titulo: "Periodo", tipo: "texto", ancho: 14 },
+                  { titulo: "Concepto", tipo: "texto", ancho: 24 },
+                  { titulo: "Tipo", tipo: "texto", ancho: 10 },
+                  { titulo: "Valor", tipo: "moneda" },
+                ],
+                filas: historial.map((t) => [t.fecha_pago, t.periodo, nombreConcepto(t.concepto), t.tipo, firmado(t)]),
+                totales: ["NETO", null, null, null, historial.reduce((n, t) => n + firmado(t), 0)],
+              },
+            ]
+          : undefined
+      }
+    >
       <div className={socioFijo ? "space-y-4" : "grid gap-4 md:grid-cols-[280px_1fr]"} data-print="single-col">
         {!socioFijo && (
         <Card className="rounded-[var(--radius-card)] border-[var(--color-border)] h-fit" data-print="hide">
@@ -122,27 +158,18 @@ export function EstadoCuentaPage({ onVolver, socioFijo }: { onVolver?: () => voi
             </div>
           )}
 
-          {detalle.loading && socioId && (
+          {detalle.loading && socioId && !detalle.data && (
             <p className="text-sm text-[var(--color-muted)]">Cargando…</p>
-          )}
-
-          {detalle.error && (
-            <div className="flex items-start gap-2 rounded-md border border-[var(--color-destructive)]/40 bg-[var(--color-destructive)]/5 p-3">
-              <AlertCircle className="size-4 text-[var(--color-destructive)] shrink-0 mt-0.5" />
-              <p className="text-sm text-[var(--color-destructive)]">{detalle.error}</p>
-            </div>
           )}
 
           {detalle.data && (
             <>
-              <PrintHeader socio={detalle.data.socio} />
               <SaldoResumen socio={detalle.data.socio} />
               <ConceptoFiltros
                 actual={filtroConcepto}
                 onChange={setFiltroConcepto}
                 total={detalle.data.historial.length}
                 filtrado={historialFiltrado.length}
-                onPrint={() => window.print()}
                 socio={detalle.data.socio}
               />
               <HistorialTabla filas={historialFiltrado} />
@@ -150,23 +177,7 @@ export function EstadoCuentaPage({ onVolver, socioFijo }: { onVolver?: () => voi
           )}
         </div>
       </div>
-    </div>
-  );
-}
-
-function PrintHeader({ socio }: { socio: Socio }) {
-  const hoy = new Date().toLocaleDateString("es-CO", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-  return (
-    <div data-print="header">
-      <h1>Estado de cuenta — Natillera</h1>
-      <p>
-        Socio: <strong>{socio.nombre}</strong> (ID #{socio.id}) · Generado el {hoy}
-      </p>
-    </div>
+    </InformeLayout>
   );
 }
 
@@ -274,14 +285,12 @@ function ConceptoFiltros({
   onChange,
   total,
   filtrado,
-  onPrint,
   socio,
 }: {
   actual: string;
   onChange: (v: string) => void;
   total: number;
   filtrado: number;
-  onPrint: () => void;
   socio: Socio;
 }) {
   const [copiado, setCopiado] = useState(false);
@@ -367,10 +376,6 @@ function ConceptoFiltros({
           <MessageCircle className="size-3 text-[var(--color-success)]" />
           WhatsApp
         </Button>
-        <Button variant="outline" size="sm" onClick={onPrint} className="h-7 px-2 gap-1">
-          <Printer className="size-3" />
-          Imprimir / PDF
-        </Button>
       </div>
     </div>
   );
@@ -388,8 +393,10 @@ function HistorialTabla({
     periodo: string | null;
   }[];
 }) {
+  const entra = filas.filter((t) => t.tipo === "ingreso").reduce((n, t) => n + t.valor, 0);
+  const sale = filas.filter((t) => t.tipo === "egreso").reduce((n, t) => n + t.valor, 0);
   return (
-    <Card className="rounded-[var(--radius-card)] border-[var(--color-border)]">
+    <Card className="rounded-[var(--radius-card)] border-[var(--color-border)] shadow-[var(--shadow-card)]">
       <CardHeader className="pb-2">
         <CardTitle className="text-base">Movimientos</CardTitle>
       </CardHeader>
@@ -434,7 +441,7 @@ function HistorialTabla({
               <TableRow key={t.id}>
                 <TableCell className="text-xs">{t.fecha_pago ?? "—"}</TableCell>
                 <TableCell className="text-xs">{t.periodo ?? "—"}</TableCell>
-                <TableCell className="text-xs font-medium">{t.concepto}</TableCell>
+                <TableCell className="text-xs font-medium">{nombreConcepto(t.concepto)}</TableCell>
                 <TableCell className="text-center">
                   <Badge
                     variant="secondary"
@@ -467,6 +474,17 @@ function HistorialTabla({
                 <TableCell colSpan={5} className="text-center text-sm text-[var(--color-muted)]">
                   Sin movimientos con este filtro
                 </TableCell>
+              </TableRow>
+            )}
+            {filas.length > 0 && (
+              <TableRow data-total className="bg-[var(--color-background)] font-semibold hover:bg-[var(--color-background)]">
+                <TableCell colSpan={3} className="text-xs">
+                  Total · {filas.length} movimientos
+                </TableCell>
+                <TableCell className="text-center text-[11px] font-normal text-[var(--color-muted)]">
+                  +{formatCOP(entra)} / −{formatCOP(sale)}
+                </TableCell>
+                <TableCell className="text-right text-xs tabular-nums">{formatCOP(entra - sale)}</TableCell>
               </TableRow>
             )}
           </TableBody>

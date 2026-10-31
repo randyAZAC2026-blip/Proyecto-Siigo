@@ -1,7 +1,9 @@
 import {
   AlertTriangle,
   BarChart3,
+  Calculator,
   CheckCircle2,
+  LayoutGrid,
   FileText,
   HandCoins,
   HardDrive,
@@ -16,6 +18,7 @@ import {
 
 export type Vista =
   | "dashboard"
+  | "informes"
   | "socios"
   | "estado"
   | "matriz"
@@ -47,42 +50,33 @@ export interface Grupo {
   items: Modulo[];
 }
 
+// Operación = donde se registra y se concilia. Informes = solo lectura,
+// todos con el mismo formato (InformeLayout): totales, Excel e impresión.
 export const GRUPOS_ADMIN: Grupo[] = [
   {
     titulo: "Inicio",
+    items: [{ key: "dashboard", label: "Panel", corto: "Inicio", Icon: Home }],
+  },
+  {
+    titulo: "Operación",
     items: [
-      { key: "dashboard", label: "Panel", corto: "Inicio", Icon: Home },
       { key: "banco", label: "Banco", Icon: Landmark },
+      { key: "control", label: "Control de pagos", Icon: CheckCircle2 },
+      { key: "prestamos", label: "Préstamos", Icon: HandCoins },
+      { key: "actividades", label: "Actividades", corto: "Rifas", Icon: Sparkles },
     ],
   },
   {
-    titulo: "Socios",
+    titulo: "Informes",
     items: [
+      { key: "informes", label: "Todos los informes", corto: "Informes", Icon: LayoutGrid },
       { key: "socios", label: "Socios y aportes", Icon: Users },
       { key: "estado", label: "Estado de cuenta", Icon: FileText },
-    ],
-  },
-  {
-    titulo: "Ahorros",
-    items: [
       { key: "matriz", label: "Matriz de ahorros", corto: "Ahorros", Icon: BarChart3 },
-      { key: "control", label: "Control de pagos", Icon: CheckCircle2 },
-      { key: "mora-ahorros", label: "Mora ahorros", Icon: AlertTriangle },
-    ],
-  },
-  {
-    titulo: "Préstamos",
-    items: [
-      { key: "prestamos", label: "Préstamos", Icon: HandCoins },
-      { key: "mora-intereses", label: "Mora intereses", Icon: AlertTriangle },
+      { key: "mora-ahorros", label: "Mora de ahorros", Icon: AlertTriangle },
+      { key: "mora-intereses", label: "Mora de intereses", Icon: AlertTriangle },
       { key: "liquidacion", label: "Liquidación", Icon: Wallet },
-      { key: "simulador", label: "Simulador cierre", Icon: Wallet },
-    ],
-  },
-  {
-    titulo: "Eventos",
-    items: [
-      { key: "actividades", label: "Actividades", corto: "Rifas", Icon: Sparkles },
+      { key: "simulador", label: "Simulador de cierre", Icon: Calculator },
     ],
   },
   {
@@ -108,6 +102,6 @@ const buscar = (grupos: Grupo[], keys: Vista[]) =>
   keys.map((k) => todos(grupos).find((m) => m.key === k)!);
 
 /** Pestañas fijas de la barra inferior; el resto del admin va en "Más". */
-export const PESTANAS_ADMIN = buscar(GRUPOS_ADMIN, ["dashboard", "matriz", "prestamos", "banco"]);
+export const PESTANAS_ADMIN = buscar(GRUPOS_ADMIN, ["dashboard", "banco", "informes", "prestamos"]);
 export const MAS_ADMIN = todos(GRUPOS_ADMIN).filter((m) => !PESTANAS_ADMIN.includes(m));
 export const PESTANAS_SOCIO = todos(GRUPOS_SOCIO);

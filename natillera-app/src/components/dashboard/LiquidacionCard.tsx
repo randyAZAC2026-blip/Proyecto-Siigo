@@ -28,13 +28,11 @@ export function LiquidacionCard({ filas }: { filas: Liquidacion[] }) {
   );
 
   return (
-    <Card className="rounded-[var(--radius-card)] border-[var(--color-border)]">
+    <Card className="rounded-[var(--radius-card)] border-[var(--color-border)] shadow-[var(--shadow-card)]">
       <CardHeader>
-        <CardTitle>Liquidación por socio</CardTitle>
+        <CardTitle className="text-base">Detalle por socio</CardTitle>
         <CardDescription>
-          Cada socio recibe lo que aportó (ahorro + actividades + rifa + intereses pagados)
-          menos sus deudas pendientes (saldo de préstamo + multas). Sin proporción — es lo
-          que le corresponde a cada uno según sus movimientos reales.
+          Aportes (+) menos deducciones (−). Neto en rojo: el socio queda debiendo a la natillera.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -106,8 +104,8 @@ export function LiquidacionCard({ filas }: { filas: Liquidacion[] }) {
                   </TableCell>
                 </TableRow>
               ))}
-            <TableRow className="bg-[var(--color-primary)]/5">
-              <TableCell className="font-semibold">TOTAL</TableCell>
+            <TableRow data-total className="bg-[var(--color-background)] hover:bg-[var(--color-background)]">
+              <TableCell className="font-semibold">Total</TableCell>
               <TableCell className="text-right tabular-nums font-semibold text-xs border-l">
                 {formatCOP(totales.ahorro)}
               </TableCell>

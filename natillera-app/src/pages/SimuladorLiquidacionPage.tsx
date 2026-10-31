@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import { FlaskConical, AlertCircle, Info, Printer } from "lucide-react";
+import { FlaskConical, Info } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -13,7 +12,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatCOP, parseCOP } from "@/lib/natillera/format";
+import { formatCOP, formatCOPCompacto, formatFechaCorta, parseCOP } from "@/lib/natillera/format";
+import { InformeLayout } from "@/components/informes/InformeLayout";
 import {
   api,
   type SimuladorParams,
@@ -30,7 +30,7 @@ const FIN_MES = (() => {
   return new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().slice(0, 10);
 })();
 
-export function SimuladorLiquidacionPage({ onVolver }: { onVolver: () => void }) {
+export function SimuladorLiquidacionPage({ onVolver: _onVolver }: { onVolver: () => void }) {
   const [params, setParams] = useState<SimuladorParams>({
     fecha_corte: HOY,
     mora_ahorros: { modo: "cobrar" },
@@ -64,58 +64,113 @@ export function SimuladorLiquidacionPage({ onVolver }: { onVolver: () => void })
     };
   }, [params]);
 
+  const t = data?.totales;
+  const deducciones = t
+    ? t.total_prestamos + t.total_multas + t.total_mora_ahorro_cobrada + t.total_mora_intereses_cobrada
+    : 0;
+
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-start justify-between gap-3" data-print="hide">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-semibold text-[var(--color-text)]">
-            <FlaskConical className="size-6 text-[var(--color-primary)]" />
-            Simulador de liquidación
-          </h1>
-          <p className="text-sm text-[var(--color-muted)] mt-1">
-            Proyecta escenarios de cierre sin modificar la BD. Ajusta cualquier control y los
-            resultados se recalculan automáticamente.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => window.print()}>
-            <Printer className="size-4" />
-            Imprimir / PDF
-          </Button>
-          <Button variant="ghost" size="sm" onClick={onVolver}>
-            ← Volver
-          </Button>
-        </div>
-      </div>
-
-      <Card
-        className="rounded-[var(--radius-card)] border-[var(--color-primary)]/30 bg-[var(--color-primary)]/5"
-        data-print="hide"
-      >
-        <CardContent className="py-3 flex items-start gap-2">
-          <Info className="size-4 text-[var(--color-primary)] shrink-0 mt-0.5" />
-          <p className="text-xs text-[var(--color-text)]">
-            <strong>Este simulador no toca la base de datos.</strong> Es solo análisis
-            "what-if". Si la junta aprueba un escenario, se ejecuta después en un proceso
-            separado de cierre.
-          </p>
-        </CardContent>
-      </Card>
-
-      <ControlesPanel params={params} onChange={setParams} />
-
-      {error && (
-        <div className="flex items-start gap-2 rounded-md border border-[var(--color-destructive)]/40 bg-[var(--color-destructive)]/5 p-3">
-          <AlertCircle className="size-4 text-[var(--color-destructive)] shrink-0 mt-0.5" />
-          <p className="text-sm text-[var(--color-destructive)]">{error}</p>
-        </div>
-      )}
-
-      {loading && !data && <Skeleton className="h-96 rounded-[var(--radius-card)]" />}
-
-      {data && <ResumenTotales totales={data.totales} loading={loading} />}
+    <InformeLayout
+      titulo="Simulador de cierre"
+      descripcion="Proyecta escenarios de liquidación sin modificar la base de datos. Ajusta cualquier control y los resultados se recalculan solos."
+      Icon={FlaskConical}
+      corte={formatFechaCorta(params.fecha_corte)}
+      horizontal
+      cargando={loading}
+      error={error}
+      listo={!!data}
+      detalleImpresion={`Escenario: utilidad ${params.utilidad?.modo ?? "—"} · reparto ${params.reparto?.modo ?? "—"} · préstamos ${params.prestamos?.modo ?? "—"} · mora ahorros ${params.mora_ahorros?.modo ?? "—"} · mora intereses ${params.mora_intereses?.modo ?? "—"}`}
+      resumen={
+        t
+          ? [
+              { label: "Aportes", valor: formatCOPCompacto(t.total_aportes) },
+              {
+                label: "Utilidad a repartir",
+                valor: formatCOPCompacto(t.utilidad_a_repartir),
+                detalle: t.reserva > 0 ? `reserva ${formatCOPCompacto(t.reserva)}` : undefined,
+              },
+              { label: "Deducciones", valor: formatCOPCompacto(-deducciones) },
+              { label: "Neto a pagar", valor: formatCOPCompacto(t.total_neto) },
+              {
+                label: "Quedan debiendo",
+                valor: String(t.socios_negativos),
+                detalle: `de ${t.socios_negativos + t.socios_positivos} socios`,
+                tono: t.socios_negativos > 0 ? "alerta" : "bueno",
+              },
+            ]
+          : undefined
+      }
+      excel={() => [
+        {
+          nombre: "Proyección por socio",
+          columnas: [
+            { titulo: "Socio", tipo: "texto", ancho: 30 },
+            { titulo: "Aportes", tipo: "moneda" },
+            { titulo: "Utilidad", tipo: "moneda" },
+            { titulo: "Préstamo", tipo: "moneda" },
+            { titulo: "Multas", tipo: "moneda" },
+            { titulo: "Mora ahorro", tipo: "moneda" },
+            { titulo: "Mora intereses", tipo: "moneda" },
+            { titulo: "Neto a recibir", tipo: "moneda" },
+          ],
+          filas: (data?.socios ?? []).map((x) => [
+            x.nombre,
+            x.total_aportes,
+            x.participacion_utilidad,
+            -x.deducc_prestamo_aplicada,
+            -x.deducc_multas,
+            -x.deducc_mora_ahorro,
+            -x.deducc_mora_intereses,
+            x.neto_a_recibir,
+          ]),
+          totales: t
+            ? [
+                "TOTAL",
+                t.total_aportes,
+                t.utilidad_a_repartir,
+                -t.total_prestamos,
+                -t.total_multas,
+                -t.total_mora_ahorro_cobrada,
+                -t.total_mora_intereses_cobrada,
+                t.total_neto,
+              ]
+            : undefined,
+        },
+        {
+          nombre: "Escenario",
+          columnas: [
+            { titulo: "Parámetro", tipo: "texto", ancho: 24 },
+            { titulo: "Valor", tipo: "texto", ancho: 40 },
+          ],
+          filas: [
+            ["Fecha de corte", params.fecha_corte],
+            ["Utilidad", JSON.stringify(params.utilidad)],
+            ["Reparto", JSON.stringify(params.reparto)],
+            ["Préstamos", JSON.stringify(params.prestamos)],
+            ["Mora de ahorros", JSON.stringify(params.mora_ahorros)],
+            ["Mora de intereses", JSON.stringify(params.mora_intereses)],
+          ],
+        },
+      ]}
+      avisos={
+        <>
+          <div
+            className="flex items-start gap-2 rounded-[var(--radius-card)] border border-[var(--color-primary)]/30 bg-[var(--color-primary)]/5 p-3"
+            data-print="hide"
+          >
+            <Info className="mt-0.5 size-4 shrink-0 text-[var(--color-primary)]" />
+            <p className="text-xs text-[var(--color-text)]">
+              <strong>Este simulador no toca la base de datos.</strong> Es solo un análisis de escenarios. Si la
+              junta aprueba uno, el cierre se hace después en un proceso aparte.
+            </p>
+          </div>
+          {/* Los controles se ven siempre, aunque la simulación aún esté cargando. */}
+          <ControlesPanel params={params} onChange={setParams} />
+        </>
+      }
+    >
       {data && <TablaSimulacion data={data} />}
-    </div>
+    </InformeLayout>
   );
 }
 
@@ -362,49 +417,6 @@ function RadioGroup<T extends string>({
   );
 }
 
-function ResumenTotales({
-  totales,
-  loading,
-}: {
-  totales: SimuladorResultado["totales"];
-  loading: boolean;
-}) {
-  const tiles = [
-    { label: "Total ahorros", value: formatCOP(totales.total_ahorros), color: "var(--color-primary)" },
-    { label: "Utilidad total", value: formatCOP(totales.utilidad_total), color: "var(--color-success)" },
-    { label: "A repartir", value: formatCOP(totales.utilidad_a_repartir), color: "var(--color-success)" },
-    { label: "Reserva", value: formatCOP(totales.reserva), color: "var(--color-warning)" },
-    {
-      label: "Total a pagar (neto)",
-      value: formatCOP(totales.total_neto),
-      color: totales.total_neto < 0 ? "var(--color-destructive)" : "var(--color-primary)",
-    },
-    { label: "Socios positivos", value: `${totales.socios_positivos}`, color: "var(--color-success)" },
-    { label: "Socios negativos", value: `${totales.socios_negativos}`, color: "var(--color-destructive)" },
-    {
-      label: "Mora cobrada",
-      value: formatCOP(totales.total_mora_ahorro_cobrada + totales.total_mora_intereses_cobrada),
-      color: "var(--color-warning)",
-    },
-  ];
-  return (
-    <div className={`grid gap-3 grid-cols-2 sm:grid-cols-4 ${loading ? "opacity-70" : ""}`}>
-      {tiles.map((t) => (
-        <Card key={t.label} className="rounded-[var(--radius-card)] border-[var(--color-border)]">
-          <CardContent className="py-3">
-            <div className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
-              {t.label}
-            </div>
-            <div className="text-lg font-semibold tabular-nums mt-1" style={{ color: t.color }}>
-              {t.value}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
-}
-
 function TablaSimulacion({ data }: { data: SimuladorResultado }) {
   return (
     <Card className="rounded-[var(--radius-card)] border-[var(--color-border)]">
@@ -415,10 +427,6 @@ function TablaSimulacion({ data }: { data: SimuladorResultado }) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div data-print="header">
-          <h1>Simulación de liquidación — Natillera</h1>
-          <p>Corte: {data.parametros.fecha_corte}</p>
-        </div>
         <Table>
           <TableHeader>
             <TableRow>
@@ -469,8 +477,8 @@ function TablaSimulacion({ data }: { data: SimuladorResultado }) {
                 </TableCell>
               </TableRow>
             ))}
-            <TableRow className="bg-[var(--color-primary)]/5">
-              <TableCell className="font-semibold">TOTAL</TableCell>
+            <TableRow data-total className="bg-[var(--color-background)] hover:bg-[var(--color-background)]">
+              <TableCell className="font-semibold">Total</TableCell>
               <TableCell className="text-right tabular-nums font-semibold text-xs">
                 {formatCOP(data.totales.total_aportes)}
               </TableCell>

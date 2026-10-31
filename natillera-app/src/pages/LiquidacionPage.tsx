@@ -1,54 +1,90 @@
-import { AlertCircle, RefreshCw, Printer } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Wallet } from "lucide-react";
 import { api } from "@/lib/dashboard/api";
 import { useApi } from "@/lib/dashboard/useApi";
+import { formatCOPCompacto } from "@/lib/natillera/format";
+import { InformeLayout } from "@/components/informes/InformeLayout";
 import { LiquidacionCard } from "@/components/dashboard/LiquidacionCard";
 
-export function LiquidacionPage({ onVolver }: { onVolver: () => void }) {
+export function LiquidacionPage({ onVolver: _onVolver }: { onVolver: () => void }) {
   const { data, loading, error, reload } = useApi(() => api.liquidacion(), []);
 
+  // Mismo filtro que la tabla: solo socios con aportes o deudas.
+  const filas = (data ?? []).filter((f) => f.total_aportes > 0 || f.deducc_prestamo > 0 || f.deducc_multas > 0);
+  const s = (fn: (f: (typeof filas)[number]) => number) => filas.reduce((t, f) => t + fn(f), 0);
+  const aportes = s((f) => f.total_aportes);
+  const deducciones = s(
+    (f) => f.deducc_prestamo + f.deducc_multas + (f.deducc_mora_ahorro ?? 0) + (f.deducc_mora_intereses ?? 0),
+  );
+  const neto = s((f) => f.neto_a_recibir);
+  const enNegativo = filas.filter((f) => f.neto_a_recibir < 0).length;
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-start justify-between gap-3" data-print="hide">
-        <div>
-          <h1 className="text-2xl font-semibold text-[var(--color-text)]">
-            Liquidación estimada
-          </h1>
-          <p className="text-sm text-[var(--color-muted)] mt-1">
-            Utilidad total (intereses + multas + rifas) repartida proporcional al ahorro
-            individual. Si cerramos el ciclo hoy, cada socio recibiría el "neto a pagar".
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => window.print()}>
-            <Printer className="size-4" />
-            Imprimir / PDF
-          </Button>
-          <Button variant="outline" size="sm" onClick={reload} disabled={loading}>
-            <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
-            Actualizar
-          </Button>
-          <Button variant="ghost" size="sm" onClick={onVolver}>
-            ← Volver
-          </Button>
-        </div>
-      </div>
-
-      <div data-print="header">
-        <h1>Liquidación estimada — Natillera</h1>
-        <p>Corte: {new Date().toLocaleDateString("es-CO", { year: "numeric", month: "long", day: "numeric" })}</p>
-      </div>
-
-      {error && (
-        <div className="flex items-start gap-2 rounded-md border border-[var(--color-destructive)]/40 bg-[var(--color-destructive)]/5 p-3">
-          <AlertCircle className="size-4 text-[var(--color-destructive)] shrink-0 mt-0.5" />
-          <p className="text-sm text-[var(--color-destructive)]">{error}</p>
-        </div>
-      )}
-
-      {loading && !data && <Skeleton className="h-96 rounded-[var(--radius-card)]" />}
+    <InformeLayout
+      titulo="Liquidación"
+      descripcion="Si el ciclo se cerrara hoy: cada socio recibe lo que aportó (ahorro, actividades, rifa e intereses pagados) menos lo que debe (saldo de préstamo, multas y mora)."
+      Icon={Wallet}
+      horizontal
+      cargando={loading}
+      error={error}
+      listo={!!data}
+      onActualizar={reload}
+      resumen={[
+        { label: "Socios a liquidar", valor: String(filas.length) },
+        { label: "Aportes", valor: formatCOPCompacto(aportes) },
+        { label: "Deducciones", valor: formatCOPCompacto(-deducciones) },
+        {
+          label: "Neto a pagar",
+          valor: formatCOPCompacto(neto),
+          detalle: enNegativo > 0 ? `${enNegativo} socios quedan debiendo` : "Ningún socio queda debiendo",
+          tono: enNegativo > 0 ? "alerta" : "bueno",
+        },
+      ]}
+      excel={() => [
+        {
+          nombre: "Liquidación",
+          columnas: [
+            { titulo: "Socio", tipo: "texto", ancho: 30 },
+            { titulo: "Ahorro", tipo: "moneda" },
+            { titulo: "Actividades", tipo: "moneda" },
+            { titulo: "Rifa", tipo: "moneda" },
+            { titulo: "Intereses pagados", tipo: "moneda" },
+            { titulo: "Total aportes", tipo: "moneda" },
+            { titulo: "Saldo préstamo", tipo: "moneda" },
+            { titulo: "Multas", tipo: "moneda" },
+            { titulo: "Mora ahorro", tipo: "moneda" },
+            { titulo: "Mora intereses", tipo: "moneda" },
+            { titulo: "Neto a recibir", tipo: "moneda" },
+          ],
+          filas: filas.map((f) => [
+            f.nombre,
+            f.ahorro,
+            f.actividades,
+            f.rifa_chance,
+            f.intereses_pagados,
+            f.total_aportes,
+            -f.deducc_prestamo,
+            -f.deducc_multas,
+            -(f.deducc_mora_ahorro ?? 0),
+            -(f.deducc_mora_intereses ?? 0),
+            f.neto_a_recibir,
+          ]),
+          totales: [
+            "TOTAL",
+            s((f) => f.ahorro),
+            s((f) => f.actividades),
+            s((f) => f.rifa_chance),
+            s((f) => f.intereses_pagados),
+            aportes,
+            -s((f) => f.deducc_prestamo),
+            -s((f) => f.deducc_multas),
+            -s((f) => f.deducc_mora_ahorro ?? 0),
+            -s((f) => f.deducc_mora_intereses ?? 0),
+            neto,
+          ],
+        },
+      ]}
+    >
       {data && <LiquidacionCard filas={data} />}
-    </div>
+    </InformeLayout>
   );
 }

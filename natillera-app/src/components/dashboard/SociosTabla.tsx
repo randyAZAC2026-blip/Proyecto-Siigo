@@ -60,16 +60,18 @@ export function SociosTabla({ socios }: { socios: Socio[] }) {
     </TableHead>
   );
 
+  const total = (k: Exclude<SortKey, "nombre">) => filtrados.reduce((t, s) => t + Number(s[k] ?? 0), 0);
+
   return (
-    <Card className="rounded-[var(--radius-card)] border-[var(--color-border)]">
+    <Card className="rounded-[var(--radius-card)] border-[var(--color-border)] shadow-[var(--shadow-card)]">
       <CardHeader className="flex flex-row items-start justify-between gap-3">
         <div>
-          <CardTitle>Socios y aportes</CardTitle>
+          <CardTitle className="text-base">Detalle por socio</CardTitle>
           <CardDescription>
-            {filtrados.length} socios · clic en un encabezado para ordenar
+            {filtrados.length} socios{q ? ` que coinciden con "${q}"` : ""}
           </CardDescription>
         </div>
-        <div className="relative w-56 max-w-full">
+        <div className="relative w-56 max-w-full" data-print="hide">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-3.5 text-[var(--color-muted)]" />
           <Input
             value={q}
@@ -110,6 +112,16 @@ export function SociosTabla({ socios }: { socios: Socio[] }) {
                 </TableCell>
               </TableRow>
             ))}
+            {filtrados.length > 0 && (
+              <TableRow data-total className="bg-[var(--color-background)] font-semibold hover:bg-[var(--color-background)]">
+                <TableCell>Total</TableCell>
+                <TableCell className="text-right tabular-nums">{formatCOP(total("ahorro"))}</TableCell>
+                <TableCell className="text-right tabular-nums">{formatCOP(total("actividades"))}</TableCell>
+                <TableCell className="text-right tabular-nums">{formatCOP(total("rifa_chance"))}</TableCell>
+                <TableCell className="text-right tabular-nums">{formatCOP(total("total_aportado"))}</TableCell>
+                <TableCell className="text-right tabular-nums">{formatCOP(total("saldo_prestamos"))}</TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </CardContent>

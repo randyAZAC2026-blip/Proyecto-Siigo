@@ -94,6 +94,16 @@
   --radius-card: 14px;
 }
 
+/* Tailwind v4 pinta los bordes con el color del texto si no se dice otro:
+   sin esta regla las tablas y tarjetas de shadcn salen con líneas casi negras. */
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--color-border);
+  }
+}
+
 body {
   margin: 0;
   background: var(--background);
@@ -115,6 +125,20 @@ body {
   @page {
     size: A4;
     margin: 1.5cm;
+  }
+
+  /* Informes con tablas anchas: hoja horizontal (páginas con nombre, Chrome 85+). */
+  @page horizontal {
+    size: A4 landscape;
+    margin: 1.2cm;
+  }
+  [data-pagina="horizontal"] {
+    page: horizontal;
+  }
+
+  /* En papel no hay scroll: la tabla se muestra completa, nunca recortada. */
+  [data-slot="table-container"] {
+    overflow: visible !important;
   }
 
   html,
@@ -213,4 +237,42 @@ body {
 /* Por defecto (pantalla), el encabezado de impresión está oculto. */
 [data-print="header"] {
   display: none;
+}
+
+@media print {
+  /* Encabezado formal de los informes: línea pequeña arriba, título, corte. */
+  [data-print="header"] p:first-child {
+    font-size: 9pt;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #2e6b4c !important;
+    margin: 0 0 0.25rem 0;
+  }
+
+  /* La franja de totales se imprime compacta, en una sola fila. */
+  [data-print="resumen"] {
+    display: grid !important;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    grid-template-columns: none !important;
+    box-shadow: none !important;
+    margin-bottom: 0.75rem;
+  }
+  [data-print="resumen"] dd {
+    font-size: 11pt !important;
+  }
+
+  /* Fila de totales de las tablas, siempre visible y marcada. */
+  tr[data-total] td {
+    font-weight: 700 !important;
+    background: #f0f0f0 !important;
+  }
+
+  /* Tablas largas: no partir una fila entre dos hojas y repetir encabezados. */
+  tr {
+    break-inside: avoid;
+  }
+  thead {
+    display: table-header-group;
+  }
 }
