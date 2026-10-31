@@ -43,7 +43,7 @@ export function AtencionCard({
       titulo: `${morosos.length} socios sin ahorrar hace 60+ días`,
       detalle: morosos.slice(0, 3).map((m) => m.nombre.split(" ")[0]).join(", ") + (morosos.length > 3 ? "…" : ""),
       nivel: morosos.length > 5 ? "critico" : "aviso",
-      destino: "mora-ahorros",
+      destino: "matriz",
     });
   if (resumen.prestamos_sin_abono_reciente > 0)
     items.push({
@@ -51,7 +51,7 @@ export function AtencionCard({
       titulo: `${resumen.prestamos_sin_abono_reciente} préstamos sin abono en 30 días`,
       detalle: "Revisar intereses y cuotas pendientes",
       nivel: "aviso",
-      destino: "mora-intereses",
+      destino: "prestamos",
     });
   if (resumen.pendientes_conciliar > 0)
     items.push({
@@ -80,7 +80,7 @@ export function AtencionCard({
     <PanelCard titulo="Requiere atención" className="h-full">
       <button
         type="button"
-        onClick={() => onIr("mora-ahorros")}
+        onClick={() => onIr("matriz")}
         className="w-full rounded-xl bg-[var(--color-background)] p-3 text-left hover:bg-[var(--color-primary)]/5"
       >
         <div className="flex items-baseline justify-between text-xs">

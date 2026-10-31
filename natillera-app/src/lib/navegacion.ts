@@ -1,5 +1,4 @@
 import {
-  AlertTriangle,
   BarChart3,
   Calculator,
   CheckCircle2,
@@ -76,8 +75,6 @@ export const GRUPOS_ADMIN: Grupo[] = [
       { key: "socios", label: "Socios y aportes", Icon: Users },
       { key: "estado", label: "Estado de cuenta", Icon: FileText },
       { key: "matriz", label: "Matriz de ahorros", corto: "Ahorros", Icon: BarChart3 },
-      { key: "mora-ahorros", label: "Mora de ahorros", Icon: AlertTriangle },
-      { key: "mora-intereses", label: "Mora de intereses", Icon: AlertTriangle },
       { key: "liquidacion", label: "Liquidación", Icon: Wallet },
       { key: "simulador", label: "Simulador de cierre", Icon: Calculator },
     ],

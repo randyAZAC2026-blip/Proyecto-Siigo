@@ -1,6 +1,5 @@
 import type { LucideIcon } from "lucide-react";
 import {
-  AlertTriangle,
   BarChart3,
   Calculator,
   ChevronRight,
@@ -47,24 +46,6 @@ const SECCIONES: { titulo: string; descripcion: string; fichas: Ficha[] }[] = [
         titulo: "Matriz de ahorros",
         descripcion: "Socio por mes: quién pagó, cuánto y el total recaudado de cada mes.",
         Icon: BarChart3,
-      },
-      {
-        vista: "mora-ahorros",
-        titulo: "Mora de ahorros",
-        descripcion: "Pagos tarde o pendientes y la mora que generan.",
-        Icon: AlertTriangle,
-      },
-    ],
-  },
-  {
-    titulo: "Préstamos",
-    descripcion: "Intereses y atrasos de la cartera.",
-    fichas: [
-      {
-        vista: "mora-intereses",
-        titulo: "Mora de intereses",
-        descripcion: "Intereses de préstamos pagados tarde o pendientes.",
-        Icon: AlertTriangle,
       },
     ],
   },

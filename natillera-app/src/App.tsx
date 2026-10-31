@@ -11,8 +11,6 @@ import { MatrizAhorrosPage } from "@/pages/MatrizAhorrosPage";
 import { ControlPagosPage } from "@/pages/ControlPagosPage";
 import { LiquidacionPage } from "@/pages/LiquidacionPage";
 import { PrestamosPage } from "@/pages/PrestamosPage";
-import { MoraInteresesPage } from "@/pages/MoraInteresesPage";
-import { MoraAhorrosPage } from "@/pages/MoraAhorrosPage";
 import { SimuladorLiquidacionPage } from "@/pages/SimuladorLiquidacionPage";
 import { BancoPage } from "@/pages/BancoPage";
 import { ActividadesPage } from "@/pages/ActividadesPage";
@@ -215,10 +213,8 @@ function Estructura({ perfil, onSalir }: { perfil: Perfil | null; onSalir?: () =
                 {vista === "estado" && <EstadoCuentaPage onVolver={volverPanel} />}
                 {vista === "matriz" && <MatrizAhorrosPage onVolver={volverPanel} />}
                 {vista === "control" && <ControlPagosPage onVolver={volverPanel} />}
-                {vista === "mora-ahorros" && <MoraAhorrosPage onVolver={volverPanel} />}
                 {vista === "prestamos" && <PrestamosPage onVolver={volverPanel} />}
                 {vista === "referidos" && <ReferidosPage onVolver={volverPanel} />}
-                {vista === "mora-intereses" && <MoraInteresesPage onVolver={volverPanel} />}
                 {vista === "liquidacion" && <LiquidacionPage onVolver={volverPanel} />}
                 {vista === "simulador" && <SimuladorLiquidacionPage onVolver={volverPanel} />}
                 {vista === "banco" && <BancoPage onVolver={volverPanel} />}
