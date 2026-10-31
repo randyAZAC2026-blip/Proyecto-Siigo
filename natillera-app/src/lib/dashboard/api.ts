@@ -62,6 +62,54 @@ export interface Resumen {
   prestamos_sin_abono_reciente: number;
 }
 
+/** Totales del panel financiero, sumados en la base (vw_panel_financiero). */
+export interface PanelFinanciero {
+  socios_activos: number;
+  ahorro: number;
+  actividades: number;
+  rifa: number;
+  intereses: number;
+  multas: number;
+  prestamos_desembolsados: number;
+  abonos_prestamos: number;
+  ingresos: number;
+  egresos: number;
+  /** Préstamos desembolsados − abonos a capital. */
+  cartera: number;
+  /** Ingresos − egresos registrados (lo que debería haber en caja según libros). */
+  caja_libros: number;
+  /** Intereses + multas + rifa. */
+  rendimientos: number;
+  /** Último saldo que trae el extracto de Bancolombia (null en modo express). */
+  saldo_banco: number | null;
+  fecha_saldo_banco: string | null;
+  ultimo_pago: string | null;
+}
+
+export interface PanelAhorroPeriodo {
+  id: number;
+  nombre: string;
+  orden: number;
+  fecha_corte_ahorro: string | null;
+  ahorro: number;
+  socios_pagaron: number;
+}
+
+export interface PanelConciliacion {
+  tipo: "ingreso" | "egreso";
+  estado: EstadoExtracto;
+  n: number;
+  monto: number;
+  pendiente: number;
+}
+
+export interface Panel {
+  financiero: PanelFinanciero;
+  ahorroPeriodos: PanelAhorroPeriodo[];
+  /** Vacío en modo express (no hay estado de conciliación). */
+  conciliacion: PanelConciliacion[];
+}
+
 /** Totales de toda la natillera, sin nombres: lo que un socio puede ver del fondo común. */
 export interface TotalesGenerales {
   socios_activos: number;
@@ -462,6 +510,35 @@ export interface ActividadPatch {
 
 const apiHttp = {
   resumen: () => get<Resumen>("/api/resumen"),
+  // El backend local no tiene vistas del panel: se arma con lo que ya expone.
+  panel: async (): Promise<Panel> => {
+    const [r, periodos] = await Promise.all([
+      get<Resumen>("/api/resumen"),
+      get<PeriodoResumen[]>("/api/ahorros-por-periodo"),
+    ]);
+    return {
+      financiero: {
+        socios_activos: r.socios_activos,
+        ahorro: r.ahorros,
+        actividades: r.actividades,
+        rifa: r.rifa,
+        intereses: r.intereses,
+        multas: r.multas,
+        prestamos_desembolsados: r.prestamos_desembolsados,
+        abonos_prestamos: r.abonos_prestamos,
+        ingresos: r.total_aportado,
+        egresos: r.prestamos_desembolsados,
+        cartera: r.deuda_pendiente,
+        caja_libros: r.total_aportado - r.prestamos_desembolsados,
+        rendimientos: r.utilidad_ciclo,
+        saldo_banco: null,
+        fecha_saldo_banco: null,
+        ultimo_pago: null,
+      },
+      ahorroPeriodos: periodos.map((p) => ({ ...p, socios_pagaron: p.n_pagos })),
+      conciliacion: [],
+    };
+  },
   // El backend local no tiene este endpoint: se arma desde /api/resumen.
   totalesGenerales: async (): Promise<TotalesGenerales> => {
     const r = await get<Resumen>("/api/resumen");

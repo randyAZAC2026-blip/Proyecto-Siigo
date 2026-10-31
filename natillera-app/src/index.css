@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #faf9f5;
+  --background: #f4f6f4;
   --foreground: #1f2a24;
   --card: #ffffff;
   --card-foreground: #1f2a24;
@@ -32,6 +32,35 @@
   --color-destructive: var(--destructive);
   --color-success: #6fa980;
   --color-warning: #c98a2e;
+
+  /* Menú lateral (verde muy oscuro: da la sobriedad de una app financiera). */
+  --sidebar: #0f2a20;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-fg: #d6e4dc;
+  --sidebar-muted: #84a293;
+  --sidebar-hover: rgba(255, 255, 255, 0.06);
+  --sidebar-active: rgba(255, 255, 255, 0.1);
+  --sidebar-accent: #6fd3a0;
+
+  /* Tarjetas */
+  --shadow-card: 0 1px 2px rgba(15, 42, 32, 0.04), 0 2px 6px rgba(15, 42, 32, 0.05);
+
+  /* Gráficas. Paleta categórica validada (validate_palette.js, superficie #fff):
+     verde (ahorro) · azul · naranja · violeta. Pasa todas las pruebas de CVD. */
+  --chart-1: #2f8f5b;
+  --chart-1-suave: #a9d3bb;
+  --chart-2: #2a78d6;
+  --chart-3: #eb6834;
+  --chart-4: #6250d6;
+  --chart-grid: #e8ebe7;
+  --chart-axis: #c9cfc9;
+  --chart-tinta-muted: #7b877f;
+
+  /* Estados (siempre con ícono + texto, nunca solo color). */
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-critical: #d03b3b;
+  --status-neutral: #c3c9c4;
 }
 
 @theme inline {

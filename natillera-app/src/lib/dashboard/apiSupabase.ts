@@ -27,6 +27,7 @@ import type {
   Periodo,
   ExtractosPage,
   EstadoExtracto,
+  Panel,
   FiltrosExtracto,
   Transaccion,
   NuevaTransaccion,
@@ -148,26 +149,64 @@ async function deudores(): Promise<Deudor[]> {
     .sort((a, b) => b.saldo - a.saldo);
 }
 
+// Totales sumados en la base (vw_banco_resumen): sumar en el navegador
+// pasaba el tope de 1000 filas de la API y daba totales cortos.
 async function bancos(): Promise<Banco[]> {
-  const movs = await q<any[]>(
-    supabase.from("movimientos_banco").select("banco, monto, detalle_origen"),
-  );
-  const agg = new Map<string, Banco>();
-  for (const m of movs) {
-    const b = agg.get(m.banco) ?? {
-      banco: m.banco,
-      n_movs: 0,
-      ingresos: 0,
-      egresos: 0,
-      ingresos_natillera: 0,
-    };
-    b.n_movs += 1;
-    if (m.monto >= 0) b.ingresos += m.monto;
-    else b.egresos += -m.monto;
-    if (m.monto >= 0 && m.detalle_origen === "NATILLERA") b.ingresos_natillera += m.monto;
-    agg.set(m.banco, b);
-  }
-  return Array.from(agg.values());
+  const filas = await q<any[]>(supabase.from("vw_banco_resumen").select("*"));
+  return filas.map((b) => ({
+    banco: b.banco,
+    n_movs: Number(b.n_movs),
+    ingresos: Number(b.ingresos),
+    egresos: Number(b.egresos),
+    ingresos_natillera: Number(b.ingresos_natillera),
+  }));
+}
+
+// -------------------- panel financiero (vistas agregadas) --------------------
+
+async function panel(): Promise<Panel> {
+  requireSupabaseEnv();
+  const [f, periodos, conc] = await Promise.all([
+    q<any>(supabase.from("vw_panel_financiero").select("*").single()),
+    q<any[]>(supabase.from("vw_panel_ahorro_periodo").select("*").order("orden")),
+    q<any[]>(supabase.from("vw_panel_conciliacion").select("*").eq("banco", "Bancolombia")),
+  ]);
+  const n = (v: unknown) => Number(v ?? 0);
+  return {
+    financiero: {
+      socios_activos: n(f.socios_activos),
+      ahorro: n(f.ahorro),
+      actividades: n(f.actividades),
+      rifa: n(f.rifa),
+      intereses: n(f.intereses),
+      multas: n(f.multas),
+      prestamos_desembolsados: n(f.prestamos_desembolsados),
+      abonos_prestamos: n(f.abonos_prestamos),
+      ingresos: n(f.ingresos),
+      egresos: n(f.egresos),
+      cartera: n(f.cartera),
+      caja_libros: n(f.caja_libros),
+      rendimientos: n(f.rendimientos),
+      saldo_banco: f.saldo_banco == null ? null : n(f.saldo_banco),
+      fecha_saldo_banco: f.fecha_saldo_banco ?? null,
+      ultimo_pago: f.ultimo_pago ?? null,
+    },
+    ahorroPeriodos: periodos.map((p) => ({
+      id: p.id,
+      nombre: p.nombre,
+      orden: p.orden,
+      fecha_corte_ahorro: p.fecha_corte_ahorro ?? null,
+      ahorro: n(p.ahorro),
+      socios_pagaron: n(p.socios_pagaron),
+    })),
+    conciliacion: conc.map((c) => ({
+      tipo: c.tipo,
+      estado: c.estado,
+      n: n(c.n),
+      monto: n(c.monto),
+      pendiente: n(c.pendiente),
+    })),
+  };
 }
 
 // Helpers de mes y 30 días: formateo YYYY-MM-DD para los filtros de Supabase.
@@ -182,10 +221,11 @@ function hace30DiasISO(): string {
 }
 
 async function resumen(): Promise<Resumen> {
-  const [ss, ts, bs, pendientesResp, alDiaMesRaw, activaResp, prestamosActivos] = await Promise.all([
-    q<any[]>(supabase.from("socios").select("id, tipo, estado")),
-    q<any[]>(supabase.from("transacciones").select("concepto, tipo, valor")),
-    q<any[]>(supabase.from("movimientos_banco").select("banco")),
+  // Totales desde vistas agregadas: traer todas las transacciones pasaba el
+  // tope de 1000 filas de la API y los totales salían cortos.
+  const [fin, bs, pendientesResp, alDiaMesRaw, activaResp, prestamosActivos] = await Promise.all([
+    q<any>(supabase.from("vw_panel_financiero").select("*").single()),
+    q<any[]>(supabase.from("vw_banco_resumen").select("banco")),
     supabase
       .from("vw_extracto_estado")
       .select("id", { count: "exact", head: true })
@@ -241,20 +281,17 @@ async function resumen(): Promise<Resumen> {
     }).length;
   }
 
-  const totalPorConcepto = (concepto: string) =>
-    ts.filter((t) => t.concepto === concepto).reduce((s, t) => s + t.valor, 0);
-  const ahorros = totalPorConcepto("AHORRO");
-  const actividades = totalPorConcepto("ACTIVIDADES");
-  const rifa = totalPorConcepto("RIFA_CHANCE");
-  const intereses = totalPorConcepto("INTERESES_PRESTAMO");
-  const prestamos_desembolsados = totalPorConcepto("PRESTAMO");
-  const abonos_prestamos_tot = totalPorConcepto("ABONO_PRESTAMO");
-  const multas_tot = totalPorConcepto("MULTA");
-  const deuda_pendiente = prestamos_desembolsados - abonos_prestamos_tot;
-  const total_aportado = ts
-    .filter((t) => t.tipo === "ingreso")
-    .reduce((s, t) => s + t.valor, 0);
-  const socios_activos = ss.filter((s) => s.tipo === "persona" && s.estado === "activo").length;
+  const n = (v: unknown) => Number(v ?? 0);
+  const ahorros = n(fin.ahorro);
+  const actividades = n(fin.actividades);
+  const rifa = n(fin.rifa);
+  const intereses = n(fin.intereses);
+  const prestamos_desembolsados = n(fin.prestamos_desembolsados);
+  const abonos_prestamos_tot = n(fin.abonos_prestamos);
+  const multas_tot = n(fin.multas);
+  const deuda_pendiente = n(fin.cartera);
+  const total_aportado = n(fin.ingresos);
+  const socios_activos = n(fin.socios_activos);
   const al_dia_mes = {
     al_dia: new Set(alDiaMesRaw.map((t) => t.socio_id).filter(Boolean)).size,
     total: socios_activos,
@@ -270,8 +307,8 @@ async function resumen(): Promise<Resumen> {
     : null;
   return {
     socios_activos,
-    cuentas_admin: ss.filter((s) => s.tipo === "cuenta_admin").length,
-    n_transacciones: ts.length,
+    cuentas_admin: n(fin.cuentas_admin),
+    n_transacciones: n(fin.n_transacciones),
     n_bancos: new Set(bs.map((b) => b.banco)).size,
     pendientes_conciliar,
     ahorros,
@@ -338,9 +375,12 @@ async function matrizPrestamos(): Promise<MatrizPrestamos> {
   ]);
   // Necesitamos el periodo_id de la transacción. Simplificación: por fecha del abono.
   // Aproximación: usar mes/año contra periodos.orden si el nombre incluye ese mes.
-  const txPeriodos = await q<any[]>(
-    supabase.from("transacciones").select("id, periodo_id"),
-  );
+  // Solo las transacciones de estos abonos: traer todas pasaba el tope de
+  // 1000 filas de la API y se perdían periodos.
+  const txIds = [...new Set(abonos.map((a) => a.transaccion_id).filter((id) => id != null))];
+  const txPeriodos = txIds.length
+    ? await q<any[]>(supabase.from("transacciones").select("id, periodo_id").in("id", txIds))
+    : [];
   const periodoDeTx = new Map(txPeriodos.map((t) => [t.id, t.periodo_id]));
   const nombreDePeriodo = new Map(ps.map((p) => [p.id, p.nombre]));
 
@@ -1092,6 +1132,7 @@ async function actualizarActividad(id: number, patch: ActividadPatch) {
 
 export const apiSupabase = {
   resumen,
+  panel,
   totalesGenerales,
   socios,
   socioById,
