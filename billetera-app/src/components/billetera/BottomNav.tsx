@@ -1,12 +1,12 @@
 import { NavLink } from "react-router-dom";
-import { Wallet, ArrowLeftRight, ArrowDownCircle, ArrowUpCircle, Calculator } from "lucide-react";
+import { Wallet, ArrowLeftRight, ArrowDownCircle, ArrowUpCircle, BarChart3 } from "lucide-react";
 
 const items = [
   { to: "/", label: "Inicio", icon: Wallet, end: true },
   { to: "/movimientos", label: "Movimientos", icon: ArrowLeftRight, end: false },
+  { to: "/analisis", label: "Análisis", icon: BarChart3, end: false },
   { to: "/por-pagar", label: "Por pagar", icon: ArrowUpCircle, end: false },
   { to: "/por-cobrar", label: "Por cobrar", icon: ArrowDownCircle, end: false },
-  { to: "/asesor", label: "Tributario", icon: Calculator, end: false },
 ];
 
 export function BottomNav() {
