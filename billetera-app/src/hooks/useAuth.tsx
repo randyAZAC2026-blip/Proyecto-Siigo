@@ -33,7 +33,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signUp(email: string, password: string) {
-    const { error } = await supabase.auth.signUp({ email, password });
+    // El enlace del correo de confirmación vuelve a esta misma app (si la URL está permitida en Supabase Auth).
+    const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin } });
     return { error: error ? traducirError(error.message) : null };
   }
 
