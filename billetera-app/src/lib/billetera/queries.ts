@@ -180,24 +180,85 @@ export interface CrearMovimientoInput {
   contraparte?: string | null;
   cxp_id?: string | null;
   cxc_id?: string | null;
+  /** Recibo del pago (PDF o foto). No es columna: se sube a Storage después de crear el movimiento. */
+  recibo?: File | null;
 }
 
 export async function crearMovimiento(
   userId: string,
   input: CrearMovimientoInput,
-): Promise<Movimiento> {
+): Promise<Movimiento & { reciboError?: string }> {
+  const { recibo, ...fila } = input;
   const { data, error } = await db
     .from("movimientos")
-    .insert({ ...input, user_id: userId })
+    .insert({ ...fila, user_id: userId })
     .select()
     .single();
   if (error) throw error;
-  return data as Movimiento;
+  const mov = data as Movimiento & { reciboError?: string };
+  if (recibo) {
+    // Si el recibo falla, el movimiento ya quedó: no se lanza el error (el formulario seguiría abierto y un segundo
+    // «Registrar» lo duplicaría); se devuelve para avisar y adjuntarlo después con el clip.
+    try {
+      mov.recibo_path = await subirRecibo(userId, mov.id, recibo, null);
+    } catch (e) {
+      mov.reciboError = e instanceof Error ? e.message : String(e);
+    }
+  }
+  return mov;
 }
 
 export async function eliminarMovimiento(id: string): Promise<void> {
-  const { error } = await supabase.from("movimientos").delete().eq("id", id);
+  const { data, error } = await db.from("movimientos").delete().eq("id", id).select("recibo_path");
   if (error) throw error;
+  const ruta = (data as { recibo_path: string | null }[] | null)?.[0]?.recibo_path;
+  if (ruta) await supabase.storage.from(BUCKET_RECIBOS).remove([ruta]);   // si falla, queda un archivo huérfano privado
+}
+
+// Recibos (bucket privado «recibos», carpeta <user_id>/<movimiento_id>/)
+
+export const BUCKET_RECIBOS = "recibos";
+export const TIPOS_RECIBO = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
+export const TAMANO_MAXIMO_RECIBO = 10 * 1024 * 1024;
+
+/** Mensaje si el archivo no sirve como recibo; null si está bien. */
+export function validarRecibo(archivo: File): string | null {
+  if (!TIPOS_RECIBO.includes(archivo.type)) return "El recibo debe ser un PDF o una foto (JPG, PNG o WebP).";
+  if (archivo.size > TAMANO_MAXIMO_RECIBO) return "El recibo pesa más de 10 MB.";
+  return null;
+}
+
+const nombreSeguro = (nombre: string) =>
+  nombre.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^\w.-]+/g, "_").slice(-80) || "recibo";
+
+/** Sube (o reemplaza) el recibo de un movimiento y guarda su ruta. Devuelve la ruta nueva. */
+export async function subirRecibo(userId: string, movimientoId: string, archivo: File, rutaAnterior: string | null): Promise<string> {
+  const problema = validarRecibo(archivo);
+  if (problema) throw new Error(problema);
+  const ruta = `${userId}/${movimientoId}/${Date.now()}-${nombreSeguro(archivo.name)}`;
+  const { error } = await supabase.storage.from(BUCKET_RECIBOS).upload(ruta, archivo, { contentType: archivo.type, upsert: false });
+  if (error) throw error;
+  const { error: errorFila } = await db.from("movimientos").update({ recibo_path: ruta }).eq("id", movimientoId);
+  if (errorFila) {
+    await supabase.storage.from(BUCKET_RECIBOS).remove([ruta]);
+    throw errorFila;
+  }
+  if (rutaAnterior) await supabase.storage.from(BUCKET_RECIBOS).remove([rutaAnterior]);
+  return ruta;
+}
+
+/** Enlace temporal (5 minutos) para abrir un recibo privado. */
+export async function enlaceRecibo(ruta: string): Promise<string> {
+  const { data, error } = await supabase.storage.from(BUCKET_RECIBOS).createSignedUrl(ruta, 300);
+  if (error || !data) throw error ?? new Error("No se pudo abrir el recibo.");
+  return data.signedUrl;
+}
+
+/** Quita el recibo de un movimiento (borra el archivo y la ruta). */
+export async function quitarRecibo(movimientoId: string, ruta: string): Promise<void> {
+  const { error } = await db.from("movimientos").update({ recibo_path: null }).eq("id", movimientoId);
+  if (error) throw error;
+  await supabase.storage.from(BUCKET_RECIBOS).remove([ruta]);
 }
 
 // Cuentas por pagar / por cobrar

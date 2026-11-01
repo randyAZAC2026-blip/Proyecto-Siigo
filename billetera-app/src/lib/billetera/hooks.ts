@@ -122,6 +122,27 @@ export function useCrearMovimiento() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: api.CrearMovimientoInput) => api.crearMovimiento(user!.id, input),
+    onSuccess: (mov) => {
+      invalidateAll(qc);
+      if (mov.reciboError) alert(`El movimiento se guardó, pero el recibo no se pudo subir (${mov.reciboError}). Adjúntalo con el clip en Movimientos.`);
+    },
+  });
+}
+
+export function useSubirRecibo() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ movimientoId, archivo, rutaAnterior }: { movimientoId: string; archivo: File; rutaAnterior: string | null }) =>
+      api.subirRecibo(user!.id, movimientoId, archivo, rutaAnterior),
+    onSuccess: () => invalidateAll(qc),
+  });
+}
+
+export function useQuitarRecibo() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ movimientoId, ruta }: { movimientoId: string; ruta: string }) => api.quitarRecibo(movimientoId, ruta),
     onSuccess: () => invalidateAll(qc),
   });
 }

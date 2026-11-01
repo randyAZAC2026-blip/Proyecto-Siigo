@@ -108,7 +108,7 @@ export function MovimientosPage() {
             </div>
           ) : movimientos.data && movimientos.data.length > 0 ? (
             movimientos.data.map((m) => (
-              <MovimientoRow key={m.id} mov={m} onDelete={handleDelete} />
+              <MovimientoRow key={m.id} mov={m} onDelete={handleDelete} adjuntarRecibo />
             ))
           ) : (
             <EmptyState

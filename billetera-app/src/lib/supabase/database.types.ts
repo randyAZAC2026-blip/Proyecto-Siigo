@@ -101,6 +101,8 @@ export interface Movimiento {
   contraparte: string | null;
   cxp_id: string | null;
   cxc_id: string | null;
+  /** Ruta del recibo (PDF o foto) en el bucket privado «recibos». */
+  recibo_path: string | null;
   created_at: string;
 }
 

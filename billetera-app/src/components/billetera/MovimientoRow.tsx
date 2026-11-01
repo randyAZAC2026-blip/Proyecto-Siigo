@@ -2,6 +2,7 @@ import { ArrowDownRight, ArrowUpRight, ArrowLeftRight } from "lucide-react";
 import type { MovimientoTipo } from "@/lib/supabase/database.types";
 import type { MovimientoConRelaciones } from "@/lib/billetera/queries";
 import { formatCOP, formatDate } from "@/lib/billetera/format";
+import { ReciboMovimiento } from "@/components/billetera/ReciboMovimiento";
 
 const estilo: Record<MovimientoTipo, { icon: typeof ArrowUpRight; color: string; sign: string }> = {
   ingreso: { icon: ArrowDownRight, color: "var(--color-success)", sign: "+" },
@@ -12,9 +13,11 @@ const estilo: Record<MovimientoTipo, { icon: typeof ArrowUpRight; color: string;
 interface Props {
   mov: MovimientoConRelaciones;
   onDelete?: (id: string) => void;
+  /** Muestra el clip para adjuntar un recibo si el movimiento no tiene. */
+  adjuntarRecibo?: boolean;
 }
 
-export function MovimientoRow({ mov, onDelete }: Props) {
+export function MovimientoRow({ mov, onDelete, adjuntarRecibo = false }: Props) {
   const { icon: Icon, color, sign } = estilo[mov.tipo];
   const titulo =
     mov.descripcion ||
@@ -41,7 +44,8 @@ export function MovimientoRow({ mov, onDelete }: Props) {
           {mov.categoria && mov.tipo !== "transferencia" ? ` · ${mov.categoria.nombre}` : ""}
         </p>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
+        {mov.tipo !== "transferencia" && <ReciboMovimiento movimientoId={mov.id} ruta={mov.recibo_path ?? null} puedeAdjuntar={adjuntarRecibo} />}
         <p className="tabular-nums font-semibold" style={{ color }}>
           {sign}
           {formatCOP(Number(mov.monto))}

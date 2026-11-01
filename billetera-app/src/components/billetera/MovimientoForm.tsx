@@ -1,4 +1,5 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useMemo, useRef, useState, type FormEvent } from "react";
+import { Paperclip, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +16,7 @@ import type {
   Cuenta,
   MovimientoTipo,
 } from "@/lib/supabase/database.types";
-import type { CrearMovimientoInput } from "@/lib/billetera/queries";
+import { TIPOS_RECIBO, validarRecibo, type CrearMovimientoInput } from "@/lib/billetera/queries";
 import { todayISO } from "@/lib/billetera/format";
 
 interface Props {
@@ -58,6 +59,16 @@ export function MovimientoForm({
   const [contraparte, setContraparte] = useState<string>(defaultContraparte ?? "");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [recibo, setRecibo] = useState<File | null>(null);
+  const entradaRecibo = useRef<HTMLInputElement>(null);
+
+  function elegirRecibo(archivo: File | undefined) {
+    if (!archivo) return;
+    const problema = validarRecibo(archivo);
+    if (problema) { setError(problema); return; }
+    setError(null);
+    setRecibo(archivo);
+  }
 
   const categoriasFiltradas = useMemo(
     () => categorias.filter((c) => (tipo === "transferencia" ? false : c.tipo === tipo)),
@@ -89,6 +100,7 @@ export function MovimientoForm({
         contraparte: contraparte || null,
         cxp_id: cxpId ?? null,
         cxc_id: cxcId ?? null,
+        recibo: tipo === "transferencia" ? null : recibo,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al guardar");
@@ -217,6 +229,25 @@ export function MovimientoForm({
           rows={2}
         />
       </div>
+
+      {tipo !== "transferencia" && (
+        <div className="space-y-1.5">
+          <Label>Recibo (opcional)</Label>
+          <input ref={entradaRecibo} type="file" accept={TIPOS_RECIBO.join(",")} className="hidden" aria-hidden tabIndex={-1}
+            onChange={(e) => { elegirRecibo(e.target.files?.[0]); e.target.value = ""; }} />
+          {recibo ? (
+            <div className="flex items-center justify-between gap-2 rounded-[var(--radius-input)] border border-[var(--color-border)] px-3 py-2 text-sm">
+              <span className="flex min-w-0 items-center gap-2"><Paperclip className="size-4 shrink-0 text-[var(--color-primary)]" /><span className="truncate">{recibo.name}</span>
+                <span className="shrink-0 text-xs text-[var(--color-muted)]">{(recibo.size / 1024 / 1024).toFixed(1)} MB</span></span>
+              <button type="button" onClick={() => setRecibo(null)} aria-label="Quitar recibo" className="text-[var(--color-muted)] hover:text-[var(--color-destructive)]"><X className="size-4" /></button>
+            </div>
+          ) : (
+            <Button type="button" variant="outline" className="w-full justify-center gap-2" onClick={() => entradaRecibo.current?.click()}>
+              <Paperclip className="size-4" /> Adjuntar recibo (PDF o foto)
+            </Button>
+          )}
+        </div>
+      )}
 
       {error && <p className="text-sm text-[var(--color-destructive)]">{error}</p>}
 
