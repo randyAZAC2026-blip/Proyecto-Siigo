@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileArchive, Download, Trash2, AlertCircle, ShieldAlert } from "lucide-react";
+import { FileArchive, Download, Trash2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { XmlDropzone } from "@/components/xml/XmlDropzone";
@@ -71,23 +71,6 @@ export function XmlProcesadorPage() {
           categorizamos con IA.
         </p>
       </div>
-
-      <Card className="rounded-[var(--radius-card)] border-[var(--color-border)] bg-amber-50/60">
-        <CardContent className="flex items-start gap-3 pt-6">
-          <ShieldAlert className="size-5 shrink-0 text-amber-600" />
-          <div className="text-sm">
-            <p className="font-medium text-[var(--color-text)]">
-              Descarga automática desde DIAN con certificado — próximamente
-            </p>
-            <p className="mt-1 text-[var(--color-muted)]">
-              Por ahora los XML se cargan manualmente (desde el ZIP que descargaste del portal
-              DIAN o del buzón de recepción). La integración directa con tu certificado digital se
-              trabajará en una siguiente entrega porque requiere un diseño de seguridad aparte
-              para custodiar el <code>.p12</code> y el PIN.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
 
       <XmlDropzone onFiles={handleFiles} disabled={processing} />
 
