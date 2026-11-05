@@ -1,5 +1,5 @@
 import { Link, Outlet } from "react-router-dom";
-import { Calculator, Settings, LogOut } from "lucide-react";
+import { Calculator, FileArchive, Settings, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { ErrorBoundary } from "@/components/layout/ErrorBoundary";
@@ -16,6 +16,12 @@ export function AppLayout() {
             Asesor Tributario IA
           </Link>
           <nav className="flex items-center gap-2">
+            <Link to="/xml">
+              <Button variant="ghost" size="sm">
+                <FileArchive className="size-4" />
+                XML DIAN
+              </Button>
+            </Link>
             {profile?.role === "superuser" && (
               <Link to="/admin/tablas">
                 <Button variant="ghost" size="sm">
