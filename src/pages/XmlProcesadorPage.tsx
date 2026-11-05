@@ -1,13 +1,17 @@
 import { useState } from "react";
-import { FileArchive, Download, Trash2, AlertCircle } from "lucide-react";
+import { FileArchive, Download, Trash2, AlertCircle, FileSpreadsheet, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { XmlDropzone } from "@/components/xml/XmlDropzone";
 import { ProcessedDocsList } from "@/components/xml/ProcessedDocsList";
 import { InvoiceDetail } from "@/components/xml/InvoiceDetail";
 import { PayrollDetail } from "@/components/xml/PayrollDetail";
+import { ItemsConsolidatedTable } from "@/components/xml/ItemsConsolidatedTable";
 import { processFile } from "@/lib/xml/parser";
 import { buildItemsCsv, downloadCsv } from "@/lib/xml/exportCsv";
+import { exportItemsXlsx } from "@/lib/xml/exportExcel";
+import { classifyXmlItems } from "@/lib/api/classifyXmlItems";
 import type { CategorizedItem, ProcessedFile } from "@/lib/xml/types";
 
 export function XmlProcesadorPage() {
@@ -16,6 +20,9 @@ export function XmlProcesadorPage() {
   const [processing, setProcessing] = useState(false);
   const [processError, setProcessError] = useState<string | null>(null);
   const [categorizations, setCategorizations] = useState<Record<string, CategorizedItem[]>>({});
+  const [bulkCategorizing, setBulkCategorizing] = useState(false);
+  const [bulkError, setBulkError] = useState<string | null>(null);
+  const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number } | null>(null);
 
   async function handleFiles(incoming: File[]) {
     setProcessing(true);
@@ -39,12 +46,54 @@ export function XmlProcesadorPage() {
     setFiles([]);
     setSelectedId(null);
     setCategorizations({});
+    setBulkError(null);
   }
 
-  function handleExport() {
+  function handleExportCsv() {
     const csv = buildItemsCsv(files, categorizations);
     const stamp = new Date().toISOString().slice(0, 10);
     downloadCsv(`xml-dian-${stamp}.csv`, csv);
+  }
+
+  function handleExportXlsx() {
+    exportItemsXlsx(files, categorizations);
+  }
+
+  async function handleCategorizeAll(mi_rol: "emisor" | "receptor") {
+    const pendientes = files.filter((f) => {
+      const d = f.doc;
+      if (d.kind === "desconocido" || d.kind === "nomina" || d.kind === "nomina_ajuste") return false;
+      return !categorizations[f.id];
+    });
+    if (pendientes.length === 0) return;
+
+    setBulkCategorizing(true);
+    setBulkError(null);
+    setBulkProgress({ done: 0, total: pendientes.length });
+    try {
+      for (let i = 0; i < pendientes.length; i++) {
+        const f = pendientes[i];
+        const d = f.doc;
+        if (d.kind === "desconocido" || d.kind === "nomina" || d.kind === "nomina_ajuste") continue;
+        const resp = await classifyXmlItems({
+          kind: d.kind,
+          mi_rol,
+          emisor_nombre: d.emisor.nombre,
+          receptor_nombre: d.receptor.nombre,
+          items: d.items.map((it) => ({
+            linea: it.linea,
+            descripcion: it.descripcion,
+            valor_total_cop: it.valor_total_cop,
+          })),
+        });
+        setCategorizations((prev) => ({ ...prev, [f.id]: resp.items }));
+        setBulkProgress({ done: i + 1, total: pendientes.length });
+      }
+    } catch (err) {
+      setBulkError(err instanceof Error ? err.message : "Error categorizando.");
+    } finally {
+      setBulkCategorizing(false);
+    }
   }
 
   const selected = files.find((f) => f.id === selectedId) ?? null;
@@ -58,6 +107,12 @@ export function XmlProcesadorPage() {
     },
     { facturas: 0, nomina: 0, desconocido: 0 },
   );
+
+  const pendientesCategorizar = files.filter((f) => {
+    const d = f.doc;
+    if (d.kind === "desconocido" || d.kind === "nomina" || d.kind === "nomina_ajuste") return false;
+    return !categorizations[f.id];
+  }).length;
 
   return (
     <div className="space-y-6">
@@ -82,54 +137,109 @@ export function XmlProcesadorPage() {
       )}
 
       {files.length > 0 && (
-        <div className="space-y-4">
-          <Card className="rounded-[var(--radius-card)] border-[var(--color-border)]">
-            <CardHeader>
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <CardTitle className="text-base">
-                  Documentos procesados ({files.length})
-                </CardTitle>
-                <div className="flex gap-2">
-                  <Button size="sm" variant="outline" onClick={handleExport}>
-                    <Download className="size-4" />
-                    Exportar CSV
+        <Card className="rounded-[var(--radius-card)] border-[var(--color-border)]">
+          <CardHeader>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <CardTitle className="text-base">
+                Documentos procesados ({files.length})
+              </CardTitle>
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" variant="outline" onClick={handleExportXlsx}>
+                  <FileSpreadsheet className="size-4" />
+                  Exportar Excel
+                </Button>
+                <Button size="sm" variant="ghost" onClick={handleExportCsv}>
+                  <Download className="size-4" />
+                  CSV
+                </Button>
+                <Button size="sm" variant="ghost" onClick={handleClear}>
+                  <Trash2 className="size-4" />
+                  Limpiar
+                </Button>
+              </div>
+            </div>
+            <p className="text-xs text-[var(--color-muted)]">
+              {summary.facturas} factura/nota · {summary.nomina} nómina
+              {summary.desconocido > 0 && ` · ${summary.desconocido} no reconocido(s)`}
+            </p>
+
+            {pendientesCategorizar > 0 && (
+              <div className="mt-3 flex flex-wrap items-center gap-2 rounded-[var(--radius-default)] bg-[var(--color-primary)]/5 p-3">
+                <Sparkles className="size-4 text-[var(--color-primary)]" />
+                <span className="text-sm text-[var(--color-text)]">
+                  {pendientesCategorizar} documento{pendientesCategorizar === 1 ? "" : "s"} sin categorizar.
+                </span>
+                <div className="ml-auto flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={bulkCategorizing}
+                    onClick={() => handleCategorizeAll("receptor")}
+                  >
+                    {bulkCategorizing && <Loader2 className="size-3 animate-spin" />}
+                    Soy receptor
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={handleClear}>
-                    <Trash2 className="size-4" />
-                    Limpiar
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={bulkCategorizing}
+                    onClick={() => handleCategorizeAll("emisor")}
+                  >
+                    {bulkCategorizing && <Loader2 className="size-3 animate-spin" />}
+                    Soy emisor
                   </Button>
                 </div>
+                {bulkProgress && bulkCategorizing && (
+                  <p className="w-full text-xs text-[var(--color-muted)]">
+                    Procesando {bulkProgress.done} / {bulkProgress.total}…
+                  </p>
+                )}
               </div>
-              <p className="text-xs text-[var(--color-muted)]">
-                {summary.facturas} factura/nota · {summary.nomina} nómina
-                {summary.desconocido > 0 && ` · ${summary.desconocido} no reconocido(s)`}
+            )}
+            {bulkError && (
+              <p className="mt-2 flex items-center gap-1.5 text-sm text-[var(--color-destructive)]">
+                <AlertCircle className="size-4" />
+                {bulkError}
               </p>
-            </CardHeader>
-            <CardContent>
-              <ProcessedDocsList
-                files={files}
-                selectedId={selectedId}
-                onSelect={setSelectedId}
-              />
-            </CardContent>
-          </Card>
+            )}
+          </CardHeader>
 
-          {selected && selected.doc.kind !== "desconocido" && (
-            <>
-              {selected.doc.kind === "nomina" || selected.doc.kind === "nomina_ajuste" ? (
-                <PayrollDetail doc={selected.doc} />
-              ) : (
-                <InvoiceDetail
-                  doc={selected.doc}
-                  cachedCategorizations={categorizations[selected.id]}
-                  onCategorized={(items) =>
-                    setCategorizations((prev) => ({ ...prev, [selected.id]: items }))
-                  }
+          <CardContent>
+            <Tabs defaultValue="lista">
+              <TabsList>
+                <TabsTrigger value="lista">Lista de ítems</TabsTrigger>
+                <TabsTrigger value="documentos">Por documento</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="lista" className="mt-4">
+                <ItemsConsolidatedTable files={files} categorizations={categorizations} />
+              </TabsContent>
+
+              <TabsContent value="documentos" className="mt-4 space-y-4">
+                <ProcessedDocsList
+                  files={files}
+                  selectedId={selectedId}
+                  onSelect={setSelectedId}
                 />
-              )}
-            </>
-          )}
-        </div>
+                {selected && selected.doc.kind !== "desconocido" && (
+                  <>
+                    {selected.doc.kind === "nomina" || selected.doc.kind === "nomina_ajuste" ? (
+                      <PayrollDetail doc={selected.doc} />
+                    ) : (
+                      <InvoiceDetail
+                        doc={selected.doc}
+                        cachedCategorizations={categorizations[selected.id]}
+                        onCategorized={(items) =>
+                          setCategorizations((prev) => ({ ...prev, [selected.id]: items }))
+                        }
+                      />
+                    )}
+                  </>
+                )}
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
