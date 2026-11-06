@@ -10,6 +10,9 @@ const keys = {
     ["billetera", "movimientos", userId, opts ?? {}] as const,
   cxp: (userId: string) => ["billetera", "cxp", userId] as const,
   cxc: (userId: string) => ["billetera", "cxc", userId] as const,
+  fuentesIngreso: (userId: string) => ["billetera", "fuentes_ingreso", userId] as const,
+  ingresosDelMes: (userId: string, anio: number, mes: number) =>
+    ["billetera", "ingresos_del_mes", userId, anio, mes] as const,
 };
 
 export function useCuentas() {
@@ -173,6 +176,55 @@ export function useSembrarCategoriasPorDefecto() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => api.sembrarCategoriasPorDefecto(user!.id),
+    onSuccess: () => invalidateAll(qc),
+  });
+}
+
+export function useFuentesIngreso() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: keys.fuentesIngreso(user?.id ?? ""),
+    queryFn: () => api.listFuentesIngreso(user!.id),
+    enabled: !!user,
+  });
+}
+
+export function useIngresosDelMes(anio: number, mes1a12: number) {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: keys.ingresosDelMes(user?.id ?? "", anio, mes1a12),
+    queryFn: () => api.listIngresosDelMes(user!.id, anio, mes1a12),
+    enabled: !!user,
+  });
+}
+
+export function useCrearFuenteIngreso() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: api.CrearFuenteIngresoInput) => api.crearFuenteIngreso(user!.id, input),
+    onSuccess: () => invalidateAll(qc),
+  });
+}
+
+export function useActualizarFuenteIngreso() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      patch,
+    }: {
+      id: string;
+      patch: Parameters<typeof api.actualizarFuenteIngreso>[1];
+    }) => api.actualizarFuenteIngreso(id, patch),
+    onSuccess: () => invalidateAll(qc),
+  });
+}
+
+export function useEliminarFuenteIngreso() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.eliminarFuenteIngreso(id),
     onSuccess: () => invalidateAll(qc),
   });
 }

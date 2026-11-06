@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SaldoResumen } from "@/components/billetera/SaldoResumen";
+import { IngresosMesCard } from "@/components/billetera/IngresosMesCard";
 import { MovimientoRow } from "@/components/billetera/MovimientoRow";
 import { EmptyState } from "@/components/billetera/EmptyState";
 import {
@@ -14,6 +15,8 @@ import {
   useCxC,
   useCategorias,
   useSembrarCategoriasPorDefecto,
+  useFuentesIngreso,
+  useIngresosDelMes,
 } from "@/lib/billetera/hooks";
 import { formatCOP } from "@/lib/billetera/format";
 
@@ -24,6 +27,9 @@ export function DashboardPage() {
   const cxc = useCxC();
   const categorias = useCategorias();
   const sembrar = useSembrarCategoriasPorDefecto();
+  const fuentes = useFuentesIngreso();
+  const hoy = new Date();
+  const ingresos = useIngresosDelMes(hoy.getFullYear(), hoy.getMonth() + 1);
 
   // Primera vez: si el usuario no tiene categorías, sembramos un conjunto básico.
   useEffect(() => {
@@ -53,6 +59,12 @@ export function DashboardPage() {
           </Button>
         </Link>
       </header>
+
+      <IngresosMesCard
+        fuentes={fuentes.data}
+        ingresos={ingresos.data}
+        loading={fuentes.isLoading || ingresos.isLoading}
+      />
 
       {saldos.isLoading ? (
         <Skeleton className="h-32 w-full rounded-[var(--radius-card)]" />

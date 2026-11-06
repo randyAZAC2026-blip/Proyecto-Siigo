@@ -6,6 +6,8 @@ import type {
   CuentaPorCobrar,
   CuentaPorPagar,
   CuentaTipo,
+  FrecuenciaIngreso,
+  FuenteIngreso,
   Movimiento,
   MovimientoTipo,
   SaldoCuenta,
@@ -26,6 +28,7 @@ export interface MovimientoConRelaciones extends Movimiento {
   cuenta: Pick<Cuenta, "id" | "nombre" | "tipo"> | null;
   cuenta_destino: Pick<Cuenta, "id" | "nombre" | "tipo"> | null;
   categoria: Pick<Categoria, "id" | "nombre" | "tipo" | "icono"> | null;
+  fuente_ingreso: Pick<FuenteIngreso, "id" | "nombre" | "frecuencia"> | null;
 }
 
 // Cuentas
@@ -150,7 +153,8 @@ export async function listMovimientos(
       *,
       cuenta:cuentas!movimientos_cuenta_id_fkey (id, nombre, tipo),
       cuenta_destino:cuentas!movimientos_cuenta_destino_id_fkey (id, nombre, tipo),
-      categoria:categorias (id, nombre, tipo, icono)
+      categoria:categorias (id, nombre, tipo, icono),
+      fuente_ingreso:fuentes_ingreso (id, nombre, frecuencia)
     `,
     )
     .eq("user_id", userId)
@@ -180,6 +184,7 @@ export interface CrearMovimientoInput {
   contraparte?: string | null;
   cxp_id?: string | null;
   cxc_id?: string | null;
+  fuente_ingreso_id?: string | null;
 }
 
 export async function crearMovimiento(
@@ -270,4 +275,100 @@ export async function eliminarCxP(id: string): Promise<void> {
 export async function eliminarCxC(id: string): Promise<void> {
   const { error } = await supabase.from("cuentas_por_cobrar").delete().eq("id", id);
   if (error) throw error;
+}
+
+// Fuentes de ingreso
+
+export async function listFuentesIngreso(userId: string): Promise<FuenteIngreso[]> {
+  const { data, error } = await supabase
+    .from("fuentes_ingreso")
+    .select("*")
+    .eq("user_id", userId)
+    .order("activa", { ascending: false })
+    .order("frecuencia", { ascending: true })
+    .order("nombre", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as FuenteIngreso[];
+}
+
+export interface CrearFuenteIngresoInput {
+  nombre: string;
+  frecuencia: FrecuenciaIngreso;
+  monto_esperado_mensual?: number | null;
+  nota?: string | null;
+}
+
+export async function crearFuenteIngreso(
+  userId: string,
+  input: CrearFuenteIngresoInput,
+): Promise<FuenteIngreso> {
+  const { data, error } = await db
+    .from("fuentes_ingreso")
+    .insert({ ...input, user_id: userId })
+    .select()
+    .single();
+  if (error) throw error;
+  return data as FuenteIngreso;
+}
+
+export async function actualizarFuenteIngreso(
+  id: string,
+  patch: Partial<FuenteIngreso>,
+): Promise<void> {
+  const { error } = await db.from("fuentes_ingreso").update(patch).eq("id", id);
+  if (error) throw error;
+}
+
+export async function eliminarFuenteIngreso(id: string): Promise<void> {
+  const { error } = await supabase.from("fuentes_ingreso").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// Ingresos del mes agrupados por fuente. Para el card prominente del dashboard.
+// Se queda client-side: una sola query al mes es irrelevante en costo, y así
+// el cálculo del rango del mes vive en un solo lugar del frontend.
+export interface IngresosDelMes {
+  // Primero del mes (YYYY-MM-01)
+  desde: string;
+  // Último del mes
+  hasta: string;
+  // Ingresos SIN fuente asignada (contado aparte)
+  sinFuente: number;
+  // key = fuente_ingreso_id
+  porFuente: Map<string, number>;
+}
+
+export async function listIngresosDelMes(
+  userId: string,
+  anio: number,
+  mes1a12: number,
+): Promise<IngresosDelMes> {
+  const desde = `${anio}-${String(mes1a12).padStart(2, "0")}-01`;
+  // último día del mes = día 0 del mes siguiente
+  const ultimo = new Date(anio, mes1a12, 0);
+  const hasta = `${ultimo.getFullYear()}-${String(ultimo.getMonth() + 1).padStart(2, "0")}-${String(ultimo.getDate()).padStart(2, "0")}`;
+
+  const { data, error } = await supabase
+    .from("movimientos")
+    .select("monto, fuente_ingreso_id")
+    .eq("user_id", userId)
+    .eq("tipo", "ingreso")
+    .gte("fecha", desde)
+    .lte("fecha", hasta);
+  if (error) throw error;
+
+  // Cast local: ver nota al tope del archivo sobre el schema Database.
+  const rows = (data ?? []) as { monto: number; fuente_ingreso_id: string | null }[];
+
+  const porFuente = new Map<string, number>();
+  let sinFuente = 0;
+  for (const row of rows) {
+    const monto = Number(row.monto);
+    if (row.fuente_ingreso_id) {
+      porFuente.set(row.fuente_ingreso_id, (porFuente.get(row.fuente_ingreso_id) ?? 0) + monto);
+    } else {
+      sinFuente += monto;
+    }
+  }
+  return { desde, hasta, sinFuente, porFuente };
 }

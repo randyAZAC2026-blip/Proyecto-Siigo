@@ -13,6 +13,7 @@ import {
 import type {
   Categoria,
   Cuenta,
+  FuenteIngreso,
   MovimientoTipo,
 } from "@/lib/supabase/database.types";
 import type { CrearMovimientoInput } from "@/lib/billetera/queries";
@@ -21,6 +22,7 @@ import { todayISO } from "@/lib/billetera/format";
 interface Props {
   cuentas: Cuenta[];
   categorias: Categoria[];
+  fuentesIngreso?: FuenteIngreso[];
   defaultTipo?: MovimientoTipo;
   // Si se pasan, el form queda pre-ligado a una CxP o CxC (saldo pendiente de cobro/pago).
   cxpId?: string;
@@ -28,6 +30,7 @@ interface Props {
   defaultMonto?: number;
   defaultContraparte?: string;
   defaultDescripcion?: string;
+  defaultFuenteIngresoId?: string;
   submitLabel?: string;
   onSubmit: (input: CrearMovimientoInput) => Promise<void> | void;
   onCancel?: () => void;
@@ -36,17 +39,23 @@ interface Props {
 export function MovimientoForm({
   cuentas,
   categorias,
+  fuentesIngreso,
   defaultTipo = "egreso",
   cxpId,
   cxcId,
   defaultMonto,
   defaultContraparte,
   defaultDescripcion,
+  defaultFuenteIngresoId,
   submitLabel = "Registrar",
   onSubmit,
   onCancel,
 }: Props) {
   const cuentasActivas = useMemo(() => cuentas.filter((c) => !c.archivada), [cuentas]);
+  const fuentesActivas = useMemo(
+    () => (fuentesIngreso ?? []).filter((f) => f.activa),
+    [fuentesIngreso],
+  );
 
   const [tipo, setTipo] = useState<MovimientoTipo>(defaultTipo);
   const [cuentaId, setCuentaId] = useState<string>(cuentasActivas[0]?.id ?? "");
@@ -56,6 +65,7 @@ export function MovimientoForm({
   const [categoriaId, setCategoriaId] = useState<string>("");
   const [descripcion, setDescripcion] = useState<string>(defaultDescripcion ?? "");
   const [contraparte, setContraparte] = useState<string>(defaultContraparte ?? "");
+  const [fuenteIngresoId, setFuenteIngresoId] = useState<string>(defaultFuenteIngresoId ?? "");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -89,6 +99,7 @@ export function MovimientoForm({
         contraparte: contraparte || null,
         cxp_id: cxpId ?? null,
         cxc_id: cxcId ?? null,
+        fuente_ingreso_id: tipo === "ingreso" ? fuenteIngresoId || null : null,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al guardar");
@@ -183,6 +194,24 @@ export function MovimientoForm({
               {categoriasFiltradas.map((c) => (
                 <SelectItem key={c.id} value={c.id}>
                   {c.nombre}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {tipo === "ingreso" && fuentesActivas.length > 0 && (
+        <div className="space-y-1.5">
+          <Label>Fuente de ingreso (opcional)</Label>
+          <Select value={fuenteIngresoId} onValueChange={setFuenteIngresoId}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Sin fuente" />
+            </SelectTrigger>
+            <SelectContent>
+              {fuentesActivas.map((f) => (
+                <SelectItem key={f.id} value={f.id}>
+                  {f.nombre} {f.frecuencia === "fijo" ? "(fijo)" : "(variable)"}
                 </SelectItem>
               ))}
             </SelectContent>

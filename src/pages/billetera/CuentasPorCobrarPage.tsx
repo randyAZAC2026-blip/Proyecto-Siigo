@@ -15,6 +15,7 @@ import {
   useCuentas,
   useCxC,
   useEliminarCxC,
+  useFuentesIngreso,
 } from "@/lib/billetera/hooks";
 import { formatCOP, formatDate } from "@/lib/billetera/format";
 import type { CuentaPorCobrar } from "@/lib/supabase/database.types";
@@ -23,6 +24,7 @@ export function CuentasPorCobrarPage() {
   const cxc = useCxC();
   const cuentas = useCuentas();
   const categorias = useCategorias();
+  const fuentesIngreso = useFuentesIngreso();
   const crear = useCrearCxC();
   const crearMov = useCrearMovimiento();
   const eliminar = useEliminarCxC();
@@ -163,6 +165,7 @@ export function CuentasPorCobrarPage() {
             <MovimientoForm
               cuentas={cuentas.data}
               categorias={categorias.data ?? []}
+              fuentesIngreso={fuentesIngreso.data ?? []}
               defaultTipo="ingreso"
               cxcId={cobrando.id}
               defaultMonto={Number(cobrando.monto_total) - Number(cobrando.monto_cobrado)}

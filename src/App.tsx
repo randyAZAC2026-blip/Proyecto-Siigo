@@ -15,6 +15,7 @@ import { CuentasPorPagarPage } from "@/pages/billetera/CuentasPorPagarPage";
 import { CuentasPorCobrarPage } from "@/pages/billetera/CuentasPorCobrarPage";
 import { CuentasPage } from "@/pages/billetera/CuentasPage";
 import { CategoriasPage } from "@/pages/billetera/CategoriasPage";
+import { FuentesIngresoPage } from "@/pages/billetera/FuentesIngresoPage";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ export default function App() {
                 <Route path="/por-cobrar" element={<CuentasPorCobrarPage />} />
                 <Route path="/cuentas" element={<CuentasPage />} />
                 <Route path="/categorias" element={<CategoriasPage />} />
+                <Route path="/ingresos" element={<FuentesIngresoPage />} />
                 <Route path="/asesor" element={<CalculatorPage />} />
 
                 <Route element={<AdminRoute />}>

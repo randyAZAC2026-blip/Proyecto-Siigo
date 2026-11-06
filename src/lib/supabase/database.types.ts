@@ -66,6 +66,7 @@ export interface TaxRegime {
 export type CuentaTipo = "efectivo" | "banco" | "billetera_digital" | "otro";
 export type CategoriaTipo = "ingreso" | "egreso";
 export type MovimientoTipo = "ingreso" | "egreso" | "transferencia";
+export type FrecuenciaIngreso = "fijo" | "variable";
 
 export interface Cuenta {
   id: string;
@@ -101,6 +102,18 @@ export interface Movimiento {
   contraparte: string | null;
   cxp_id: string | null;
   cxc_id: string | null;
+  fuente_ingreso_id: string | null;
+  created_at: string;
+}
+
+export interface FuenteIngreso {
+  id: string;
+  user_id: string;
+  nombre: string;
+  frecuencia: FrecuenciaIngreso;
+  monto_esperado_mensual: number | null;
+  activa: boolean;
+  nota: string | null;
   created_at: string;
 }
 
@@ -368,6 +381,7 @@ export type Database = {
           cxp_id: string | null;
           descripcion: string | null;
           fecha: string;
+          fuente_ingreso_id: string | null;
           id: string;
           monto: number;
           tipo: string;
@@ -383,6 +397,7 @@ export type Database = {
           cxp_id?: string | null;
           descripcion?: string | null;
           fecha?: string;
+          fuente_ingreso_id?: string | null;
           id?: string;
           monto: number;
           tipo: string;
@@ -398,9 +413,43 @@ export type Database = {
           cxp_id?: string | null;
           descripcion?: string | null;
           fecha?: string;
+          fuente_ingreso_id?: string | null;
           id?: string;
           monto?: number;
           tipo?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      fuentes_ingreso: {
+        Row: {
+          activa: boolean;
+          created_at: string;
+          frecuencia: string;
+          id: string;
+          monto_esperado_mensual: number | null;
+          nombre: string;
+          nota: string | null;
+          user_id: string;
+        };
+        Insert: {
+          activa?: boolean;
+          created_at?: string;
+          frecuencia: string;
+          id?: string;
+          monto_esperado_mensual?: number | null;
+          nombre: string;
+          nota?: string | null;
+          user_id: string;
+        };
+        Update: {
+          activa?: boolean;
+          created_at?: string;
+          frecuencia?: string;
+          id?: string;
+          monto_esperado_mensual?: number | null;
+          nombre?: string;
+          nota?: string | null;
           user_id?: string;
         };
         Relationships: [];

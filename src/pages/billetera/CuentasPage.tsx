@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Archive, ArchiveRestore, Trash2, Tags } from "lucide-react";
+import { Plus, Archive, ArchiveRestore, Trash2, Tags, Anchor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -31,6 +31,12 @@ export function CuentasPage() {
       <header className="flex items-center justify-between gap-2">
         <h1 className="text-xl font-semibold text-[var(--color-text)]">Mis cuentas</h1>
         <div className="flex items-center gap-2">
+          <Link to="/ingresos">
+            <Button variant="outline" size="sm">
+              <Anchor className="size-4" />
+              Fuentes
+            </Button>
+          </Link>
           <Link to="/categorias">
             <Button variant="outline" size="sm">
               <Tags className="size-4" />

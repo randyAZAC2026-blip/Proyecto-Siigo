@@ -11,7 +11,11 @@ El header muestra ambas; en mobile hay un tab bar inferior (`BottomNav`) que alt
 
 ## Billetera personal
 
-Módulo de billetera multi-usuario (cada usuario sólo ve lo suyo vía RLS). Tablas: `cuentas`, `categorias`, `movimientos`, `cuentas_por_pagar`, `cuentas_por_cobrar`. Vista `saldos_cuentas` calcula saldo actual = `saldo_inicial + ingresos − egresos + transferencias_in − transferencias_out` — nunca se persiste un saldo, se derivan siempre de los movimientos (fuente única de verdad).
+Módulo de billetera multi-usuario (cada usuario sólo ve lo suyo vía RLS). Tablas: `cuentas`, `categorias`, `movimientos`, `cuentas_por_pagar`, `cuentas_por_cobrar`, `fuentes_ingreso`. Vista `saldos_cuentas` calcula saldo actual = `saldo_inicial + ingresos − egresos + transferencias_in − transferencias_out` — nunca se persiste un saldo, se derivan siempre de los movimientos (fuente única de verdad).
+
+### Fuentes de ingreso (migración 0004)
+
+`fuentes_ingreso` clasifica de dónde viene el dinero del usuario y si es fijo (recurrencia esperada mensual) o variable (sin recurrencia). Columna `fuente_ingreso_id` en `movimientos` (nullable, CHECK: sólo aplica cuando `tipo = 'ingreso'`). En el dashboard, `IngresosMesCard` va **antes** del `SaldoResumen` y muestra ingresos del mes actual divididos en Fijos / Variables, con breakdown por fuente; para fijos con `monto_esperado_mensual` muestra "recibido / esperado". Cálculo del mes se hace client-side en `listIngresosDelMes` (una query, agregación en JS — la billetera personal no mueve volumen suficiente para justificar una vista SQL).
 
 ### Pantallas (`src/pages/billetera/`)
 
@@ -19,7 +23,7 @@ Módulo de billetera multi-usuario (cada usuario sólo ve lo suyo vía RLS). Tab
 - `MovimientosPage` (`/movimientos`) — lista con filtros por cuenta y tipo.
 - `NuevoMovimientoPage` (`/movimientos/nuevo`) — formulario rápido ingreso/egreso/transferencia.
 - `CuentasPorPagarPage` (`/por-pagar`) / `CuentasPorCobrarPage` (`/por-cobrar`) — CRUD; "Registrar pago/cobro" abre el `MovimientoForm` pre-ligado por `cxp_id` / `cxc_id`, un trigger de Postgres actualiza `monto_pagado`/`monto_cobrado` automáticamente.
-- `CuentasPage` (`/cuentas`) / `CategoriasPage` (`/categorias`) — administración de cuentas (archivar/eliminar) y categorías por usuario.
+- `CuentasPage` (`/cuentas`) / `CategoriasPage` (`/categorias`) / `FuentesIngresoPage` (`/ingresos`) — administración de cuentas (archivar/eliminar), categorías y fuentes de ingreso por usuario. Las tres se enlazan mutuamente en sus headers.
 
 ### Capa de datos (`src/lib/billetera/`)
 

@@ -4,12 +4,18 @@ import { MovimientoForm } from "@/components/billetera/MovimientoForm";
 import { EmptyState } from "@/components/billetera/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { useCuentas, useCategorias, useCrearMovimiento } from "@/lib/billetera/hooks";
+import {
+  useCuentas,
+  useCategorias,
+  useCrearMovimiento,
+  useFuentesIngreso,
+} from "@/lib/billetera/hooks";
 
 export function NuevoMovimientoPage() {
   const navigate = useNavigate();
   const cuentas = useCuentas();
   const categorias = useCategorias();
+  const fuentesIngreso = useFuentesIngreso();
   const crear = useCrearMovimiento();
 
   if (cuentas.isLoading) return null;
@@ -40,6 +46,7 @@ export function NuevoMovimientoPage() {
           <MovimientoForm
             cuentas={cuentas.data}
             categorias={categorias.data ?? []}
+            fuentesIngreso={fuentesIngreso.data ?? []}
             onSubmit={async (input) => {
               await crear.mutateAsync(input);
               navigate("/movimientos");
