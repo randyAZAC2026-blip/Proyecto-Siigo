@@ -27,13 +27,26 @@ export function SaldoResumen({ saldos }: Props) {
 
   return (
     <section className="space-y-4">
-      <Card className="rounded-[var(--radius-card)] border-[var(--color-border)] bg-[var(--color-primary)] text-white">
-        <CardHeader>
-          <CardTitle className="text-sm font-medium opacity-80">Saldo total</CardTitle>
+      <Card className="relative overflow-hidden rounded-[var(--radius-card)] border-[var(--color-border)]">
+        {/* Halo neon detrás del saldo */}
+        <div
+          className="pointer-events-none absolute -top-16 -right-16 size-56 rounded-full opacity-40 blur-3xl"
+          style={{ background: "var(--neon-primary)" }}
+        />
+        <div
+          className="pointer-events-none absolute -bottom-20 -left-16 size-56 rounded-full opacity-25 blur-3xl"
+          style={{ background: "var(--neon-cyan)" }}
+        />
+        <CardHeader className="relative">
+          <CardTitle className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
+            Saldo total
+          </CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-3xl font-semibold tabular-nums">{formatCOP(total)}</p>
-          <p className="mt-1 text-xs opacity-80">
+        <CardContent className="relative">
+          <p className="neon-text font-mono text-4xl font-semibold tracking-tight text-[var(--color-text)] tabular-nums">
+            {formatCOP(total)}
+          </p>
+          <p className="mt-1 text-xs text-[var(--color-muted)]">
             {activos.length} {activos.length === 1 ? "cuenta activa" : "cuentas activas"}
           </p>
         </CardContent>
@@ -46,19 +59,21 @@ export function SaldoResumen({ saldos }: Props) {
             return (
               <Card
                 key={s.cuenta_id}
-                className="rounded-[var(--radius-card)] border-[var(--color-border)]"
+                className="rounded-[var(--radius-card)] border-[var(--color-border)] transition-colors"
               >
                 <CardContent className="flex items-center gap-3 py-4">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)]">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[var(--neon-primary)]/15 text-[var(--neon-primary)]">
                     <Icon className="size-5" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-[var(--color-text)]">
                       {s.nombre}
                     </p>
-                    <p className="text-xs text-[var(--color-muted)]">{etiquetaTipo[s.tipo]}</p>
+                    <p className="text-[11px] uppercase tracking-wider text-[var(--color-muted)]">
+                      {etiquetaTipo[s.tipo]}
+                    </p>
                   </div>
-                  <p className="tabular-nums font-semibold text-[var(--color-text)]">
+                  <p className="font-mono text-base font-semibold text-[var(--color-text)] tabular-nums">
                     {formatCOP(Number(s.saldo_actual))}
                   </p>
                 </CardContent>

@@ -12,10 +12,20 @@ export function AppLayout() {
 
   return (
     <div className="flex min-h-svh flex-col">
-      <header className="border-b border-[var(--color-border)] bg-[var(--color-surface)]">
+      <header
+        className="border-b border-[var(--color-border)]"
+        style={{
+          background: "var(--glass-bg)",
+          backdropFilter: "blur(20px) saturate(140%)",
+          WebkitBackdropFilter: "blur(20px) saturate(140%)",
+        }}
+      >
         <div className="mx-auto flex max-w-[960px] items-center justify-between px-4 py-3">
-          <Link to="/" className="flex items-center gap-2 font-semibold text-[var(--color-text)]">
-            <Wallet className="size-5 text-[var(--color-primary)]" />
+          <Link
+            to="/"
+            className="flex items-center gap-2 font-semibold tracking-tight text-[var(--color-text)]"
+          >
+            <Wallet className="size-5 text-[var(--neon-primary)]" />
             Mi billetera
           </Link>
           <nav className="flex items-center gap-1">

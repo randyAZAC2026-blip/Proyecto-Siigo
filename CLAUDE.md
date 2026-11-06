@@ -111,12 +111,20 @@ Panel admin: cliente → Supabase client directo (PostgREST) → RLS valida `rol
 - Body: Inter, 400
 - Montos: Inter tabular-nums, 600
 
-### Estilo
+### Estilo (tema "Glass + aurora", dark-only)
 
-- Border radius: 10px (inputs/botones), 14px (cards)
-- Sombras sutiles, sin gradientes, mucho aire entre secciones
-- Verde usado con moderación (acentos), blanco pastel domina el fondo
-- Mobile-first: grids colapsan a 1 columna por defecto, `sm:` agrega columnas
+- Fondo global: aurora animado de tres orbes (esmeralda / cyan / violeta) sobre negro profundo, puesto en `body::before` con `position:fixed` para no moverse con scroll. Animación `aurora-drift` de 24s.
+- Cards: `.glass-card` + aplicado globalmente via `[data-slot="card"]` → fondo semitransparente + `backdrop-filter: blur(18px) saturate(140%)` + borde luminoso. Al agregar un card nuevo de shadcn, hereda glass automáticamente.
+- Acentos: `--neon-primary` (verde esmeralda), `--neon-cyan`, `--neon-warning`, `--neon-destructive`. Usar `.neon-text` / `.neon-text-cyan` para montos y titulares que ameritan glow.
+- Tipografía: Inter para texto; `font-mono` (JetBrains Mono) para montos y números grandes. Montos clave con `tracking-tight` + `tabular-nums` + glow.
+- Metadata labels: uppercase + `tracking-[0.18em]` para dar aire "panel de control".
+- Border radius: 10px inputs/botones, 16px cards.
+- Scrollbar y `::selection` tematizados con el verde neon.
+- Mobile-first: grids colapsan a 1 columna por defecto, `sm:` agrega columnas.
+
+### Banner motivacional
+
+`MotivacionBanner` va justo debajo del header del dashboard, arriba de `IngresosMesCard`. Rota una de 20 frases ORIGINALES escritas al estilo del corrido norteño (trabajo honrado, disciplina financiera, familia, perseverancia). **Nunca son letras literales** de ningún artista — se evita cualquier problema de copyright. La frase cambia cada día (índice determinista `floor(Date.now()/86_400_000) % N`), no por sesión, para no "parpadear" al navegar.
 
 ## Variables de Entorno
 

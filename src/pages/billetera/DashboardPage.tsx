@@ -8,6 +8,7 @@ import { SaldoResumen } from "@/components/billetera/SaldoResumen";
 import { IngresosMesCard } from "@/components/billetera/IngresosMesCard";
 import { MovimientoRow } from "@/components/billetera/MovimientoRow";
 import { EmptyState } from "@/components/billetera/EmptyState";
+import { MotivacionBanner } from "@/components/billetera/MotivacionBanner";
 import {
   useSaldos,
   useMovimientos,
@@ -48,17 +49,21 @@ export function DashboardPage() {
   return (
     <div className="space-y-6">
       <header className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-[var(--color-text)]">Mi billetera</h1>
+        <h1 className="text-xl font-semibold tracking-tight text-[var(--color-text)]">
+          Mi billetera
+        </h1>
         <Link to="/movimientos/nuevo">
           <Button
             size="sm"
-            className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)]"
+            className="bg-[var(--color-primary)] text-[var(--primary-foreground)] hover:bg-[var(--color-primary-hover)]"
           >
             <Plus className="size-4" />
             Registrar
           </Button>
         </Link>
       </header>
+
+      <MotivacionBanner />
 
       <IngresosMesCard
         fuentes={fuentes.data}

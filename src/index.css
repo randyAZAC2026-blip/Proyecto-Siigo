@@ -1,44 +1,67 @@
 @import "tailwindcss";
 
-:root {
-  /* Tokens semánticos shadcn/ui — paleta verde sereno / blanco pastel */
-  --background: #faf9f5;
-  --foreground: #1f2a24;
-  --card: #ffffff;
-  --card-foreground: #1f2a24;
-  --popover: #ffffff;
-  --popover-foreground: #1f2a24;
-  --primary: #3f7a5c;
-  --primary-foreground: #ffffff;
-  --secondary: #eef1ec;
-  --secondary-foreground: #1f2a24;
-  --muted: #eef1ec;
-  --muted-foreground: #6b7a70;
-  --accent: #eef1ec;
-  --accent-foreground: #1f2a24;
-  --destructive: #c1443a;
-  --destructive-foreground: #ffffff;
-  --border: #e4e7e1;
-  --input: #e4e7e1;
-  --ring: #3f7a5c;
-  --radius: 0.625rem;
+/* ───────────────────────────────────────────────────────────────────────────
+   Tema "Glass + aurora" — oscuro con gradiente aurora de fondo y cards
+   glassmorphism. Modo único: la app vive en dark. Los tokens shadcn mapean
+   al tema oscuro directamente; los componentes custom usan los alias
+   --color-* al final.
+   ─────────────────────────────────────────────────────────────────────── */
 
-  /* Alias propios usados en componentes de la app (calculadora, layout) */
+:root {
+  /* Tokens shadcn — paleta oscura esmeralda/cyan */
+  --background: #060d0f;
+  --foreground: #e8f4ee;
+  --card: rgba(16, 28, 32, 0.6);
+  --card-foreground: #e8f4ee;
+  --popover: #0d1a1d;
+  --popover-foreground: #e8f4ee;
+  --primary: #3fd99b;
+  --primary-foreground: #04150e;
+  --secondary: rgba(255, 255, 255, 0.06);
+  --secondary-foreground: #e8f4ee;
+  --muted: rgba(255, 255, 255, 0.05);
+  --muted-foreground: #90a9a1;
+  --accent: rgba(63, 217, 155, 0.14);
+  --accent-foreground: #d7f8e8;
+  --destructive: #ff5c7a;
+  --destructive-foreground: #1a0205;
+  --border: rgba(255, 255, 255, 0.09);
+  --input: rgba(255, 255, 255, 0.12);
+  --ring: #3fd99b;
+  --radius: 0.75rem;
+
+  /* Aurora de fondo */
+  --aurora-from: #0ed184;
+  --aurora-via: #0bc9c1;
+  --aurora-to: #6b3fd9;
+
+  /* Glass */
+  --glass-bg: rgba(16, 28, 32, 0.55);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shine: rgba(255, 255, 255, 0.06);
+
+  /* Neon accents */
+  --neon-primary: #3fd99b;
+  --neon-cyan: #30e3d1;
+  --neon-warning: #ffb74d;
+  --neon-destructive: #ff5c7a;
+
+  /* Alias usados en componentes hechos a mano */
   --color-primary: var(--primary);
-  --color-primary-hover: #2e5c44;
+  --color-primary-hover: #35bd87;
   --color-background: var(--background);
-  --color-surface: var(--card);
+  --color-surface: var(--glass-bg);
   --color-text: var(--foreground);
   --color-muted: var(--muted-foreground);
-  --color-border: var(--border);
+  --color-border: var(--glass-border);
   --color-destructive: var(--destructive);
-  --color-success: #6fa980;
-  --color-warning: #c98a2e;
+  --color-success: #4ee6b0;
+  --color-warning: var(--neon-warning);
 }
 
 @theme inline {
   --font-sans: "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  --font-mono: "JetBrains Mono", "SF Mono", ui-monospace, Consolas, monospace;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -65,18 +88,124 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --radius-default: 10px;
-  --radius-card: 14px;
+  --radius-card: 16px;
 }
 
+/* Fondo aurora: tres orbes de color desenfocadas que respiran lentamente.
+   Las fijo con position:fixed en un pseudoelemento del body para que no se
+   muevan al hacer scroll. */
 body {
   margin: 0;
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  letter-spacing: -0.005em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  position: relative;
+  min-height: 100svh;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(60vmax 60vmax at 10% 10%, color-mix(in oklab, var(--aurora-from) 45%, transparent) 0%, transparent 60%),
+    radial-gradient(55vmax 55vmax at 90% 20%, color-mix(in oklab, var(--aurora-via) 40%, transparent) 0%, transparent 60%),
+    radial-gradient(70vmax 70vmax at 50% 100%, color-mix(in oklab, var(--aurora-to) 42%, transparent) 0%, transparent 65%),
+    var(--background);
+  filter: saturate(1.1);
+  animation: aurora-drift 24s ease-in-out infinite alternate;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.0) 0%, rgba(0, 0, 0, 0.35) 100%),
+    radial-gradient(ellipse at top, transparent 40%, rgba(0, 0, 0, 0.5) 100%);
+  pointer-events: none;
+}
+
+@keyframes aurora-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-2%, 2%, 0) scale(1.06);
+  }
+  100% {
+    transform: translate3d(2%, -1%, 0) scale(1.02);
+  }
 }
 
 #root {
   min-height: 100svh;
+}
+
+/* Clase para cards con efecto glass. La uso en los componentes nuevos y la
+   agrego gradualmente a las cards existentes sin reescribirlas. */
+.glass-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  box-shadow:
+    0 1px 0 0 var(--glass-shine) inset,
+    0 20px 40px -20px rgba(0, 0, 0, 0.5);
+}
+
+.glass-card:hover {
+  border-color: color-mix(in oklab, var(--neon-primary) 30%, var(--glass-border));
+}
+
+/* Glow sutil para montos y titulares importantes */
+.neon-text {
+  text-shadow: 0 0 20px color-mix(in oklab, var(--neon-primary) 40%, transparent);
+}
+
+.neon-text-cyan {
+  text-shadow: 0 0 20px color-mix(in oklab, var(--neon-cyan) 50%, transparent);
+}
+
+/* Cards shadcn: forzar que usen glass en vez del `bg-card` opaco.
+   data-slot="card" lo pone el componente Card de shadcn. */
+[data-slot="card"] {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  box-shadow:
+    0 1px 0 0 var(--glass-shine) inset,
+    0 20px 40px -20px rgba(0, 0, 0, 0.5);
+}
+
+/* Scrollbar más futurista en navegadores que lo soportan */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--neon-primary) 25%, transparent);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklab, var(--neon-primary) 45%, transparent);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+
+/* Selección de texto con acento neon */
+::selection {
+  background: color-mix(in oklab, var(--neon-primary) 40%, transparent);
+  color: var(--foreground);
 }
